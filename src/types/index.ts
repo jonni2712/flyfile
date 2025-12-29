@@ -43,6 +43,10 @@ export interface UserProfile {
   subscriptionStatus?: 'active' | 'canceled' | 'past_due' | 'trialing';
   billingCycle?: 'monthly' | 'annual';
   billing?: BillingInfo;
+  // Beta tester fields
+  isBetaTester?: boolean;
+  betaTesterCode?: string;
+  betaTesterSince?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

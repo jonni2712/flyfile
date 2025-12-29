@@ -4,6 +4,7 @@ import {
   doc,
   addDoc,
   getDocs,
+  getDoc,
   query,
   where,
   orderBy,
@@ -14,6 +15,17 @@ import { db } from '@/lib/firebase';
 import { getUploadUrl, generateFileKey } from '@/lib/r2';
 import { sendEmail, getTransferNotificationEmail, formatFileSize } from '@/lib/email';
 import { v4 as uuidv4 } from 'uuid';
+import { getPlanLimits } from '@/types';
+
+// Default limits for anonymous users (same as free plan)
+const ANONYMOUS_LIMITS = {
+  storageLimit: 5 * 1024 * 1024 * 1024, // 5 GB
+  maxTransfers: 10,
+  maxFilesPerTransfer: 10,
+  retentionDays: 5,
+  passwordProtection: false,
+  customExpiry: false,
+};
 
 // Simple password hashing for demo (in production use bcrypt on server)
 async function hashPassword(password: string): Promise<string> {
@@ -37,6 +49,7 @@ export async function POST(request: NextRequest) {
       deliveryMethod,
       expiryDays,
       userId,
+      isAnonymous,
       files // Array of { name, type, size }
     } = body;
 
@@ -48,13 +61,131 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate expiry date
-    const retentionDays = expiryDays || 5;
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + retentionDays);
-
     // Calculate total size
     const totalSize = files.reduce((acc: number, file: { size: number }) => acc + file.size, 0);
+
+    // Check user plan limits
+    let planLimits;
+    let currentStorageUsed = 0;
+    let currentMonthlyTransfers = 0;
+    let maxRetentionDays = 5;
+
+    if (isAnonymous || !userId) {
+      // Anonymous user - use free plan limits
+      planLimits = ANONYMOUS_LIMITS;
+      maxRetentionDays = ANONYMOUS_LIMITS.retentionDays;
+    } else {
+      // Registered user - fetch their plan
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        return NextResponse.json(
+          { success: false, error: 'Utente non trovato' },
+          { status: 404 }
+        );
+      }
+
+      const userData = userSnap.data();
+      const userPlan = userData.plan || 'free';
+      planLimits = getPlanLimits(userPlan);
+      currentStorageUsed = userData.storageUsed || 0;
+      currentMonthlyTransfers = userData.monthlyTransfers || 0;
+      maxRetentionDays = userData.retentionDays || planLimits.retentionDays;
+
+      // Check storage limit (skip for business plan with unlimited storage)
+      if (planLimits.storageLimit !== -1 && currentStorageUsed + totalSize > (userData.storageLimit || planLimits.storageLimit)) {
+        const limitInGB = ((userData.storageLimit || planLimits.storageLimit) / (1024 * 1024 * 1024)).toFixed(0);
+        const usedInGB = (currentStorageUsed / (1024 * 1024 * 1024)).toFixed(2);
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Limite di storage raggiunto. Hai usato ${usedInGB} GB su ${limitInGB} GB disponibili. Passa a un piano superiore per più spazio.`,
+            code: 'STORAGE_LIMIT_EXCEEDED'
+          },
+          { status: 403 }
+        );
+      }
+
+      // Check monthly transfer limit (skip for business plan with unlimited transfers)
+      const maxTransfers = userData.maxMonthlyTransfers || planLimits.maxTransfers;
+      if (planLimits.maxTransfers !== -1 && currentMonthlyTransfers >= maxTransfers) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Hai raggiunto il limite di ${maxTransfers} trasferimenti mensili. Passa a un piano superiore per più trasferimenti.`,
+            code: 'TRANSFER_LIMIT_EXCEEDED'
+          },
+          { status: 403 }
+        );
+      }
+
+      // Check max files per transfer (skip for business plan)
+      if (planLimits.maxFilesPerTransfer !== -1 && files.length > planLimits.maxFilesPerTransfer) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Puoi caricare massimo ${planLimits.maxFilesPerTransfer} file per trasferimento. Passa a un piano superiore per caricare più file.`,
+            code: 'FILES_LIMIT_EXCEEDED'
+          },
+          { status: 403 }
+        );
+      }
+
+      // Check password protection (only Pro and Business)
+      if (password && !planLimits.passwordProtection) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'La protezione con password è disponibile solo per i piani Pro e Business.',
+            code: 'FEATURE_NOT_AVAILABLE'
+          },
+          { status: 403 }
+        );
+      }
+
+      // Check custom expiry (only Pro and Business)
+      if (expiryDays && expiryDays > maxRetentionDays && !planLimits.customExpiry) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Il tuo piano permette una conservazione massima di ${maxRetentionDays} giorni. Passa a un piano superiore per una maggiore durata.`,
+            code: 'EXPIRY_LIMIT_EXCEEDED'
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    // For anonymous users, check limits
+    if (isAnonymous || !userId) {
+      if (files.length > ANONYMOUS_LIMITS.maxFilesPerTransfer) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Puoi caricare massimo ${ANONYMOUS_LIMITS.maxFilesPerTransfer} file per trasferimento. Registrati per caricare più file.`,
+            code: 'FILES_LIMIT_EXCEEDED'
+          },
+          { status: 403 }
+        );
+      }
+
+      if (password) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'La protezione con password è disponibile solo per utenti registrati con piano Pro o Business.',
+            code: 'FEATURE_NOT_AVAILABLE'
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Calculate expiry date (respect plan limits)
+    const retentionDays = Math.min(expiryDays || 5, maxRetentionDays);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + retentionDays);
 
     // Generate unique transfer ID (UUID for public URL)
     const transferId = uuidv4();

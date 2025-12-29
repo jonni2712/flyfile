@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { TransferProvider } from "@/context/TransferContext";
 import { TeamProvider } from "@/context/TeamContext";
 import CookieBanner from "@/components/CookieBanner";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -46,6 +47,7 @@ export default function RootLayout({
             </TeamProvider>
           </TransferProvider>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );

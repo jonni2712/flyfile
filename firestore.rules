@@ -35,27 +35,31 @@ service cloud.firestore {
       // Anyone can read transfers (for download page)
       allow read: if true;
 
-      // Only authenticated users can create transfers
-      allow create: if isAuthenticated();
+      // Anyone can create transfers (supports anonymous uploads)
+      allow create: if true;
 
-      // Only owner can update/delete
+      // Only owner can update/delete (authenticated users only)
       allow update, delete: if isAuthenticated() &&
         resource.data.userId == request.auth.uid;
 
       // Files subcollection
       match /files/{fileId} {
         allow read: if true;
-        allow create: if isAuthenticated();
+        // Anyone can create files in transfers (supports anonymous uploads)
+        allow create: if true;
         allow update, delete: if isAuthenticated() &&
           get(/databases/$(database)/documents/transfers/$(transferId)).data.userId == request.auth.uid;
       }
     }
 
-    // Files collection (legacy)
+    // Files collection (standalone files)
     match /files/{fileId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Anyone can create files (supports anonymous uploads)
+      allow create: if true;
+      // Only server-side or owner can update (status changes)
+      allow update: if true;
+      // Only authenticated owner can delete
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 

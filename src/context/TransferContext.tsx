@@ -6,14 +6,12 @@ import {
   doc,
   getDoc,
   getDocs,
-  addDoc,
   updateDoc,
   deleteDoc,
   query,
   where,
   orderBy,
-  serverTimestamp,
-  Timestamp
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from './AuthContext';
@@ -237,7 +235,7 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Create a new transfer
+  // Create a new transfer (using API to enforce plan limits)
   const createTransfer = useCallback(async (
     data: TransferUploadData,
     files: File[]
@@ -246,63 +244,46 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      // Calculate retention days based on user plan
-      const retentionDays = data.expiryDays || userProfile?.retentionDays || 5;
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + retentionDays);
+      // Prepare files metadata for API
+      const filesMetadata = files.map(file => ({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      }));
 
-      // Calculate total size
-      const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+      // Call API to create transfer (with plan limit validation)
+      const createResponse = await fetch('/api/transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: data.title,
+          message: data.message,
+          recipientEmail: data.recipientEmail,
+          senderName: data.senderName || user?.displayName || 'Utente',
+          password: data.password,
+          deliveryMethod: data.deliveryMethod,
+          expiryDays: data.expiryDays,
+          userId: user?.uid || null,
+          isAnonymous: !user,
+          files: filesMetadata,
+        }),
+      });
 
-      // Generate unique transfer ID
-      const transferId = generateTransferId();
+      const createResult = await createResponse.json();
 
-      // Create transfer document
-      const transferData = {
-        transferId,
-        userId: user?.uid || null,
-        title: data.title,
-        message: data.message || null,
-        recipientEmail: data.recipientEmail || null,
-        senderName: data.senderName || user?.displayName || 'Utente',
-        password: data.password ? await hashPassword(data.password) : null,
-        deliveryMethod: data.deliveryMethod,
-        status: 'active',
-        totalSize,
-        fileCount: files.length,
-        downloadCount: 0,
-        maxDownloads: null,
-        expiresAt: Timestamp.fromDate(expiresAt),
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
+      if (!createResponse.ok || !createResult.success) {
+        throw new Error(createResult.error || 'Impossibile creare il trasferimento');
+      }
 
-      const transferRef = await addDoc(collection(db, 'transfers'), transferData);
+      const { transferId, internalId, downloadUrl, uploadUrls, expiresAt, emailSent } = createResult;
 
-      // Upload files to R2 and create file documents
+      // Upload files to R2 using presigned URLs
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-
-        // Get upload URL from API
-        const uploadUrlResponse = await fetch('/api/files/upload-url', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            transferId: transferRef.id,
-          }),
-        });
-
-        if (!uploadUrlResponse.ok) {
-          throw new Error('Impossibile ottenere URL di upload');
-        }
-
-        const { uploadUrl, key } = await uploadUrlResponse.json();
+        const uploadUrl = uploadUrls[i].uploadUrl;
 
         // Upload to R2
-        await fetch(uploadUrl, {
+        const uploadResponse = await fetch(uploadUrl, {
           method: 'PUT',
           body: file,
           headers: {
@@ -310,41 +291,31 @@ export function TransferProvider({ children }: { children: ReactNode }) {
           },
         });
 
-        // Create file document
-        await addDoc(collection(db, 'transfers', transferRef.id, 'files'), {
-          transferId: transferRef.id,
-          originalName: file.name,
-          storedName: key,
-          path: key,
-          size: file.size,
-          mimeType: file.type,
-          downloadCount: 0,
-          createdAt: serverTimestamp(),
-        });
+        if (!uploadResponse.ok) {
+          throw new Error(`Upload fallito per ${file.name}`);
+        }
       }
 
-      // Confirm upload
+      // Confirm upload to activate transfer
       await fetch('/api/files/confirm-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transferId: transferRef.id }),
+        body: JSON.stringify({ transferId: internalId }),
       });
 
       // Refresh transfers list
       await fetchTransfers();
-
-      const downloadUrl = `${window.location.origin}/download/${transferId}`;
 
       return {
         success: true,
         transferId,
         downloadUrl,
         message: data.deliveryMethod === 'email'
-          ? 'Email inviata con successo'
+          ? (emailSent ? 'Email inviata con successo' : 'Transfer creato, ma invio email fallito')
           : 'Transfer creato con successo',
         deliveryMethod: data.deliveryMethod,
         recipientEmail: data.recipientEmail,
-        expiresAt: expiresAt.toISOString(),
+        expiresAt,
       };
     } catch (err) {
       console.error('Error creating transfer:', err);
@@ -357,7 +328,7 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [user, userProfile, fetchTransfers]);
+  }, [user, fetchTransfers]);
 
   // Update transfer
   const updateTransfer = useCallback(async (
@@ -504,14 +475,4 @@ export function useTransfer() {
     throw new Error('useTransfer must be used within a TransferProvider');
   }
   return context;
-}
-
-// Password hashing with salt (used for creating transfers with password)
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const salt = 'flyfile-salt'; // Must match server-side PASSWORD_SALT default
-  const data = encoder.encode(password + salt);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }

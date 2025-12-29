@@ -104,6 +104,18 @@ export default function UploadPage() {
     const fileToUpload = files[index];
     if (fileToUpload.status !== 'pending') return;
 
+    // Validate anonymous user has email before uploading
+    if (isAnonymous && !senderEmail) {
+      setFiles((prev) =>
+        prev.map((f, i) =>
+          i === index
+            ? { ...f, status: 'error' as const, error: 'Inserisci la tua email per procedere con il caricamento.' }
+            : f
+        )
+      );
+      return;
+    }
+
     setFiles((prev) =>
       prev.map((f, i) => (i === index ? { ...f, status: 'uploading' as const } : f))
     );
@@ -122,11 +134,15 @@ export default function UploadPage() {
         }),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to get upload URL');
+        // Show specific error message from API (plan limits, etc.)
+        const errorMessage = responseData.error || 'Errore durante l\'upload';
+        throw new Error(errorMessage);
       }
 
-      const { uploadUrl, fileId, shareLink } = await response.json();
+      const { uploadUrl, fileId, shareLink } = responseData;
 
       const uploadResponse = await fetch(uploadUrl, {
         method: 'PUT',
@@ -154,10 +170,11 @@ export default function UploadPage() {
         )
       );
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload fallito. Riprova.';
       setFiles((prev) =>
         prev.map((f, i) =>
           i === index
-            ? { ...f, status: 'error' as const, error: 'Upload fallito. Riprova.' }
+            ? { ...f, status: 'error' as const, error: errorMessage }
             : f
         )
       );
