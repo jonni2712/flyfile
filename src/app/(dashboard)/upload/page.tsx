@@ -103,6 +103,7 @@ export default function UploadPage() {
           fileName: fileToUpload.file.name,
           contentType: fileToUpload.file.type,
           fileSize: fileToUpload.file.size,
+          userId: user?.uid || 'anonymous',
         }),
       });
 

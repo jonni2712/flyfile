@@ -434,24 +434,22 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     }
   }, [user, fetchTransfers]);
 
-  // Verify password for protected transfer
+  // Verify password for protected transfer (using server-side API)
   const verifyPassword = useCallback(async (
     transferId: string,
     password: string
   ): Promise<boolean> => {
     try {
-      const transfersRef = collection(db, 'transfers');
-      const q = query(transfersRef, where('transferId', '==', transferId));
-      const snapshot = await getDocs(q);
+      const response = await fetch('/api/transfer/verify-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transferId, password }),
+      });
 
-      if (snapshot.empty) return false;
+      if (!response.ok) return false;
 
-      const data = snapshot.docs[0].data();
-      if (!data.password) return true;
-
-      // Verify password hash
-      const isValid = await verifyPasswordHash(password, data.password);
-      return isValid;
+      const { valid } = await response.json();
+      return valid;
     } catch (err) {
       console.error('Error verifying password:', err);
       return false;
@@ -508,16 +506,12 @@ export function useTransfer() {
   return context;
 }
 
-// Simple password hashing (in production, use bcrypt on server)
+// Password hashing with salt (used for creating transfers with password)
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
-  const data = encoder.encode(password);
+  const salt = 'flyfile-salt'; // Must match server-side PASSWORD_SALT default
+  const data = encoder.encode(password + salt);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function verifyPasswordHash(password: string, hash: string): Promise<boolean> {
-  const passwordHash = await hashPassword(password);
-  return passwordHash === hash;
 }
