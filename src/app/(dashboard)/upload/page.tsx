@@ -13,6 +13,15 @@ interface UploadFile {
   shareLink?: string;
 }
 
+// Generate unique anonymous ID
+const generateAnonymousId = (): string => {
+  return 'anon_' + 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 export default function UploadPage() {
   const { user, userProfile, loading } = useAuth();
   const router = useRouter();
@@ -21,9 +30,13 @@ export default function UploadPage() {
   const [deliveryMethod, setDeliveryMethod] = useState<'email' | 'link'>('link');
   const [recipientEmail, setRecipientEmail] = useState('');
   const [senderName, setSenderName] = useState('');
+  const [senderEmail, setSenderEmail] = useState(''); // For anonymous users
   const [message, setMessage] = useState('');
   const [password, setPassword] = useState('');
   const [expiryDays, setExpiryDays] = useState('3');
+  const [anonymousId] = useState(() => generateAnonymousId()); // Unique ID per session
+
+  const isAnonymous = !user;
 
   useEffect(() => {
     if (!loading && user && userProfile) {
@@ -103,7 +116,9 @@ export default function UploadPage() {
           fileName: fileToUpload.file.name,
           contentType: fileToUpload.file.type,
           fileSize: fileToUpload.file.size,
-          userId: user?.uid || 'anonymous',
+          userId: user?.uid || anonymousId,
+          isAnonymous: !user,
+          senderEmail: !user ? senderEmail : undefined,
         }),
       });
 
@@ -150,6 +165,12 @@ export default function UploadPage() {
   };
 
   const uploadAllFiles = async () => {
+    // Validate anonymous user has email
+    if (isAnonymous && !senderEmail) {
+      alert('Per favore inserisci la tua email per procedere con il caricamento.');
+      return;
+    }
+
     for (let i = 0; i < files.length; i++) {
       if (files[i].status === 'pending') {
         await handleUploadFile(i);
@@ -365,6 +386,44 @@ export default function UploadPage() {
               </div>
             </div>
 
+            {/* Anonymous User Email */}
+            {isAnonymous && (
+              <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                <p className="text-yellow-200 text-sm mb-3">
+                  Stai caricando come utente anonimo. Inserisci la tua email per ricevere il link di download.
+                </p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="senderEmail" className="block text-sm font-semibold text-white mb-2">
+                      La tua Email *
+                    </label>
+                    <input
+                      type="email"
+                      id="senderEmail"
+                      value={senderEmail}
+                      onChange={(e) => setSenderEmail(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                      placeholder="tuaemail@esempio.com"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="senderNameAnon" className="block text-sm font-semibold text-white mb-2">
+                      Il tuo Nome
+                    </label>
+                    <input
+                      type="text"
+                      id="senderNameAnon"
+                      value={senderName}
+                      onChange={(e) => setSenderName(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                      placeholder="Mario Rossi"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Email Fields */}
             {deliveryMethod === 'email' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -381,19 +440,21 @@ export default function UploadPage() {
                     placeholder="destinatario@email.com"
                   />
                 </div>
-                <div>
-                  <label htmlFor="senderName" className="block text-sm font-semibold text-white mb-2">
-                    Il tuo Nome
-                  </label>
-                  <input
-                    type="text"
-                    id="senderName"
-                    value={senderName}
-                    onChange={(e) => setSenderName(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
-                    placeholder="Mario Rossi"
-                  />
-                </div>
+                {!isAnonymous && (
+                  <div>
+                    <label htmlFor="senderName" className="block text-sm font-semibold text-white mb-2">
+                      Il tuo Nome
+                    </label>
+                    <input
+                      type="text"
+                      id="senderName"
+                      value={senderName}
+                      onChange={(e) => setSenderName(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                      placeholder="Mario Rossi"
+                    />
+                  </div>
+                )}
               </div>
             )}
 

@@ -1,18 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUploadUrl, generateFileKey } from '@/lib/r2';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
   try {
-    const { fileName, contentType, fileSize, userId } = await request.json();
+    const { fileName, contentType, fileSize, userId, isAnonymous, senderEmail } = await request.json();
 
     if (!fileName || !contentType || !fileSize || !userId) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    // If anonymous user, store their info
+    if (isAnonymous && senderEmail) {
+      const anonUserRef = doc(db, 'anonymousUsers', userId);
+      const anonUserSnap = await getDoc(anonUserRef);
+
+      if (!anonUserSnap.exists()) {
+        await setDoc(anonUserRef, {
+          id: userId,
+          email: senderEmail,
+          transferCount: 1,
+          createdAt: serverTimestamp(),
+        });
+      } else {
+        // Increment transfer count
+        const currentCount = anonUserSnap.data().transferCount || 0;
+        await setDoc(anonUserRef, {
+          transferCount: currentCount + 1,
+        }, { merge: true });
+      }
     }
 
     // Generate unique file ID and R2 key
