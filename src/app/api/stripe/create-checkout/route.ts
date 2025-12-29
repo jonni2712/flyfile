@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -53,7 +55,16 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-    const session = await stripe.checkout.sessions.create({
+    // Fetch user billing data from Firestore
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    const userData = userDoc.data();
+    const billing = userData?.billing;
+
+    // Prepare customer creation/update data for Stripe
+    const customerData: Stripe.Checkout.SessionCreateParams.CustomerCreation = 'always';
+
+    // Build session parameters
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [
@@ -64,6 +75,7 @@ export async function POST(request: NextRequest) {
       ],
       customer_email: userEmail,
       client_reference_id: userId,
+      customer_creation: customerData,
       success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/pricing?canceled=true`,
       metadata: {
@@ -78,7 +90,42 @@ export async function POST(request: NextRequest) {
           billingCycle: cycle,
         },
       },
-    });
+      // Pre-fill billing address if available
+      billing_address_collection: 'required',
+    };
+
+    // If user has billing data, pre-populate the checkout
+    if (billing) {
+      // Set tax ID collection for business users
+      if (billing.userType === 'business') {
+        sessionParams.tax_id_collection = { enabled: true };
+      }
+
+      // Add customer update to populate address
+      sessionParams.customer_update = {
+        address: 'auto',
+        name: 'auto',
+      };
+
+      // Pre-fill phone number collection
+      sessionParams.phone_number_collection = { enabled: true };
+
+      // Add invoice creation for proper billing
+      sessionParams.invoice_creation = {
+        enabled: true,
+        invoice_data: {
+          metadata: {
+            userId,
+            userType: billing.userType || 'individual',
+          },
+          custom_fields: billing.userType === 'business' && billing.vatNumber ? [
+            { name: 'Partita IVA', value: billing.vatNumber },
+          ] : undefined,
+        },
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return NextResponse.json({ url: session.url });
   } catch (error) {

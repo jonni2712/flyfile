@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { PLANS } from '@/types';
 
@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
         if (userId && planId) {
           const plan = PLANS[planId];
           if (plan) {
-            await updateDoc(doc(db, 'users', userId), {
+            // Build update data
+            const updateData: Record<string, unknown> = {
               plan: planId,
               storageLimit: plan.storageLimit,
               maxMonthlyTransfers: plan.maxTransfers,
@@ -43,7 +44,25 @@ export async function POST(request: NextRequest) {
               subscriptionId: session.subscription,
               subscriptionStatus: 'active',
               billingCycle: billingCycle || 'monthly',
-            });
+            };
+
+            // If we have customer details from checkout, update billing info
+            if (session.customer_details) {
+              const customerDetails = session.customer_details;
+              updateData['billing.firstName'] = customerDetails.name?.split(' ')[0] || '';
+              updateData['billing.lastName'] = customerDetails.name?.split(' ').slice(1).join(' ') || '';
+              updateData['billing.phone'] = customerDetails.phone || '';
+
+              if (customerDetails.address) {
+                updateData['billing.address'] = customerDetails.address.line1 || '';
+                updateData['billing.city'] = customerDetails.address.city || '';
+                updateData['billing.state'] = customerDetails.address.state || '';
+                updateData['billing.postalCode'] = customerDetails.address.postal_code || '';
+                updateData['billing.country'] = customerDetails.address.country || '';
+              }
+            }
+
+            await updateDoc(doc(db, 'users', userId), updateData);
           }
         }
         break;
@@ -53,24 +72,59 @@ export async function POST(request: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
 
-        // Find user by stripeCustomerId and update status
-        // Note: In production, you'd query Firestore for the user
-        console.log('Subscription updated:', subscription.id, subscription.status);
+        // Find user by stripeCustomerId
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('stripeCustomerId', '==', customerId));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          await updateDoc(doc(db, 'users', userDoc.id), {
+            subscriptionStatus: subscription.status as 'active' | 'canceled' | 'past_due' | 'trialing',
+          });
+        }
         break;
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
-        console.log('Subscription deleted:', subscription.id);
+        const customerId = subscription.customer as string;
 
-        // Downgrade user to free plan
-        // Note: In production, you'd query Firestore for the user and update
+        // Find user by stripeCustomerId and downgrade to free
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('stripeCustomerId', '==', customerId));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          const freePlan = PLANS.free;
+          await updateDoc(doc(db, 'users', userDoc.id), {
+            plan: 'free',
+            storageLimit: freePlan.storageLimit,
+            maxMonthlyTransfers: freePlan.maxTransfers,
+            retentionDays: freePlan.retentionDays,
+            subscriptionId: null,
+            subscriptionStatus: 'canceled',
+          });
+        }
         break;
       }
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        console.log('Payment failed for invoice:', invoice.id);
+        const customerId = invoice.customer as string;
+
+        // Find user and update status
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('stripeCustomerId', '==', customerId));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          await updateDoc(doc(db, 'users', userDoc.id), {
+            subscriptionStatus: 'past_due',
+          });
+        }
         break;
       }
     }
