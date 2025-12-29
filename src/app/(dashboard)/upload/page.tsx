@@ -175,11 +175,14 @@ export default function UploadPage() {
 
       if (!response.ok) {
         // Show specific error message from API (plan limits, etc.)
+        console.error('Upload URL API error:', responseData);
         const errorMessage = responseData.error || 'Errore durante l\'upload';
-        throw new Error(errorMessage);
+        const details = responseData.details ? ` (${responseData.details})` : '';
+        throw new Error(errorMessage + details);
       }
 
       const { uploadUrl, fileId, shareLink } = responseData;
+      console.log('Got upload URL, uploading to R2...');
 
       // Upload to R2 with better error handling
       try {

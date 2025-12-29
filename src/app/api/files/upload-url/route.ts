@@ -165,8 +165,14 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error generating upload URL:', error);
+    // Return more detailed error for debugging
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to generate upload URL' },
+      {
+        error: 'Errore nella generazione URL di upload',
+        details: errorMessage,
+        hint: 'Verifica le variabili R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME'
+      },
       { status: 500 }
     );
   }
