@@ -28,17 +28,23 @@ export async function POST(request: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
-        const planId = session.metadata?.planId as 'pro' | 'business';
+        const planId = session.metadata?.planId as 'starter' | 'pro' | 'business';
+        const billingCycle = session.metadata?.billingCycle as 'monthly' | 'annual';
 
         if (userId && planId) {
           const plan = PLANS[planId];
-          await updateDoc(doc(db, 'users', userId), {
-            plan: planId,
-            storageLimit: plan.storageLimit,
-            stripeCustomerId: session.customer,
-            subscriptionId: session.subscription,
-            subscriptionStatus: 'active',
-          });
+          if (plan) {
+            await updateDoc(doc(db, 'users', userId), {
+              plan: planId,
+              storageLimit: plan.storageLimit,
+              maxMonthlyTransfers: plan.maxTransfers,
+              retentionDays: plan.retentionDays,
+              stripeCustomerId: session.customer,
+              subscriptionId: session.subscription,
+              subscriptionStatus: 'active',
+              billingCycle: billingCycle || 'monthly',
+            });
+          }
         }
         break;
       }

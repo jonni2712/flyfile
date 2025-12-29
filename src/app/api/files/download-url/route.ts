@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDownloadUrl } from '@/lib/r2';
-import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, getDocs, collection, query, where, updateDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+// GET method for single file download via query params
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -55,6 +56,91 @@ export async function GET(request: NextRequest) {
       downloadUrl,
       fileName: fileData.originalName,
     });
+  } catch (error) {
+    console.error('Error generating download URL:', error);
+    return NextResponse.json(
+      { error: 'Failed to generate download URL' },
+      { status: 500 }
+    );
+  }
+}
+
+// POST method for transfer file downloads (used by download page)
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { transferId, fileId, path, all } = body;
+
+    if (!transferId) {
+      return NextResponse.json(
+        { error: 'Missing transferId' },
+        { status: 400 }
+      );
+    }
+
+    // Get transfer document
+    const transferDoc = await getDoc(doc(db, 'transfers', transferId));
+
+    if (!transferDoc.exists()) {
+      return NextResponse.json(
+        { error: 'Transfer not found' },
+        { status: 404 }
+      );
+    }
+
+    const transferData = transferDoc.data();
+
+    // Check if transfer is expired
+    if (transferData.expiresAt && transferData.expiresAt.toDate() < new Date()) {
+      return NextResponse.json(
+        { error: 'Transfer has expired' },
+        { status: 410 }
+      );
+    }
+
+    // If downloading all files, return a single URL for the first file (or handle zip creation)
+    if (all) {
+      // Get all files for this transfer
+      const filesRef = collection(db, 'transfers', transferId, 'files');
+      const filesSnapshot = await getDocs(filesRef);
+
+      if (filesSnapshot.empty) {
+        return NextResponse.json(
+          { error: 'No files found' },
+          { status: 404 }
+        );
+      }
+
+      // For now, return the first file's download URL
+      // TODO: Implement zip download for multiple files
+      const firstFile = filesSnapshot.docs[0].data();
+      const downloadUrl = await getDownloadUrl(firstFile.path || firstFile.storedName);
+
+      return NextResponse.json({
+        downloadUrl,
+        fileName: firstFile.originalName,
+        fileCount: filesSnapshot.size,
+      });
+    }
+
+    // Single file download
+    if (fileId && path) {
+      const downloadUrl = await getDownloadUrl(path);
+
+      // Get file info
+      const fileDoc = await getDoc(doc(db, 'transfers', transferId, 'files', fileId));
+      const fileName = fileDoc.exists() ? fileDoc.data().originalName : 'download';
+
+      return NextResponse.json({
+        downloadUrl,
+        fileName,
+      });
+    }
+
+    return NextResponse.json(
+      { error: 'Invalid request parameters' },
+      { status: 400 }
+    );
   } catch (error) {
     console.error('Error generating download URL:', error);
     return NextResponse.json(

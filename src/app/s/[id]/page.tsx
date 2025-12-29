@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import MainLayout from '@/components/layout/MainLayout';
 import { Download, File, AlertCircle, Lock, Calendar, Hash } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -130,14 +131,17 @@ export default function SharePage() {
 
   if (loading) {
     return (
+      <MainLayout>
       <div className="min-h-[calc(100vh-64px)] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
+      </MainLayout>
     );
   }
 
   if (error && !fileInfo) {
     return (
+      <MainLayout>
       <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-xl shadow-sm p-8 text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -145,12 +149,14 @@ export default function SharePage() {
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
+      </MainLayout>
     );
   }
 
   if (!fileInfo) return null;
 
   return (
+    <MainLayout>
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full bg-white rounded-xl shadow-sm p-8">
         <div className="text-center mb-6">
@@ -234,5 +240,6 @@ export default function SharePage() {
         </p>
       </div>
     </div>
+    </MainLayout>
   );
 }

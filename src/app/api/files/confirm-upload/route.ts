@@ -4,20 +4,32 @@ import { db } from '@/lib/firebase';
 
 export async function POST(request: NextRequest) {
   try {
-    const { fileId } = await request.json();
+    const body = await request.json();
+    const { fileId, transferId } = body;
 
-    if (!fileId) {
+    // Support both fileId (for files collection) and transferId (for transfers collection)
+    if (!fileId && !transferId) {
       return NextResponse.json(
-        { error: 'Missing fileId' },
+        { error: 'Missing fileId or transferId' },
         { status: 400 }
       );
     }
 
-    // Update file status to completed
-    await updateDoc(doc(db, 'files', fileId), {
-      status: 'completed',
-      updatedAt: serverTimestamp(),
-    });
+    if (fileId) {
+      // Update file status in files collection
+      await updateDoc(doc(db, 'files', fileId), {
+        status: 'completed',
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    if (transferId) {
+      // Update transfer status
+      await updateDoc(doc(db, 'transfers', transferId), {
+        status: 'active',
+        updatedAt: serverTimestamp(),
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
