@@ -1,0 +1,110 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isTeamMember(teamId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/teamMembers/$(request.auth.uid + '_' + teamId));
+    }
+
+    function isTeamOwner(teamId) {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/teams/$(teamId)).data.ownerId == request.auth.uid;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+
+    // Transfers collection
+    match /transfers/{transferId} {
+      // Anyone can read transfers (for download page)
+      allow read: if true;
+
+      // Only authenticated users can create transfers
+      allow create: if isAuthenticated();
+
+      // Only owner can update/delete
+      allow update, delete: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+
+      // Files subcollection
+      match /files/{fileId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update, delete: if isAuthenticated() &&
+          get(/databases/$(database)/documents/transfers/$(transferId)).data.userId == request.auth.uid;
+      }
+    }
+
+    // Files collection (legacy)
+    match /files/{fileId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Teams collection
+    match /teams/{teamId} {
+      allow read: if isAuthenticated() && (
+        resource.data.ownerId == request.auth.uid ||
+        isTeamMember(teamId)
+      );
+      allow create: if isAuthenticated();
+      allow update: if isTeamOwner(teamId);
+      allow delete: if isTeamOwner(teamId);
+    }
+
+    // Team Members collection
+    match /teamMembers/{memberId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isTeamOwner(resource.data.teamId)
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isTeamOwner(resource.data.teamId)
+      );
+    }
+
+    // Team Invitations collection
+    match /teamInvitations/{invitationId} {
+      // Anyone can read invitations (to accept via token)
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if true; // Allow accepting invitation
+      allow delete: if isAuthenticated() &&
+        isTeamOwner(resource.data.teamId);
+    }
+
+    // Anonymous Users collection
+    match /anonymousUsers/{anonId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+    }
+
+    // Transfer Downloads (analytics)
+    match /transferDownloads/{downloadId} {
+      allow read: if isAuthenticated();
+      allow create: if true;
+    }
+  }
+}
