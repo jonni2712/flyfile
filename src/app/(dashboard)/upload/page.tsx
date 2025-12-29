@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Upload, X, File, Check, AlertCircle, Lock, Mail, Link2, Clock, Shield, Plus, Image, Video, FileText } from 'lucide-react';
+import { Upload, X, File, Check, AlertCircle, Lock, Mail, Link2, Clock, Shield, Plus, Image, Video, FileText, Crown } from 'lucide-react';
+import { getPlanLimits } from '@/types';
 
 interface UploadFile {
   file: File;
@@ -22,6 +23,20 @@ const generateAnonymousId = (): string => {
   });
 };
 
+// Expiry options with plan requirements
+const EXPIRY_OPTIONS = [
+  { value: '1', label: '1 Giorno', minPlan: 'free' },
+  { value: '3', label: '3 Giorni', minPlan: 'free' },
+  { value: '5', label: '5 Giorni', minPlan: 'free' },
+  { value: '7', label: '1 Settimana', minPlan: 'starter' },
+  { value: '14', label: '2 Settimane', minPlan: 'pro' },
+  { value: '30', label: '1 Mese', minPlan: 'pro' },
+  { value: '90', label: '3 Mesi', minPlan: 'business' },
+  { value: '365', label: '1 Anno', minPlan: 'business' },
+];
+
+const PLAN_HIERARCHY = ['free', 'starter', 'pro', 'business'];
+
 export default function UploadPage() {
   const { user, userProfile, loading } = useAuth();
   const router = useRouter();
@@ -37,6 +52,28 @@ export default function UploadPage() {
   const [anonymousId] = useState(() => generateAnonymousId()); // Unique ID per session
 
   const isAnonymous = !user;
+
+  // Get current user's plan and limits
+  const currentPlan = useMemo(() => {
+    if (isAnonymous) return 'free';
+    return userProfile?.plan || 'free';
+  }, [isAnonymous, userProfile]);
+
+  const planLimits = useMemo(() => {
+    return getPlanLimits(currentPlan as 'free' | 'starter' | 'pro' | 'business');
+  }, [currentPlan]);
+
+  // Filter expiry options based on plan
+  const availableExpiryOptions = useMemo(() => {
+    const planIndex = PLAN_HIERARCHY.indexOf(currentPlan);
+    return EXPIRY_OPTIONS.filter(option => {
+      const optionPlanIndex = PLAN_HIERARCHY.indexOf(option.minPlan);
+      return optionPlanIndex <= planIndex;
+    });
+  }, [currentPlan]);
+
+  // Check if password protection is available
+  const canUsePassword = planLimits.passwordProtection;
 
   useEffect(() => {
     if (!loading && user && userProfile) {
@@ -144,16 +181,25 @@ export default function UploadPage() {
 
       const { uploadUrl, fileId, shareLink } = responseData;
 
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: fileToUpload.file,
-        headers: {
-          'Content-Type': fileToUpload.file.type,
-        },
-      });
+      // Upload to R2 with better error handling
+      try {
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'PUT',
+          body: fileToUpload.file,
+          headers: {
+            'Content-Type': fileToUpload.file.type,
+          },
+        });
 
-      if (!uploadResponse.ok) {
-        throw new Error('Upload failed');
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text().catch(() => 'Unknown error');
+          throw new Error(`Upload su storage fallito: ${uploadResponse.status} - ${errorText}`);
+        }
+      } catch (uploadError) {
+        if (uploadError instanceof TypeError && uploadError.message === 'Failed to fetch') {
+          throw new Error('Errore di connessione allo storage. Verifica la connessione internet o riprova.');
+        }
+        throw uploadError;
       }
 
       await fetch('/api/files/confirm-upload', {
@@ -492,27 +538,37 @@ export default function UploadPage() {
 
             {/* Advanced Options */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Password */}
+              {/* Password - Only for Pro/Business */}
               <div>
                 <label htmlFor="password" className="block text-sm font-semibold text-white mb-2">
                   <Lock className="w-4 h-4 inline-block mr-1" />
                   Password (Opzionale)
+                  {!canUsePassword && (
+                    <span className="ml-2 text-xs text-yellow-400">
+                      <Crown className="w-3 h-3 inline-block mr-1" />
+                      Pro
+                    </span>
+                  )}
                 </label>
                 <input
                   type="password"
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-12 px-4 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
-                  placeholder="Proteggi con password"
+                  disabled={!canUsePassword}
+                  className={`w-full h-12 px-4 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all ${!canUsePassword ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  placeholder={canUsePassword ? "Proteggi con password" : "Disponibile con piano Pro"}
                 />
               </div>
 
-              {/* Expiry */}
+              {/* Expiry - Filtered by plan */}
               <div>
                 <label htmlFor="expiryDays" className="block text-sm font-semibold text-white mb-2">
                   <Clock className="w-4 h-4 inline-block mr-1" />
                   Scadenza
+                  <span className="ml-2 text-xs text-blue-300">
+                    (max {planLimits.retentionDays} giorni)
+                  </span>
                 </label>
                 <select
                   id="expiryDays"
@@ -520,11 +576,11 @@ export default function UploadPage() {
                   onChange={(e) => setExpiryDays(e.target.value)}
                   className="w-full h-12 px-4 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all appearance-none cursor-pointer"
                 >
-                  <option value="1" className="bg-slate-900">1 Giorno</option>
-                  <option value="3" className="bg-slate-900">3 Giorni</option>
-                  <option value="7" className="bg-slate-900">1 Settimana</option>
-                  <option value="14" className="bg-slate-900">2 Settimane</option>
-                  <option value="30" className="bg-slate-900">1 Mese</option>
+                  {availableExpiryOptions.map(option => (
+                    <option key={option.value} value={option.value} className="bg-slate-900">
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
