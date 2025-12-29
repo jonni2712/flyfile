@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { Mail, Eye, EyeOff, User, UserPlus } from 'lucide-react';
+import { Mail, Eye, EyeOff, User, UserPlus, Building2, ChevronDown, FileText } from 'lucide-react';
 
 export default function RegisterPage() {
+  const [username, setUsername] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -17,6 +18,24 @@ export default function RegisterPage() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // User type
+  const [userType, setUserType] = useState<'individual' | 'business'>('individual');
+
+  // Billing info
+  const [showBilling, setShowBilling] = useState(false);
+  const [billingFirstName, setBillingFirstName] = useState('');
+  const [billingLastName, setBillingLastName] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [vatNumber, setVatNumber] = useState('');
+  const [taxCode, setTaxCode] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [phone, setPhone] = useState('');
+  const [country, setCountry] = useState('IT');
+
   const { signUp, signInWithGoogle } = useAuth();
   const router = useRouter();
 
@@ -43,7 +62,24 @@ export default function RegisterPage() {
 
     try {
       const displayName = `${firstName} ${lastName}`.trim();
-      await signUp(email, password, displayName);
+
+      // Prepare billing data if provided
+      const billingData = showBilling ? {
+        userType,
+        firstName: billingFirstName || firstName,
+        lastName: billingLastName || lastName,
+        companyName: userType === 'business' ? companyName : undefined,
+        vatNumber: userType === 'business' ? vatNumber : undefined,
+        taxCode: userType === 'business' ? taxCode : undefined,
+        address,
+        city,
+        state,
+        postalCode: zipCode,
+        phone,
+        country,
+      } : { userType };
+
+      await signUp(email, password, displayName, username, billingData);
       router.push('/dashboard');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Impossibile creare l\'account';
@@ -91,6 +127,29 @@ export default function RegisterPage() {
 
           {/* Form */}
           <form className="space-y-5" onSubmit={handleSubmit}>
+            {/* Username Field */}
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-white/90 mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  autoComplete="username"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:bg-white/20 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/50 transition-all duration-300"
+                  placeholder="mario.rossi"
+                />
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <User className="h-5 w-5 text-white/50" />
+                </div>
+              </div>
+            </div>
+
             {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -213,6 +272,230 @@ export default function RegisterPage() {
                 </button>
               </div>
             </div>
+
+            {/* User Type Selection */}
+            <div>
+              <label className="block text-sm font-medium text-white/90 mb-3">Tipo di account</label>
+              <div className="grid grid-cols-2 gap-3">
+                <label
+                  className={`flex items-center p-3 bg-white/5 border rounded-xl cursor-pointer hover:bg-white/10 transition-colors ${
+                    userType === 'individual' ? 'bg-purple-500/20 border-purple-400/50' : 'border-white/20'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="user_type"
+                    value="individual"
+                    checked={userType === 'individual'}
+                    onChange={() => setUserType('individual')}
+                    className="sr-only"
+                  />
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center mr-3">
+                      <User className="w-4 h-4 text-white/80" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-white text-sm">Privato</div>
+                      <div className="text-white/60 text-xs">Uso personale</div>
+                    </div>
+                  </div>
+                </label>
+                <label
+                  className={`flex items-center p-3 bg-white/5 border rounded-xl cursor-pointer hover:bg-white/10 transition-colors ${
+                    userType === 'business' ? 'bg-purple-500/20 border-purple-400/50' : 'border-white/20'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="user_type"
+                    value="business"
+                    checked={userType === 'business'}
+                    onChange={() => setUserType('business')}
+                    className="sr-only"
+                  />
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center mr-3">
+                      <Building2 className="w-4 h-4 text-white/80" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-white text-sm">Azienda</div>
+                      <div className="text-white/60 text-xs">Uso aziendale</div>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Billing Information Toggle */}
+            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+              <button
+                type="button"
+                onClick={() => setShowBilling(!showBilling)}
+                className="w-full flex items-center justify-between text-white/90 hover:text-white transition-colors"
+              >
+                <div className="flex items-center">
+                  <FileText className="w-5 h-5 mr-2" />
+                  <span className="font-medium">Dati di fatturazione</span>
+                  <span className="ml-2 text-xs text-white/60">(opzionale ora)</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showBilling ? 'rotate-180' : ''}`} />
+              </button>
+              <p className="text-white/60 text-xs mt-2">Puoi aggiungere questi dati anche successivamente nel tuo profilo</p>
+            </div>
+
+            {/* Billing Fields (Collapsible) */}
+            {showBilling && (
+              <div className="space-y-4 bg-white/5 rounded-xl p-4 border border-white/10 animate-in slide-in-from-top-2">
+                {/* Billing First Name and Last Name */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="billing_first_name" className="block text-sm font-medium text-white/90 mb-2">Nome</label>
+                    <input
+                      type="text"
+                      id="billing_first_name"
+                      value={billingFirstName}
+                      onChange={(e) => setBillingFirstName(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
+                      placeholder="Mario"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="billing_last_name" className="block text-sm font-medium text-white/90 mb-2">Cognome</label>
+                    <input
+                      type="text"
+                      id="billing_last_name"
+                      value={billingLastName}
+                      onChange={(e) => setBillingLastName(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
+                      placeholder="Rossi"
+                    />
+                  </div>
+                </div>
+
+                {/* Company Name (Business Only) */}
+                {userType === 'business' && (
+                  <div>
+                    <label htmlFor="company_name" className="block text-sm font-medium text-white/90 mb-2">Nome azienda</label>
+                    <input
+                      type="text"
+                      id="company_name"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
+                      placeholder="Nome della tua azienda"
+                    />
+                  </div>
+                )}
+
+                {/* VAT Number and Tax Code (Business Only) */}
+                {userType === 'business' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="vat_number" className="block text-sm font-medium text-white/90 mb-2">Partita IVA</label>
+                      <input
+                        type="text"
+                        id="vat_number"
+                        value={vatNumber}
+                        onChange={(e) => setVatNumber(e.target.value)}
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
+                        placeholder="IT12345678901"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="tax_code" className="block text-sm font-medium text-white/90 mb-2">Codice fiscale</label>
+                      <input
+                        type="text"
+                        id="tax_code"
+                        value={taxCode}
+                        onChange={(e) => setTaxCode(e.target.value)}
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
+                        placeholder="RSSMRA80A01H501Z"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Address */}
+                <div>
+                  <label htmlFor="address" className="block text-sm font-medium text-white/90 mb-2">Indirizzo</label>
+                  <input
+                    type="text"
+                    id="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
+                    placeholder="Via Roma 123"
+                  />
+                </div>
+
+                {/* City, State and Postal Code */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="city" className="block text-sm font-medium text-white/90 mb-2">Città</label>
+                    <input
+                      type="text"
+                      id="city"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
+                      placeholder="Milano"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="state" className="block text-sm font-medium text-white/90 mb-2">Provincia</label>
+                    <input
+                      type="text"
+                      id="state"
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
+                      placeholder="MI"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="zip_code" className="block text-sm font-medium text-white/90 mb-2">CAP</label>
+                    <input
+                      type="text"
+                      id="zip_code"
+                      value={zipCode}
+                      onChange={(e) => setZipCode(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
+                      placeholder="20100"
+                    />
+                  </div>
+                </div>
+
+                {/* Phone and Country */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-white/90 mb-2">Telefono</label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
+                      placeholder="+39 123 456 7890"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="country" className="block text-sm font-medium text-white/90 mb-2">Paese</label>
+                    <select
+                      id="country"
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
+                    >
+                      <option value="IT" className="bg-gray-800">Italia</option>
+                      <option value="US" className="bg-gray-800">Stati Uniti</option>
+                      <option value="FR" className="bg-gray-800">Francia</option>
+                      <option value="DE" className="bg-gray-800">Germania</option>
+                      <option value="ES" className="bg-gray-800">Spagna</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Terms Checkbox */}
             <div className="mt-6">

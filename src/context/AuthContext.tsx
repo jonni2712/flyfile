@@ -21,14 +21,14 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '@/lib/firebase';
-import { UserProfile } from '@/types';
+import { UserProfile, BillingInfo } from '@/types';
 
 interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName: string, username?: string, billingData?: BillingInfo) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -65,10 +65,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // Create user profile in Firestore
-  async function createUserProfile(user: User, displayName?: string) {
+  async function createUserProfile(
+    user: User,
+    displayName?: string,
+    username?: string,
+    billingData?: BillingInfo
+  ) {
     const userProfile: Omit<UserProfile, 'createdAt' | 'updatedAt'> = {
       uid: user.uid,
       email: user.email || '',
+      username: username || undefined,
       displayName: displayName || user.displayName || '',
       photoURL: user.photoURL || undefined,
       plan: 'free',
@@ -78,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       maxMonthlyTransfers: 10,
       retentionDays: 5,
       filesCount: 0,
+      billing: billingData || undefined,
     };
 
     await setDoc(doc(db, 'users', user.uid), {
@@ -109,10 +116,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signInWithEmailAndPassword(auth, email, password);
   }
 
-  async function signUp(email: string, password: string, displayName: string) {
+  async function signUp(
+    email: string,
+    password: string,
+    displayName: string,
+    username?: string,
+    billingData?: BillingInfo
+  ) {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(user, { displayName });
-    await createUserProfile(user, displayName);
+    await createUserProfile(user, displayName, username, billingData);
   }
 
   async function signInWithGoogle() {

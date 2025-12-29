@@ -18,6 +18,7 @@ export interface BillingInfo {
   taxCode?: string;
   address?: string;
   city?: string;
+  state?: string;
   postalCode?: string;
   country?: string;
   phone?: string;
@@ -26,6 +27,7 @@ export interface BillingInfo {
 export interface UserProfile {
   uid: string;
   email: string;
+  username?: string;
   displayName: string;
   photoURL?: string;
   avatarPath?: string;
