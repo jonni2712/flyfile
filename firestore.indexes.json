@@ -1,25 +1,11 @@
 {
   "indexes": [
     {
-      "collectionGroup": "users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "stripeCustomerId", "order": "ASCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "transfers",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "userId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "transfers",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "transferId", "order": "ASCENDING" }
       ]
     },
     {
@@ -28,13 +14,6 @@
       "fields": [
         { "fieldPath": "userId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "teams",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "ownerId", "order": "ASCENDING" }
       ]
     },
     {
@@ -51,13 +30,6 @@
       "fields": [
         { "fieldPath": "teamId", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "teamInvitations",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "token", "order": "ASCENDING" }
       ]
     }
   ],
