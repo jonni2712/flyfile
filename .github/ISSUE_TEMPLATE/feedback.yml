@@ -1,0 +1,98 @@
+name: Feedback Tester
+description: Feedback generale sulla tua esperienza con FlyFile
+title: "[FEEDBACK] "
+labels: ["feedback", "beta-testing"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Grazie per partecipare al beta testing di FlyFile! Il tuo feedback è prezioso.
+
+  - type: dropdown
+    id: experience
+    attributes:
+      label: Esperienza complessiva
+      description: Come valuti la tua esperienza con FlyFile?
+      options:
+        - Eccellente
+        - Buona
+        - Nella media
+        - Scarsa
+        - Molto scarsa
+    validations:
+      required: true
+
+  - type: textarea
+    id: liked
+    attributes:
+      label: Cosa ti è piaciuto
+      description: Quali aspetti di FlyFile hai apprezzato di più?
+      placeholder: "Mi è piaciuto particolarmente..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: disliked
+    attributes:
+      label: Cosa potrebbe migliorare
+      description: Quali aspetti potrebbero essere migliorati?
+      placeholder: "Penso che potrebbe migliorare..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: confusing
+    attributes:
+      label: Parti confuse o poco chiare
+      description: C'è qualcosa che non era chiaro o ti ha confuso?
+      placeholder: "Non ho capito bene come..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: ease
+    attributes:
+      label: Facilità d'uso
+      description: Quanto è stato facile usare FlyFile?
+      options:
+        - Molto facile
+        - Abbastanza facile
+        - Nella media
+        - Abbastanza difficile
+        - Molto difficile
+    validations:
+      required: true
+
+  - type: dropdown
+    id: recommend
+    attributes:
+      label: Lo consiglieresti?
+      description: Consiglieresti FlyFile ad un amico o collega?
+      options:
+        - Sicuramente sì
+        - Probabilmente sì
+        - Non saprei
+        - Probabilmente no
+        - Sicuramente no
+    validations:
+      required: true
+
+  - type: textarea
+    id: comparison
+    attributes:
+      label: Confronto con altre soluzioni
+      description: Hai usato servizi simili (WeTransfer, Dropbox, ecc.)? Come si confronta FlyFile?
+      placeholder: "Rispetto a WeTransfer..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Altri commenti
+      description: Qualsiasi altro feedback che vuoi condividere
+      placeholder: "Vorrei anche dire che..."
+    validations:
+      required: false

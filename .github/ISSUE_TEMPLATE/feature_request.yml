@@ -1,0 +1,87 @@
+name: Feature Request
+description: Suggerisci una nuova funzionalità o miglioramento
+title: "[FEATURE] "
+labels: ["enhancement", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Grazie per il tuo suggerimento! Le tue idee ci aiutano a migliorare FlyFile.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema o esigenza
+      description: Descrivi il problema che questa funzionalità risolverebbe
+      placeholder: "Mi trovo spesso a dover fare X, ma attualmente non è possibile perché..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Soluzione proposta
+      description: Come vorresti che funzionasse?
+      placeholder: "Vorrei poter..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative considerate
+      description: Hai considerato altre soluzioni?
+      placeholder: "Ho anche pensato a..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priorità suggerita
+      description: Quanto è importante per te questa funzionalità?
+      options:
+        - Alta (ne ho bisogno urgentemente)
+        - Media (sarebbe molto utile)
+        - Bassa (nice to have)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area dell'applicazione
+      description: A quale parte di FlyFile si riferisce?
+      options:
+        - Upload file
+        - Download file
+        - Dashboard
+        - Gestione team
+        - Account/Profilo
+        - Abbonamenti/Pagamenti
+        - Sicurezza
+        - Performance
+        - Design/UI
+        - Altro
+    validations:
+      required: true
+
+  - type: textarea
+    id: mockup
+    attributes:
+      label: Mockup o esempi
+      description: Se hai idee visive, allega immagini o link a esempi simili
+      placeholder: "Ecco come immagino la funzionalità..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Informazioni aggiuntive
+      description: Qualsiasi altra informazione utile
+      placeholder: "Altre info..."
+    validations:
+      required: false

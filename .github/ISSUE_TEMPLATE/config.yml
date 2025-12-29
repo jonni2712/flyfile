@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentazione
+    url: https://flyfile.it/documentation
+    about: Consulta la documentazione prima di aprire una issue
+  - name: Supporto
+    url: https://flyfile.it/support
+    about: Per domande generali, contatta il supporto

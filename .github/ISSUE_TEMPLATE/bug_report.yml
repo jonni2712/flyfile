@@ -1,0 +1,131 @@
+name: Bug Report
+description: Segnala un bug o problema riscontrato
+title: "[BUG] "
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Grazie per aiutarci a migliorare FlyFile! Compila questo form per segnalare un bug.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrizione del bug
+      description: Descrivi chiaramente il problema riscontrato
+      placeholder: "Quando clicco sul pulsante X succede Y invece di Z..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passi per riprodurre
+      description: Come possiamo riprodurre questo bug?
+      placeholder: |
+        1. Vai alla pagina '...'
+        2. Clicca su '...'
+        3. Scrolla fino a '...'
+        4. Vedi l'errore
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento atteso
+      description: Cosa ti aspettavi che succedesse?
+      placeholder: "Mi aspettavo che..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Comportamento attuale
+      description: Cosa succede invece?
+      placeholder: "Invece succede che..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Gravità
+      description: Quanto è grave questo bug?
+      options:
+        - Critico (blocca completamente l'uso)
+        - Alto (funzionalità principale non funziona)
+        - Medio (funzionalità secondaria non funziona)
+        - Basso (problema estetico o minore)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      description: Quale browser stai usando?
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Opera
+        - Altro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: Dispositivo
+      description: Su quale dispositivo hai riscontrato il problema?
+      options:
+        - Desktop Windows
+        - Desktop Mac
+        - Desktop Linux
+        - Smartphone Android
+        - iPhone/iPad
+        - Tablet Android
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshot
+      description: Se possibile, allega screenshot del problema (trascina qui le immagini)
+      placeholder: "Trascina qui gli screenshot..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Errori console (se disponibili)
+      description: Apri la console del browser (F12) e copia eventuali errori rossi
+      placeholder: "Errori dalla console del browser..."
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: url
+    attributes:
+      label: URL della pagina
+      description: Su quale pagina hai riscontrato il problema?
+      placeholder: "https://flyfile.it/..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Informazioni aggiuntive
+      description: Qualsiasi altra informazione utile
+      placeholder: "Altre info..."
+    validations:
+      required: false
