@@ -260,6 +260,7 @@ export function TransferProvider({ children }: { children: ReactNode }) {
           message: data.message,
           recipientEmail: data.recipientEmail,
           senderName: data.senderName || user?.displayName || 'Utente',
+          senderEmail: data.email, // For anonymous users to receive confirmation
           password: data.password,
           deliveryMethod: data.deliveryMethod,
           expiryDays: data.expiryDays,

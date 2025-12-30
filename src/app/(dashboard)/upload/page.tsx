@@ -1,9 +1,13 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Upload, X, File, Check, AlertCircle, Lock, Mail, Link2, Clock, Shield, Plus, Image, Video, FileText, Crown } from 'lucide-react';
+import { useTransfer } from '@/context/TransferContext';
+import {
+  Upload, X, File, Check, AlertCircle, Lock, Mail, Link2, Clock, Shield, Plus,
+  Image, Video, FileText, Crown, Copy, CheckCircle, ExternalLink, Loader2
+} from 'lucide-react';
 import { getPlanLimits } from '@/types';
 
 interface UploadFile {
@@ -11,45 +15,61 @@ interface UploadFile {
   progress: number;
   status: 'pending' | 'uploading' | 'completed' | 'error';
   error?: string;
-  shareLink?: string;
 }
-
-// Generate unique anonymous ID
-const generateAnonymousId = (): string => {
-  return 'anon_' + 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-};
 
 // Expiry options with plan requirements
 const EXPIRY_OPTIONS = [
-  { value: '1', label: '1 Giorno', minPlan: 'free' },
-  { value: '3', label: '3 Giorni', minPlan: 'free' },
-  { value: '5', label: '5 Giorni', minPlan: 'free' },
-  { value: '7', label: '1 Settimana', minPlan: 'starter' },
-  { value: '14', label: '2 Settimane', minPlan: 'pro' },
-  { value: '30', label: '1 Mese', minPlan: 'pro' },
-  { value: '90', label: '3 Mesi', minPlan: 'business' },
-  { value: '365', label: '1 Anno', minPlan: 'business' },
+  { value: 1, label: '1 Giorno', minPlan: 'free' },
+  { value: 3, label: '3 Giorni', minPlan: 'free' },
+  { value: 5, label: '5 Giorni', minPlan: 'free' },
+  { value: 7, label: '1 Settimana', minPlan: 'starter' },
+  { value: 14, label: '2 Settimane', minPlan: 'pro' },
+  { value: 30, label: '1 Mese', minPlan: 'pro' },
+  { value: 90, label: '3 Mesi', minPlan: 'business' },
+  { value: 365, label: '1 Anno', minPlan: 'business' },
 ];
 
 const PLAN_HIERARCHY = ['free', 'starter', 'pro', 'business'];
 
 export default function UploadPage() {
   const { user, userProfile, loading } = useAuth();
+  const { createTransfer, loading: transferLoading } = useTransfer();
   const router = useRouter();
+
+  // Form state
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [title, setTitle] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState<'email' | 'link'>('link');
   const [recipientEmail, setRecipientEmail] = useState('');
   const [senderName, setSenderName] = useState('');
-  const [senderEmail, setSenderEmail] = useState(''); // For anonymous users
+  const [senderEmail, setSenderEmail] = useState('');
   const [message, setMessage] = useState('');
   const [password, setPassword] = useState('');
-  const [expiryDays, setExpiryDays] = useState('3');
-  const [anonymousId] = useState(() => generateAnonymousId()); // Unique ID per session
+  const [expiryDays, setExpiryDays] = useState(3);
+
+  // Upload state
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Verification state (for anonymous users)
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationError, setVerificationError] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const verificationInputRef = useRef<HTMLInputElement>(null);
+
+  // Success modal state
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [uploadResult, setUploadResult] = useState<{
+    downloadUrl: string;
+    transferId: string;
+    expiresAt: string;
+    emailSent?: boolean;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const isAnonymous = !user;
 
@@ -80,6 +100,13 @@ export default function UploadPage() {
       setSenderName(userProfile.displayName || '');
     }
   }, [user, userProfile, loading]);
+
+  // Focus verification input when modal opens
+  useEffect(() => {
+    if (showVerificationModal && verificationInputRef.current) {
+      verificationInputRef.current.focus();
+    }
+  }, [showVerificationModal]);
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -125,128 +152,226 @@ export default function UploadPage() {
   };
 
   const addFiles = (newFiles: File[]) => {
+    // Check max files limit
+    const currentCount = files.length;
+    const maxFiles = planLimits.maxFilesPerTransfer === -1 ? Infinity : planLimits.maxFilesPerTransfer;
+
+    if (currentCount + newFiles.length > maxFiles) {
+      setUploadError(`Puoi caricare massimo ${maxFiles} file per trasferimento.`);
+      return;
+    }
+
     const uploadFiles: UploadFile[] = newFiles.map((file) => ({
       file,
       progress: 0,
       status: 'pending' as const,
     }));
     setFiles((prev) => [...prev, ...uploadFiles]);
+    setUploadError(null);
+
+    // Auto-fill title from first file if empty
+    if (!title && newFiles.length > 0) {
+      const firstName = newFiles[0].name.replace(/\.[^/.]+$/, ''); // Remove extension
+      setTitle(firstName);
+    }
   };
 
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleUploadFile = async (index: number) => {
-    const fileToUpload = files[index];
-    if (fileToUpload.status !== 'pending') return;
+  // Send verification code
+  const sendVerificationCode = async () => {
+    if (!senderEmail.trim()) {
+      setUploadError('Inserisci la tua email per procedere.');
+      return false;
+    }
 
-    // Validate anonymous user has email before uploading
-    if (isAnonymous && !senderEmail) {
-      setFiles((prev) =>
-        prev.map((f, i) =>
-          i === index
-            ? { ...f, status: 'error' as const, error: 'Inserisci la tua email per procedere con il caricamento.' }
-            : f
-        )
-      );
+    setIsSendingCode(true);
+    setVerificationError('');
+
+    try {
+      const response = await fetch('/api/anonymous/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: senderEmail.trim() }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setShowVerificationModal(true);
+        return true;
+      } else {
+        if (result.limitsExceeded) {
+          setUploadError(result.error);
+        } else {
+          setVerificationError(result.error || 'Errore nell\'invio del codice');
+        }
+        return false;
+      }
+    } catch (error) {
+      console.error('Error sending verification code:', error);
+      setUploadError('Errore di connessione. Riprova.');
+      return false;
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  // Verify code
+  const verifyCode = async () => {
+    if (verificationCode.length !== 6) {
+      setVerificationError('Inserisci un codice di 6 cifre');
       return;
     }
 
-    setFiles((prev) =>
-      prev.map((f, i) => (i === index ? { ...f, status: 'uploading' as const } : f))
-    );
+    setIsVerifying(true);
+    setVerificationError('');
 
     try {
-      const response = await fetch('/api/files/upload-url', {
+      const response = await fetch('/api/anonymous/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fileName: fileToUpload.file.name,
-          contentType: fileToUpload.file.type,
-          fileSize: fileToUpload.file.size,
-          userId: user?.uid || anonymousId,
-          isAnonymous: !user,
-          senderEmail: !user ? senderEmail : undefined,
+          email: senderEmail.trim(),
+          code: verificationCode,
         }),
       });
 
-      const responseData = await response.json();
+      const result = await response.json();
 
-      if (!response.ok) {
-        // Show specific error message from API (plan limits, etc.)
-        console.error('Upload URL API error:', responseData);
-        const errorMessage = responseData.error || 'Errore durante l\'upload';
-        const details = responseData.details ? ` (${responseData.details})` : '';
-        throw new Error(errorMessage + details);
+      if (result.success) {
+        setIsEmailVerified(true);
+        setShowVerificationModal(false);
+        // Proceed with upload
+        await performUpload();
+      } else {
+        setVerificationError(result.error || 'Codice non valido');
       }
-
-      const { uploadUrl, fileId, shareLink } = responseData;
-      console.log('Got upload URL, uploading to R2...');
-
-      // Upload to R2 with better error handling
-      try {
-        const uploadResponse = await fetch(uploadUrl, {
-          method: 'PUT',
-          body: fileToUpload.file,
-          headers: {
-            'Content-Type': fileToUpload.file.type,
-          },
-        });
-
-        if (!uploadResponse.ok) {
-          const errorText = await uploadResponse.text().catch(() => 'Unknown error');
-          throw new Error(`Upload su storage fallito: ${uploadResponse.status} - ${errorText}`);
-        }
-      } catch (uploadError) {
-        if (uploadError instanceof TypeError && uploadError.message === 'Failed to fetch') {
-          throw new Error('Errore di connessione allo storage. Verifica la connessione internet o riprova.');
-        }
-        throw uploadError;
-      }
-
-      await fetch('/api/files/confirm-upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileId }),
-      });
-
-      setFiles((prev) =>
-        prev.map((f, i) =>
-          i === index
-            ? { ...f, status: 'completed' as const, progress: 100, shareLink }
-            : f
-        )
-      );
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Upload fallito. Riprova.';
-      setFiles((prev) =>
-        prev.map((f, i) =>
-          i === index
-            ? { ...f, status: 'error' as const, error: errorMessage }
-            : f
-        )
-      );
+      console.error('Error verifying code:', error);
+      setVerificationError('Errore di connessione. Riprova.');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
-  const uploadAllFiles = async () => {
-    // Validate anonymous user has email
-    if (isAnonymous && !senderEmail) {
-      alert('Per favore inserisci la tua email per procedere con il caricamento.');
+  // Handle code input change
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    setVerificationCode(value);
+    setVerificationError('');
+
+    // Auto-submit when 6 digits entered
+    if (value.length === 6) {
+      setTimeout(() => verifyCode(), 100);
+    }
+  };
+
+  // Perform the actual upload
+  const performUpload = async () => {
+    setIsUploading(true);
+    setUploadError(null);
+
+    // Update file statuses to uploading
+    setFiles(prev => prev.map(f => ({ ...f, status: 'uploading' as const })));
+
+    try {
+      const result = await createTransfer(
+        {
+          title: title.trim(),
+          message: message.trim() || undefined,
+          recipientEmail: deliveryMethod === 'email' ? recipientEmail.trim() : undefined,
+          senderName: senderName.trim() || undefined,
+          password: canUsePassword && password ? password : undefined,
+          deliveryMethod,
+          expiryDays,
+          email: isAnonymous ? senderEmail.trim() : undefined,
+        },
+        files.map(f => f.file)
+      );
+
+      if (result.success && result.downloadUrl) {
+        // Update file statuses to completed
+        setFiles(prev => prev.map(f => ({ ...f, status: 'completed' as const, progress: 100 })));
+
+        // Show success modal
+        setUploadResult({
+          downloadUrl: result.downloadUrl,
+          transferId: result.transferId || '',
+          expiresAt: result.expiresAt || '',
+          emailSent: deliveryMethod === 'email',
+        });
+        setShowSuccessModal(true);
+      } else {
+        throw new Error(result.error || 'Errore durante il caricamento');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Errore durante il caricamento';
+      setUploadError(errorMessage);
+      setFiles(prev => prev.map(f => ({ ...f, status: 'error' as const, error: errorMessage })));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Handle upload button click
+  const handleUpload = async () => {
+    // Validation
+    if (files.length === 0) {
+      setUploadError('Seleziona almeno un file da caricare.');
       return;
     }
 
-    for (let i = 0; i < files.length; i++) {
-      if (files[i].status === 'pending') {
-        await handleUploadFile(i);
-      }
+    if (!title.trim()) {
+      setUploadError('Inserisci un titolo per il trasferimento.');
+      return;
+    }
+
+    if (isAnonymous && !senderEmail.trim()) {
+      setUploadError('Inserisci la tua email per procedere.');
+      return;
+    }
+
+    if (deliveryMethod === 'email' && !recipientEmail.trim()) {
+      setUploadError('Inserisci l\'email del destinatario.');
+      return;
+    }
+
+    // For anonymous users, require email verification first
+    if (isAnonymous && !isEmailVerified) {
+      await sendVerificationCode();
+      return;
+    }
+
+    // For registered users or verified anonymous users, proceed with upload
+    await performUpload();
+  };
+
+  const copyToClipboard = async () => {
+    if (uploadResult?.downloadUrl) {
+      await navigator.clipboard.writeText(uploadResult.downloadUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  const copyShareLink = (link: string) => {
-    navigator.clipboard.writeText(link);
+  const resetForm = () => {
+    setFiles([]);
+    setTitle('');
+    setMessage('');
+    setRecipientEmail('');
+    setPassword('');
+    setExpiryDays(3);
+    setShowSuccessModal(false);
+    setUploadResult(null);
+    setUploadError(null);
+    setIsEmailVerified(false);
+    setVerificationCode('');
   };
+
+  const totalSize = files.reduce((acc, f) => acc + f.file.size, 0);
 
   if (loading) {
     return (
@@ -255,9 +380,6 @@ export default function UploadPage() {
       </div>
     );
   }
-
-  const pendingCount = files.filter((f) => f.status === 'pending').length;
-  const completedCount = files.filter((f) => f.status === 'completed').length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden -mt-16 pt-24 pb-20">
@@ -271,6 +393,157 @@ export default function UploadPage() {
                             radial-gradient(circle at 40% 80%, rgba(120, 200, 255, 0.3) 0%, transparent 50%)`
         }}
       ></div>
+
+      {/* Verification Modal */}
+      {showVerificationModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-white/20">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-cyan-500/20 rounded-full mb-4">
+                <Mail className="w-8 h-8 text-cyan-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Verifica la tua Email</h3>
+              <p className="text-blue-200/80">Abbiamo inviato un codice di 6 cifre a:</p>
+              <p className="text-cyan-400 font-semibold mt-1">{senderEmail}</p>
+            </div>
+
+            <div className="mb-6">
+              <label htmlFor="verificationCode" className="block text-sm font-semibold text-white mb-2">
+                Codice di Verifica
+              </label>
+              <input
+                ref={verificationInputRef}
+                type="text"
+                id="verificationCode"
+                value={verificationCode}
+                onChange={handleCodeChange}
+                maxLength={6}
+                placeholder="000000"
+                className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white text-center text-2xl font-mono tracking-widest placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+              />
+              {verificationError && (
+                <p className="text-red-400 text-sm mt-2">{verificationError}</p>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowVerificationModal(false);
+                  setVerificationCode('');
+                  setVerificationError('');
+                }}
+                className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-all"
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                onClick={verifyCode}
+                disabled={isVerifying || verificationCode.length !== 6}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {isVerifying ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Verifica...
+                  </>
+                ) : (
+                  'Verifica'
+                )}
+              </button>
+            </div>
+
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={sendVerificationCode}
+                disabled={isSendingCode}
+                className="text-cyan-400 hover:text-cyan-300 text-sm font-medium disabled:opacity-50"
+              >
+                {isSendingCode ? 'Invio in corso...' : 'Non hai ricevuto il codice? Reinvia'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && uploadResult && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-3xl shadow-2xl max-w-lg w-full p-8 border border-white/20">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-tr from-green-400 to-emerald-500 rounded-full mb-4 animate-bounce">
+                <CheckCircle className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-3xl font-bold text-white mb-2">Upload Completato!</h3>
+              <p className="text-blue-200/80">
+                {uploadResult.emailSent
+                  ? 'Il link è stato inviato al destinatario via email.'
+                  : 'Condividi il link qui sotto con il destinatario.'}
+              </p>
+            </div>
+
+            {/* Download Link */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-white mb-2">
+                Link di Download
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={uploadResult.downloadUrl}
+                  className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-sm"
+                />
+                <button
+                  onClick={copyToClipboard}
+                  className="px-4 py-3 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-xl text-cyan-400 transition-colors"
+                >
+                  {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                </button>
+              </div>
+              {copied && (
+                <p className="text-green-400 text-sm mt-2">Link copiato negli appunti!</p>
+              )}
+            </div>
+
+            {/* Transfer Info */}
+            <div className="bg-white/5 rounded-xl p-4 mb-6 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-blue-200/70">File caricati:</span>
+                <span className="text-white font-medium">{files.length}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-blue-200/70">Dimensione totale:</span>
+                <span className="text-white font-medium">{formatBytes(totalSize)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-blue-200/70">Scadenza:</span>
+                <span className="text-white font-medium">{expiryDays} giorni</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => window.open(uploadResult.downloadUrl, '_blank')}
+                className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Apri Link
+              </button>
+              <button
+                onClick={resetForm}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition-colors"
+              >
+                Nuovo Upload
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
@@ -287,6 +560,17 @@ export default function UploadPage() {
             Condividi file in modo sicuro con crittografia end-to-end
           </p>
         </div>
+
+        {/* Error Alert */}
+        {uploadError && (
+          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+            <p className="text-red-200">{uploadError}</p>
+            <button onClick={() => setUploadError(null)} className="ml-auto text-red-400 hover:text-red-300">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
         {/* Main Upload Card */}
         <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl overflow-hidden mb-6">
@@ -305,6 +589,7 @@ export default function UploadPage() {
               onChange={handleFileSelect}
               className="hidden"
               id="fileInput"
+              disabled={isUploading}
             />
 
             {files.length === 0 ? (
@@ -322,18 +607,21 @@ export default function UploadPage() {
                   <Plus className="w-5 h-5 inline-block mr-2" />
                   Seleziona File
                 </button>
-                <p className="text-xs text-blue-200/60 mt-4">Dimensione file illimitata • Tutti i formati supportati</p>
+                <p className="text-xs text-blue-200/60 mt-4">
+                  Max {planLimits.maxFilesPerTransfer === -1 ? 'illimitati' : planLimits.maxFilesPerTransfer} file • Tutti i formati supportati
+                </p>
               </div>
             ) : (
               <div className="space-y-3">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold text-white">
-                    File ({completedCount}/{files.length} caricati)
+                    File ({files.length}) - {formatBytes(totalSize)}
                   </h3>
                   <button
                     type="button"
                     onClick={() => document.getElementById('fileInput')?.click()}
-                    className="text-cyan-400 hover:text-cyan-300 text-sm font-medium"
+                    disabled={isUploading}
+                    className="text-cyan-400 hover:text-cyan-300 text-sm font-medium disabled:opacity-50"
                   >
                     + Aggiungi altri
                   </button>
@@ -353,39 +641,20 @@ export default function UploadPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-white font-medium truncate">{fileItem.file.name}</p>
                           <p className="text-blue-200/60 text-sm">{formatBytes(fileItem.file.size)}</p>
-                          {fileItem.status === 'error' && (
-                            <p className="text-red-400 text-xs flex items-center gap-1 mt-1">
-                              <AlertCircle className="w-3 h-3" />
-                              {fileItem.error}
-                            </p>
-                          )}
-                          {fileItem.shareLink && (
-                            <button
-                              onClick={() => copyShareLink(fileItem.shareLink!)}
-                              className="text-xs text-cyan-400 hover:underline mt-1"
-                            >
-                              Copia link di condivisione
-                            </button>
-                          )}
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2 ml-3">
-                        {fileItem.status === 'pending' && (
-                          <button
-                            onClick={() => handleUploadFile(index)}
-                            className="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-lg text-sm font-medium hover:bg-cyan-500/30 transition-colors"
-                          >
-                            Carica
-                          </button>
-                        )}
                         {fileItem.status === 'uploading' && (
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-400"></div>
+                          <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
                         )}
                         {fileItem.status === 'completed' && (
                           <Check className="w-5 h-5 text-green-400" />
                         )}
-                        {fileItem.status !== 'uploading' && (
+                        {fileItem.status === 'error' && (
+                          <AlertCircle className="w-5 h-5 text-red-400" />
+                        )}
+                        {!isUploading && (
                           <button
                             onClick={() => removeFile(index)}
                             className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all opacity-0 group-hover:opacity-100"
@@ -403,6 +672,22 @@ export default function UploadPage() {
 
           {/* Upload Options */}
           <div className="p-8 lg:p-10 space-y-6">
+            {/* Title */}
+            <div>
+              <label htmlFor="title" className="block text-sm font-semibold text-white mb-2">
+                Titolo del Trasferimento *
+              </label>
+              <input
+                type="text"
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                disabled={isUploading}
+                className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all disabled:opacity-50"
+                placeholder="Es: Documenti progetto, Foto vacanze..."
+              />
+            </div>
+
             {/* Delivery Method */}
             <div>
               <label className="block text-sm font-semibold text-white mb-3">Metodo di Consegna</label>
@@ -416,11 +701,14 @@ export default function UploadPage() {
                     value="email"
                     checked={deliveryMethod === 'email'}
                     onChange={() => setDeliveryMethod('email')}
+                    disabled={isUploading}
                     className="hidden"
                   />
-                  <div className={`w-5 h-5 border-2 rounded-full mr-3 ${
+                  <div className={`w-5 h-5 border-2 rounded-full mr-3 flex items-center justify-center ${
                     deliveryMethod === 'email' ? 'border-cyan-400 bg-cyan-400' : 'border-white/40'
-                  }`}></div>
+                  }`}>
+                    {deliveryMethod === 'email' && <div className="w-2 h-2 bg-white rounded-full" />}
+                  </div>
                   <div className="flex-1">
                     <div className="flex items-center">
                       <Mail className="w-5 h-5 text-cyan-400 mr-2" />
@@ -437,11 +725,14 @@ export default function UploadPage() {
                     value="link"
                     checked={deliveryMethod === 'link'}
                     onChange={() => setDeliveryMethod('link')}
+                    disabled={isUploading}
                     className="hidden"
                   />
-                  <div className={`w-5 h-5 border-2 rounded-full mr-3 ${
+                  <div className={`w-5 h-5 border-2 rounded-full mr-3 flex items-center justify-center ${
                     deliveryMethod === 'link' ? 'border-cyan-400 bg-cyan-400' : 'border-white/40'
-                  }`}></div>
+                  }`}>
+                    {deliveryMethod === 'link' && <div className="w-2 h-2 bg-white rounded-full" />}
+                  </div>
                   <div className="flex-1">
                     <div className="flex items-center">
                       <Link2 className="w-5 h-5 text-purple-400 mr-2" />
@@ -456,20 +747,24 @@ export default function UploadPage() {
             {isAnonymous && (
               <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
                 <p className="text-yellow-200 text-sm mb-3">
-                  Stai caricando come utente anonimo. Inserisci la tua email per ricevere il link di download.
+                  Stai caricando come utente anonimo. Inserisci la tua email per verificare la tua identità e ricevere il link di download.
                 </p>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="senderEmail" className="block text-sm font-semibold text-white mb-2">
-                      La tua Email *
+                      La tua Email * {isEmailVerified && <span className="text-green-400">(Verificata)</span>}
                     </label>
                     <input
                       type="email"
                       id="senderEmail"
                       value={senderEmail}
-                      onChange={(e) => setSenderEmail(e.target.value)}
+                      onChange={(e) => {
+                        setSenderEmail(e.target.value);
+                        setIsEmailVerified(false); // Reset verification if email changes
+                      }}
+                      disabled={isUploading || isEmailVerified}
                       required
-                      className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all disabled:opacity-50"
                       placeholder="tuaemail@esempio.com"
                     />
                   </div>
@@ -482,7 +777,8 @@ export default function UploadPage() {
                       id="senderNameAnon"
                       value={senderName}
                       onChange={(e) => setSenderName(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                      disabled={isUploading}
+                      className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all disabled:opacity-50"
                       placeholder="Mario Rossi"
                     />
                   </div>
@@ -495,14 +791,15 @@ export default function UploadPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="recipientEmail" className="block text-sm font-semibold text-white mb-2">
-                    Email Destinatario
+                    Email Destinatario *
                   </label>
                   <input
                     type="email"
                     id="recipientEmail"
                     value={recipientEmail}
                     onChange={(e) => setRecipientEmail(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    disabled={isUploading}
+                    className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all disabled:opacity-50"
                     placeholder="destinatario@email.com"
                   />
                 </div>
@@ -516,7 +813,8 @@ export default function UploadPage() {
                       id="senderName"
                       value={senderName}
                       onChange={(e) => setSenderName(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                      disabled={isUploading}
+                      className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all disabled:opacity-50"
                       placeholder="Mario Rossi"
                     />
                   </div>
@@ -534,7 +832,8 @@ export default function UploadPage() {
                 rows={3}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all resize-none"
+                disabled={isUploading}
+                className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all resize-none disabled:opacity-50"
                 placeholder="Aggiungi un messaggio per il destinatario..."
               />
             </div>
@@ -558,7 +857,7 @@ export default function UploadPage() {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={!canUsePassword}
+                  disabled={!canUsePassword || isUploading}
                   className={`w-full h-12 px-4 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all ${!canUsePassword ? 'opacity-50 cursor-not-allowed' : ''}`}
                   placeholder={canUsePassword ? "Proteggi con password" : "Disponibile con piano Pro"}
                 />
@@ -576,8 +875,9 @@ export default function UploadPage() {
                 <select
                   id="expiryDays"
                   value={expiryDays}
-                  onChange={(e) => setExpiryDays(e.target.value)}
-                  className="w-full h-12 px-4 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all appearance-none cursor-pointer"
+                  onChange={(e) => setExpiryDays(parseInt(e.target.value))}
+                  disabled={isUploading}
+                  className="w-full h-12 px-4 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all appearance-none cursor-pointer disabled:opacity-50"
                 >
                   {availableExpiryOptions.map(option => (
                     <option key={option.value} value={option.value} className="bg-slate-900">
@@ -592,12 +892,31 @@ export default function UploadPage() {
             <div className="pt-4">
               <button
                 type="button"
-                onClick={uploadAllFiles}
-                disabled={pendingCount === 0}
+                onClick={handleUpload}
+                disabled={files.length === 0 || isUploading || isSendingCode}
                 className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center group"
               >
-                <Upload className="w-6 h-6 mr-2 group-hover:scale-110 transition-transform" />
-                {pendingCount > 0 ? `Carica ${pendingCount} File` : 'Seleziona file da caricare'}
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                    Caricamento in corso...
+                  </>
+                ) : isSendingCode ? (
+                  <>
+                    <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                    Invio codice...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-6 h-6 mr-2 group-hover:scale-110 transition-transform" />
+                    {files.length > 0
+                      ? isAnonymous && !isEmailVerified
+                        ? `Verifica Email e Carica ${files.length} File`
+                        : `Carica ${files.length} File (${formatBytes(totalSize)})`
+                      : 'Seleziona file da caricare'
+                    }
+                  </>
+                )}
               </button>
             </div>
           </div>

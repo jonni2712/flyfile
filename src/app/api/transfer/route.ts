@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getUploadUrl, generateFileKey } from '@/lib/r2';
-import { sendEmail, getTransferNotificationEmail, formatFileSize } from '@/lib/email';
+import { sendEmail, getTransferNotificationEmail, getUploadConfirmationEmail, formatFileSize } from '@/lib/email';
 import { v4 as uuidv4 } from 'uuid';
 import { getPlanLimits } from '@/types';
 
@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
       message,
       recipientEmail,
       senderName,
+      senderEmail, // Email for anonymous users to receive confirmation
       password,
       deliveryMethod,
       expiryDays,
@@ -201,6 +202,7 @@ export async function POST(request: NextRequest) {
       message: message || null,
       recipientEmail: recipientEmail || null,
       senderName: senderName || 'Utente',
+      senderEmail: senderEmail || null, // For anonymous users
       password: hashedPassword,
       deliveryMethod: deliveryMethod || 'link',
       status: 'pending', // Will be set to 'active' after files are uploaded
@@ -245,7 +247,7 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const downloadUrl = `${baseUrl}/download/${transferId}`;
 
-    // Send email notification if delivery method is email
+    // Send email notification to recipient if delivery method is email
     let emailSent = false;
     if (deliveryMethod === 'email' && recipientEmail) {
       try {
@@ -278,6 +280,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Send confirmation email to sender (for anonymous users)
+    let senderEmailSent = false;
+    if (senderEmail) {
+      try {
+        const { html: confirmHtml, text: confirmText } = getUploadConfirmationEmail({
+          senderName: senderName || 'Utente',
+          title,
+          downloadLink: downloadUrl,
+          fileCount: files.length,
+          totalSize: formatFileSize(totalSize),
+          expiresAt: expiresAt.toLocaleDateString('it-IT', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
+          recipientEmail: recipientEmail || undefined,
+        });
+
+        await sendEmail({
+          to: senderEmail,
+          subject: `Upload completato: ${title} - FlyFile`,
+          html: confirmHtml,
+          text: confirmText,
+        });
+
+        senderEmailSent = true;
+      } catch (emailError) {
+        console.error('Error sending upload confirmation email:', emailError);
+        // Don't fail the transfer if email fails
+      }
+    }
+
     return NextResponse.json({
       success: true,
       transferId,
@@ -286,9 +321,10 @@ export async function POST(request: NextRequest) {
       uploadUrls,
       expiresAt: expiresAt.toISOString(),
       emailSent,
+      senderEmailSent,
       message: deliveryMethod === 'email'
         ? emailSent ? 'Email inviata con successo' : 'Transfer creato, ma invio email fallito'
-        : 'Transfer creato con successo',
+        : senderEmailSent ? 'Transfer creato e conferma inviata via email' : 'Transfer creato con successo',
     });
   } catch (error) {
     console.error('Error creating transfer:', error);
