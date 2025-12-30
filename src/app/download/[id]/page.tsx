@@ -128,38 +128,39 @@ export default function DownloadPage() {
     }
   };
 
-  // Handle download all files
+  // Handle download all files as ZIP
   const handleDownloadAll = async () => {
     if (!transfer || !transfer.files) return;
 
     setDownloading(true);
     try {
-      // Get download URL from API
-      const response = await fetch('/api/files/download-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transferId: transfer.id,
-          all: true
-        }),
-      });
+      // If only one file, download directly
+      if (transfer.files.length === 1) {
+        await handleDownloadFile(transfer.files[0]);
+        return;
+      }
+
+      // Download all files as ZIP
+      const zipUrl = `/api/transfer/${transfer.id}/download-zip`;
+      const response = await fetch(zipUrl);
 
       if (!response.ok) {
         throw new Error('Download non disponibile');
       }
 
-      const { downloadUrl } = await response.json();
+      // Get the blob from response
+      const blob = await response.blob();
 
-      // Trigger download
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `flyfile_${transfer.title || 'transfer'}.zip`;
+      link.href = url;
+      link.download = `${transfer.title || 'flyfile_transfer'}.zip`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-      // Increment download count
-      await incrementDownloadCount(transferId);
     } catch (err) {
       console.error('Download error:', err);
       alert('Errore durante il download. Riprova.');
