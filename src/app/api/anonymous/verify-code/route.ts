@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 3 requests per minute for sensitive endpoints
+    const rateLimitResponse = await checkRateLimit(request, 'sensitive');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { email, code } = await request.json();
 
     if (!email || !code) {

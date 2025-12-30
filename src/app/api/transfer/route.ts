@@ -16,6 +16,9 @@ import { getUploadUrl, generateFileKey } from '@/lib/r2';
 import { sendEmail, getTransferNotificationEmail, getUploadConfirmationEmail, formatFileSize } from '@/lib/email';
 import { v4 as uuidv4 } from 'uuid';
 import { getPlanLimits } from '@/types';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { hashPassword } from '@/lib/password';
+import { validateFiles, sanitizeFilename } from '@/lib/file-validation';
 
 // Default limits for anonymous users (same as free plan)
 const ANONYMOUS_LIMITS = {
@@ -27,18 +30,13 @@ const ANONYMOUS_LIMITS = {
   customExpiry: false,
 };
 
-// Simple password hashing for demo (in production use bcrypt on server)
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + process.env.PASSWORD_SALT || 'flyfile-salt');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 // POST - Create a new transfer
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 10 requests per minute for upload operations
+    const rateLimitResponse = await checkRateLimit(request, 'upload');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const body = await request.json();
     const {
       title,
@@ -61,6 +59,22 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Validate files for security (blocked extensions, size limits)
+    const plan = isAnonymous ? 'anonymous' : 'free'; // Will be updated after fetching user
+    const fileValidation = validateFiles(files, plan as 'anonymous' | 'free' | 'starter' | 'pro' | 'business', 10);
+    if (!fileValidation.valid) {
+      return NextResponse.json(
+        { success: false, error: fileValidation.error, code: fileValidation.errorCode },
+        { status: 400 }
+      );
+    }
+
+    // Sanitize file names
+    const sanitizedFiles = files.map((file: { name: string; type: string; size: number }) => ({
+      ...file,
+      name: sanitizeFilename(file.name),
+    }));
 
     // Calculate total size
     const totalSize = files.reduce((acc: number, file: { size: number }) => acc + file.size, 0);
@@ -219,7 +233,7 @@ export async function POST(request: NextRequest) {
 
     // Generate upload URLs for each file
     const uploadUrls = await Promise.all(
-      files.map(async (file: { name: string; type: string; size: number }, index: number) => {
+      sanitizedFiles.map(async (file: { name: string; type: string; size: number }, index: number) => {
         const r2Key = generateFileKey(transferRef.id, file.name);
         const uploadUrl = await getUploadUrl(r2Key, file.type);
 
@@ -338,6 +352,10 @@ export async function POST(request: NextRequest) {
 // GET - Get all transfers for a user
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting: 60 requests per minute for API operations
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 

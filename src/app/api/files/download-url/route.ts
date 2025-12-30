@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDownloadUrl } from '@/lib/r2';
 import { doc, getDoc, getDocs, collection, query, where, updateDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // GET method for single file download via query params
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting: 30 requests per minute for download operations
+    const rateLimitResponse = await checkRateLimit(request, 'download');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { searchParams } = new URL(request.url);
     const fileId = searchParams.get('fileId');
 
@@ -68,6 +73,10 @@ export async function GET(request: NextRequest) {
 // POST method for transfer file downloads (used by download page)
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 30 requests per minute for download operations
+    const rateLimitResponse = await checkRateLimit(request, 'download');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const body = await request.json();
     const { transferId, fileId, path, all } = body;
 

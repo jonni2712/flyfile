@@ -4,6 +4,7 @@ import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { getPlanLimits } from '@/types';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // Default limits for anonymous users (same as free plan)
 const ANONYMOUS_LIMITS = {
@@ -14,6 +15,10 @@ const ANONYMOUS_LIMITS = {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 10 requests per minute for upload operations
+    const rateLimitResponse = await checkRateLimit(request, 'upload');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { fileName, contentType, fileSize, userId, isAnonymous, senderEmail } = await request.json();
 
     if (!fileName || !contentType || !fileSize || !userId) {

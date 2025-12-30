@@ -12,10 +12,15 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { deleteFile } from '@/lib/r2';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // PATCH - Update profile
 export async function PATCH(request: NextRequest) {
   try {
+    // Rate limiting: 60 requests per minute for API operations
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const body = await request.json();
     const { userId, displayName, company, phone, address, city, postalCode, country, vatNumber } = body;
 
@@ -69,6 +74,10 @@ export async function PATCH(request: NextRequest) {
 // DELETE - Delete account
 export async function DELETE(request: NextRequest) {
   try {
+    // Rate limiting: 3 requests per minute for sensitive operations
+    const rateLimitResponse = await checkRateLimit(request, 'sensitive');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -194,6 +203,10 @@ export async function DELETE(request: NextRequest) {
 // GET - Get profile
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting: 60 requests per minute for API operations
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 

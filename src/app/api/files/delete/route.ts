@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { deleteFile } from '@/lib/r2';
 import { doc, deleteDoc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Rate limiting: 60 requests per minute for API operations
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { fileId, r2Key } = await request.json();
 
     if (!fileId || !r2Key) {

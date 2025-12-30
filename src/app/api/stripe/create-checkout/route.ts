@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -25,6 +26,10 @@ const PRICE_IDS = {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 5 requests per minute for payment operations
+    const rateLimitResponse = await checkRateLimit(request, 'auth');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { planId, priceId, billingCycle, userId, userEmail } = await request.json();
 
     if (!planId || !userId || !userEmail) {

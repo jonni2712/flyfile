@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { sendEmail, getVerificationCodeEmail } from '@/lib/email';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // Generate 6-digit verification code
 function generateVerificationCode(): string {
@@ -17,6 +18,10 @@ const ANONYMOUS_LIMITS = {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 5 requests per minute for auth endpoints
+    const rateLimitResponse = await checkRateLimit(request, 'auth');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { email } = await request.json();
 
     if (!email) {

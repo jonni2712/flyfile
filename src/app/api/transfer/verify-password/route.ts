@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-
-// Password hashing with salt
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const salt = process.env.PASSWORD_SALT || 'flyfile-salt';
-  const data = encoder.encode(password + salt);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
+import { checkRateLimit } from '@/lib/rate-limit';
+import { verifyPassword, hashPassword, needsHashUpgrade } from '@/lib/password';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 3 requests per minute for sensitive operations
+    const rateLimitResponse = await checkRateLimit(request, 'sensitive');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { transferId, password } = await request.json();
 
     if (!transferId || !password) {
@@ -42,9 +38,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ valid: true });
     }
 
-    // Verify password
-    const hashedPassword = await hashPassword(password);
-    const isValid = hashedPassword === transferData.password;
+    // Verify password (supports both bcrypt and legacy SHA-256)
+    const isValid = await verifyPassword(password, transferData.password);
+
+    // If password is valid and using legacy hash, upgrade to bcrypt
+    if (isValid && needsHashUpgrade(transferData.password)) {
+      try {
+        const newHash = await hashPassword(password);
+        const transferDocRef = doc(db, 'transfers', snapshot.docs[0].id);
+        await updateDoc(transferDocRef, { password: newHash });
+        console.log('Password hash upgraded to bcrypt for transfer:', transferId);
+      } catch (upgradeError) {
+        console.error('Failed to upgrade password hash:', upgradeError);
+        // Don't fail the verification if upgrade fails
+      }
+    }
 
     return NextResponse.json({ valid: isValid });
   } catch (error) {

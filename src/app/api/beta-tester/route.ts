@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // Valid beta tester codes
 const VALID_BETA_CODES = [
@@ -13,6 +14,10 @@ const VALID_BETA_CODES = [
 // POST - Activate beta tester status
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 5 requests per minute for auth-like operations
+    const rateLimitResponse = await checkRateLimit(request, 'auth');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { userId, code } = await request.json();
 
     if (!userId || !code) {
@@ -80,6 +85,10 @@ export async function POST(request: NextRequest) {
 // GET - Check beta tester status
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting: 60 requests per minute for API operations
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
