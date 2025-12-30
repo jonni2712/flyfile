@@ -443,6 +443,95 @@ FlyFile - Condivisione file sicura
   return { html, text };
 }
 
+// Download notification email to sender
+export function getDownloadNotificationEmail(params: {
+  senderName: string;
+  title: string;
+  downloadLink: string;
+  fileCount: number;
+  downloadCount: number;
+  recipientInfo?: string;
+}) {
+  const { senderName, title, downloadLink, fileCount, downloadCount, recipientInfo } = params;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>I tuoi file sono stati scaricati - FlyFile</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
+      <h1 style="color: white; margin: 0; font-size: 28px;">FlyFile</h1>
+      <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0;">Condivisione file sicura</p>
+    </div>
+
+    <div style="background: white; padding: 40px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="display: inline-block; width: 60px; height: 60px; background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%); border-radius: 50%; line-height: 60px; font-size: 28px;">
+          📥
+        </div>
+      </div>
+
+      <h2 style="color: #1f2937; margin: 0 0 24px 0; font-size: 24px; text-align: center;">I tuoi file sono stati scaricati!</h2>
+
+      <p style="color: #4b5563; line-height: 1.6; margin: 0 0 16px 0;">
+        Ciao <strong>${senderName}</strong>, qualcuno ha scaricato i tuoi file.
+      </p>
+
+      <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin: 24px 0;">
+        <h3 style="color: #1f2937; margin: 0 0 12px 0; font-size: 18px;">${title}</h3>
+        <div style="color: #6b7280; font-size: 14px;">
+          <div style="margin-bottom: 8px;">📁 ${fileCount} file</div>
+          <div style="margin-bottom: 8px;">📊 Download totali: <strong>${downloadCount}</strong></div>
+          ${recipientInfo ? `<div style="margin-bottom: 8px;">👤 Scaricato da: ${recipientInfo}</div>` : ''}
+        </div>
+      </div>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${downloadLink}" style="display: inline-block; background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; text-decoration: none; padding: 12px 32px; border-radius: 12px; font-weight: 600; font-size: 14px;">
+          Visualizza Trasferimento
+        </a>
+      </div>
+    </div>
+
+    <div style="text-align: center; padding: 24px; color: #9ca3af; font-size: 12px;">
+      <p style="margin: 0;">© ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+      <p style="margin: 8px 0 0 0;">
+        <a href="${BASE_URL}/privacy" style="color: #9ca3af;">Privacy</a> ·
+        <a href="${BASE_URL}/terms" style="color: #9ca3af;">Termini</a>
+      </p>
+      <p style="margin: 8px 0 0 0; font-size: 11px;">
+        <a href="${BASE_URL}/settings/notifications" style="color: #9ca3af;">Gestisci notifiche</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+I tuoi file sono stati scaricati - FlyFile
+
+Ciao ${senderName}, qualcuno ha scaricato i tuoi file!
+
+${title}
+File: ${fileCount}
+Download totali: ${downloadCount}
+${recipientInfo ? `Scaricato da: ${recipientInfo}` : ''}
+
+Visualizza trasferimento: ${downloadLink}
+
+---
+FlyFile - Condivisione file sicura
+  `.trim();
+
+  return { html, text };
+}
+
 // Helper function to format file size
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';

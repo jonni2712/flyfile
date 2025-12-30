@@ -3,6 +3,7 @@ import { doc, getDoc, getDocs, collection, updateDoc, increment } from 'firebase
 import { db } from '@/lib/firebase';
 import { getDownloadUrl } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { sendEmail, getDownloadNotificationEmail } from '@/lib/email';
 import archiver from 'archiver';
 import { Readable, PassThrough } from 'stream';
 
@@ -132,6 +133,67 @@ export async function GET(
     await updateDoc(transferRef, {
       downloadCount: increment(1),
     });
+
+    // Send download notification email (fire and forget - don't block response)
+    const newDownloadCount = (transferData.downloadCount || 0) + 1;
+    const senderEmail = transferData.senderEmail || transferData.userId;
+
+    if (senderEmail && transferData.notifyOnDownload !== false) {
+      // Get sender info if userId exists
+      let senderName = transferData.senderName || 'Utente';
+
+      if (transferData.userId) {
+        try {
+          const userRef = doc(db, 'users', transferData.userId);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            senderName = userData.displayName || userData.email || senderName;
+
+            // Only send notification if user has email notifications enabled
+            if (userData.emailNotifications?.downloads === false) {
+              console.log('Download notifications disabled for user');
+            } else {
+              const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+              const { html, text } = getDownloadNotificationEmail({
+                senderName,
+                title: transferData.title || 'Trasferimento',
+                downloadLink: `${baseUrl}/download/${transferData.transferId}`,
+                fileCount: transferData.fileCount || filesSnapshot.size,
+                downloadCount: newDownloadCount,
+              });
+
+              // Send email asynchronously
+              sendEmail({
+                to: userData.email,
+                subject: `I tuoi file sono stati scaricati - ${transferData.title || 'FlyFile'}`,
+                html,
+                text,
+              }).catch(err => console.error('Failed to send download notification:', err));
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching user for notification:', err);
+        }
+      } else if (transferData.senderEmail) {
+        // Anonymous user - send to senderEmail
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const { html, text } = getDownloadNotificationEmail({
+          senderName,
+          title: transferData.title || 'Trasferimento',
+          downloadLink: `${baseUrl}/download/${transferData.transferId}`,
+          fileCount: transferData.fileCount || filesSnapshot.size,
+          downloadCount: newDownloadCount,
+        });
+
+        sendEmail({
+          to: transferData.senderEmail,
+          subject: `I tuoi file sono stati scaricati - ${transferData.title || 'FlyFile'}`,
+          html,
+          text,
+        }).catch(err => console.error('Failed to send download notification:', err));
+      }
+    }
 
     // Generate filename
     const zipFileName = `${transferData.title || 'files'}.zip`
