@@ -51,6 +51,7 @@ export default function DashboardPage() {
   const [editingTitle, setEditingTitle] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [deletingTransfer, setDeletingTransfer] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -126,6 +127,35 @@ export default function DashboardPage() {
     }).catch(() => {
       showToast('Errore durante la copia', 'error');
     });
+  };
+
+  const deleteTransfer = async (transferId: string) => {
+    if (!user) return;
+
+    if (!confirm('Sei sicuro di voler eliminare questo trasferimento? Questa azione non può essere annullata.')) {
+      return;
+    }
+
+    setDeletingTransfer(transferId);
+    try {
+      const response = await fetch(`/api/transfer/${transferId}?userId=${user.uid}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        showToast('Trasferimento eliminato con successo!', 'success');
+        // Refresh the transfers list
+        fetchRecentTransfers();
+      } else {
+        const data = await response.json();
+        showToast(data.error || 'Errore durante l\'eliminazione', 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting transfer:', error);
+      showToast('Errore durante l\'eliminazione', 'error');
+    } finally {
+      setDeletingTransfer(null);
+    }
   };
 
   const formatBytes = (bytes: number) => {
@@ -351,17 +381,28 @@ export default function DashboardPage() {
                               Visualizza
                             </Link>
                             {isPaidPlan && (
-                              <>
-                                <button className="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full hover:bg-yellow-200 transition-colors">
-                                  <Lock className="w-3 h-3 mr-1" />
-                                  {transfer.hasPassword ? 'Modifica password' : 'Imposta password'}
-                                </button>
-                                <button className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full hover:bg-red-200 transition-colors">
+                              <button className="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full hover:bg-yellow-200 transition-colors">
+                                <Lock className="w-3 h-3 mr-1" />
+                                {transfer.hasPassword ? 'Modifica password' : 'Imposta password'}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => deleteTransfer(transfer.id)}
+                              disabled={deletingTransfer === transfer.id}
+                              className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {deletingTransfer === transfer.id ? (
+                                <>
+                                  <div className="w-3 h-3 mr-1 border-2 border-red-800 border-t-transparent rounded-full animate-spin"></div>
+                                  Eliminando...
+                                </>
+                              ) : (
+                                <>
                                   <Trash2 className="w-3 h-3 mr-1" />
                                   Elimina
-                                </button>
-                              </>
-                            )}
+                                </>
+                              )}
+                            </button>
                           </div>
                         )}
                       </div>
