@@ -113,6 +113,9 @@ export interface Transfer {
   createdAt: Date;
   updatedAt: Date;
   files?: TransferFile[];
+  // End-to-end encryption
+  isE2EEncrypted?: boolean;
+  encryptionKeyId?: string;
 }
 
 export interface TransferFile {
@@ -125,6 +128,12 @@ export interface TransferFile {
   mimeType: string;
   downloadCount: number;
   createdAt: Date;
+  // Encryption metadata
+  isEncrypted?: boolean;
+  encryptionIv?: string;
+  encryptionAuthTag?: string;
+  encryptionSalt?: string;
+  encryptionKeyId?: string;
 }
 
 export interface TransferDownload {

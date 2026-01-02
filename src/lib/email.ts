@@ -532,6 +532,198 @@ FlyFile - Condivisione file sicura
   return { html, text };
 }
 
+// Contact form notification to admin
+export function getContactNotificationEmail(params: {
+  name: string;
+  email: string;
+  company?: string;
+  subject: string;
+  message: string;
+  ip: string;
+  userAgent: string;
+  messageId: string;
+}) {
+  const { name, email, company, subject, message, ip, userAgent, messageId } = params;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuovo Messaggio di Contatto - FlyFile</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+    <div style="background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
+      <h1 style="color: white; margin: 0; font-size: 28px;">📬 Nuovo Messaggio</h1>
+      <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0;">Form di Contatto - FlyFile</p>
+    </div>
+
+    <div style="background: white; padding: 40px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <h2 style="color: #1f2937; margin: 0 0 24px 0; font-size: 24px;">${subject}</h2>
+
+      <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin: 0 0 24px 0;">
+        <h3 style="color: #6b7280; margin: 0 0 16px 0; font-size: 14px; text-transform: uppercase;">Informazioni Mittente</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="color: #6b7280; padding: 4px 0; width: 100px;">Nome:</td>
+            <td style="color: #1f2937; padding: 4px 0; font-weight: 600;">${name}</td>
+          </tr>
+          <tr>
+            <td style="color: #6b7280; padding: 4px 0;">Email:</td>
+            <td style="color: #1f2937; padding: 4px 0;"><a href="mailto:${email}" style="color: #3b82f6;">${email}</a></td>
+          </tr>
+          ${company ? `
+          <tr>
+            <td style="color: #6b7280; padding: 4px 0;">Azienda:</td>
+            <td style="color: #1f2937; padding: 4px 0;">${company}</td>
+          </tr>
+          ` : ''}
+        </table>
+      </div>
+
+      <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 12px; padding: 20px; margin: 0 0 24px 0;">
+        <h3 style="color: #854d0e; margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase;">Messaggio</h3>
+        <p style="color: #1f2937; line-height: 1.6; margin: 0; white-space: pre-wrap;">${message}</p>
+      </div>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="mailto:${email}?subject=Re: ${encodeURIComponent(subject)}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; text-decoration: none; padding: 16px 48px; border-radius: 12px; font-weight: 600; font-size: 16px;">
+          Rispondi
+        </a>
+      </div>
+
+      <div style="background: #f3f4f6; border-radius: 8px; padding: 12px; margin: 24px 0 0 0;">
+        <p style="color: #6b7280; font-size: 12px; margin: 0;">
+          <strong>ID Messaggio:</strong> ${messageId}<br>
+          <strong>IP:</strong> ${ip}<br>
+          <strong>User Agent:</strong> ${userAgent}
+        </p>
+      </div>
+    </div>
+
+    <div style="text-align: center; padding: 24px; color: #9ca3af; font-size: 12px;">
+      <p style="margin: 0;">© ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+Nuovo Messaggio di Contatto - FlyFile
+
+Oggetto: ${subject}
+
+MITTENTE
+Nome: ${name}
+Email: ${email}
+${company ? `Azienda: ${company}` : ''}
+
+MESSAGGIO
+${message}
+
+---
+ID: ${messageId}
+IP: ${ip}
+User Agent: ${userAgent}
+  `.trim();
+
+  return { html, text };
+}
+
+// Beta tester welcome email
+export function getBetaTesterWelcomeEmail(params: {
+  userName: string;
+  couponCode: string;
+}) {
+  const { userName, couponCode } = params;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benvenuto nel Programma Beta - FlyFile</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+    <div style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
+      <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Benvenuto Beta Tester!</h1>
+      <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0;">FlyFile - Programma Beta Esclusivo</p>
+    </div>
+
+    <div style="background: white; padding: 40px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <h2 style="color: #1f2937; margin: 0 0 24px 0; font-size: 24px;">Ciao ${userName}!</h2>
+
+      <p style="color: #4b5563; line-height: 1.6; margin: 0 0 16px 0;">
+        Grazie per esserti unito al nostro esclusivo programma beta! Sei tra i primi a provare FlyFile e il tuo feedback sarà fondamentale per migliorare il servizio.
+      </p>
+
+      <div style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+        <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin: 0 0 8px 0;">Il tuo codice beta:</p>
+        <span style="font-size: 28px; font-weight: bold; letter-spacing: 4px; color: white; font-family: monospace;">
+          ${couponCode}
+        </span>
+      </div>
+
+      <h3 style="color: #1f2937; margin: 24px 0 12px 0; font-size: 18px;">Vantaggi del Programma Beta:</h3>
+      <ul style="color: #4b5563; line-height: 1.8; padding-left: 20px; margin: 0;">
+        <li>Sconto esclusivo del 50% per sempre</li>
+        <li>Accesso anticipato alle nuove funzionalità</li>
+        <li>Supporto prioritario</li>
+        <li>Badge "Beta Tester" sul tuo profilo</li>
+        <li>Canale Discord esclusivo per feedback</li>
+      </ul>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${BASE_URL}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); color: white; text-decoration: none; padding: 16px 48px; border-radius: 12px; font-weight: 600; font-size: 16px;">
+          Vai alla Dashboard
+        </a>
+      </div>
+
+      <p style="color: #9ca3af; font-size: 14px; margin: 24px 0 0 0;">
+        Hai domande o feedback? Rispondi direttamente a questa email!
+      </p>
+    </div>
+
+    <div style="text-align: center; padding: 24px; color: #9ca3af; font-size: 12px;">
+      <p style="margin: 0;">© ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+Benvenuto nel Programma Beta - FlyFile
+
+Ciao ${userName}!
+
+Grazie per esserti unito al nostro esclusivo programma beta!
+
+Il tuo codice beta: ${couponCode}
+
+Vantaggi del Programma Beta:
+- Sconto esclusivo del 50% per sempre
+- Accesso anticipato alle nuove funzionalità
+- Supporto prioritario
+- Badge "Beta Tester" sul tuo profilo
+- Canale Discord esclusivo per feedback
+
+Vai alla Dashboard: ${BASE_URL}/dashboard
+
+Hai domande o feedback? Rispondi direttamente a questa email!
+
+---
+FlyFile - Condivisione file sicura
+  `.trim();
+
+  return { html, text };
+}
+
 // Helper function to format file size
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';

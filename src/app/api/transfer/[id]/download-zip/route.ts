@@ -4,6 +4,8 @@ import { db } from '@/lib/firebase';
 import { getDownloadUrl } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { sendEmail, getDownloadNotificationEmail } from '@/lib/email';
+import { recordDownload } from '@/lib/analytics';
+import { triggerWebhooks } from '@/lib/webhooks';
 import archiver from 'archiver';
 import { Readable, PassThrough } from 'stream';
 
@@ -134,8 +136,36 @@ export async function GET(
       downloadCount: increment(1),
     });
 
-    // Send download notification email (fire and forget - don't block response)
+    // Calculate new download count
     const newDownloadCount = (transferData.downloadCount || 0) + 1;
+
+    // Record download analytics
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || 'unknown';
+    const userAgent = request.headers.get('user-agent');
+    const country = request.headers.get('cf-ipcountry') || undefined;
+
+    recordDownload({
+      transferId,
+      ip,
+      userAgent,
+      country,
+      downloadType: 'zip',
+    }).catch(err => console.error('Analytics error:', err));
+
+    // Trigger webhooks for download event
+    if (transferData.userId) {
+      triggerWebhooks(transferData.userId, 'transfer.downloaded', {
+        transferId,
+        title: transferData.title || 'Senza titolo',
+        downloadCount: newDownloadCount,
+        downloadType: 'zip',
+        fileCount: filesSnapshot.size,
+      }).catch(err => console.error('Webhook error:', err));
+    }
+
+    // Send download notification email (fire and forget - don't block response)
     const senderEmail = transferData.senderEmail || transferData.userId;
 
     if (senderEmail && transferData.notifyOnDownload !== false) {

@@ -6,9 +6,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useTransfer } from '@/context/TransferContext';
 import {
   Upload, X, File, Check, AlertCircle, Lock, Mail, Link2, Clock, Shield, Plus,
-  Image, Video, FileText, Crown, Copy, CheckCircle, ExternalLink, Loader2
+  Image, Video, FileText, Crown, Copy, CheckCircle, ExternalLink, Loader2, HardDrive
 } from 'lucide-react';
 import { getPlanLimits } from '@/types';
+import StorageQuota from '@/components/StorageQuota';
 
 interface UploadFile {
   file: File;
@@ -161,6 +162,24 @@ export default function UploadPage() {
       return;
     }
 
+    // Check storage limit for registered users
+    if (user && userProfile) {
+      const storageLimit = userProfile.storageLimit || planLimits.storageLimit;
+      const currentStorage = userProfile.storageUsed || 0;
+      const existingFilesSize = files.reduce((acc, f) => acc + f.file.size, 0);
+      const newFilesSize = newFiles.reduce((acc, f) => acc + f.size, 0);
+      const totalNewSize = existingFilesSize + newFilesSize;
+
+      // Skip check for unlimited storage (-1)
+      if (storageLimit !== -1 && currentStorage + totalNewSize > storageLimit) {
+        const availableSpace = storageLimit - currentStorage;
+        setUploadError(
+          `Spazio insufficiente. Hai ${formatBytes(availableSpace)} disponibili, ma stai cercando di caricare ${formatBytes(totalNewSize)}. Passa a un piano superiore per più spazio.`
+        );
+        return;
+      }
+    }
+
     const uploadFiles: UploadFile[] = newFiles.map((file) => ({
       file,
       progress: 0,
@@ -220,8 +239,13 @@ export default function UploadPage() {
   };
 
   // Verify code
-  const verifyCode = async () => {
-    if (verificationCode.length !== 6) {
+  const verifyCode = async (codeToVerify?: string) => {
+    // Prevent double submission
+    if (isVerifying) return;
+
+    const code = codeToVerify || verificationCode;
+
+    if (!code || code.length !== 6) {
       setVerificationError('Inserisci un codice di 6 cifre');
       return;
     }
@@ -235,7 +259,7 @@ export default function UploadPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: senderEmail.trim(),
-          code: verificationCode,
+          code: code,
         }),
       });
 
@@ -265,7 +289,7 @@ export default function UploadPage() {
 
     // Auto-submit when 6 digits entered
     if (value.length === 6) {
-      setTimeout(() => verifyCode(), 100);
+      setTimeout(() => verifyCode(value), 100);
     }
   };
 
@@ -440,7 +464,7 @@ export default function UploadPage() {
               </button>
               <button
                 type="button"
-                onClick={verifyCode}
+                onClick={() => verifyCode(verificationCode)}
                 disabled={isVerifying || verificationCode.length !== 6}
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
@@ -560,6 +584,17 @@ export default function UploadPage() {
             Condividi file in modo sicuro con crittografia end-to-end
           </p>
         </div>
+
+        {/* Storage Quota - Show for logged in users */}
+        {user && userProfile && (
+          <div className="mb-6">
+            <StorageQuota
+              storageUsed={userProfile.storageUsed || 0}
+              storageLimit={userProfile.storageLimit || planLimits.storageLimit}
+              pendingSize={totalSize}
+            />
+          </div>
+        )}
 
         {/* Error Alert */}
         {uploadError && (

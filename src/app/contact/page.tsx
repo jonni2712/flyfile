@@ -16,16 +16,42 @@ export default function ContactPage() {
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
-    // Simula invio (in produzione collegare a un API endpoint)
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      // Send to API
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
-    setSuccess(true);
-    setLoading(false);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Errore nell\'invio del messaggio');
+      }
+
+      setSuccess(true);
+      setFormData({
+        name: '',
+        email: '',
+        company: '',
+        subject: '',
+        message: '',
+        privacy: false,
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (success) {
@@ -269,6 +295,14 @@ export default function ContactPage() {
                     </label>
                   </div>
                 </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                    {error}
+                  </div>
+                )}
 
                 {/* Submit Button */}
                 <div className="flex justify-center">

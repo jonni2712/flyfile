@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { TransferProvider } from "@/context/TransferContext";
 import { TeamProvider } from "@/context/TeamContext";
 import CookieBanner from "@/components/CookieBanner";
+import ToastContainer from "@/components/Toast";
 import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
@@ -44,6 +45,7 @@ export default function RootLayout({
             <TeamProvider>
               {children}
               <CookieBanner />
+              <ToastContainer />
             </TeamProvider>
           </TransferProvider>
         </AuthProvider>

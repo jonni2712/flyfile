@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
         transferId: data.transferId,
         title: data.title,
         userId: data.userId,
+        userEmail: data.senderEmail || data.userEmail,
         senderEmail: data.senderEmail,
         recipientEmail: data.recipientEmail,
         status: transferStatus,

@@ -3,6 +3,7 @@ import { getDownloadUrl } from '@/lib/r2';
 import { doc, getDoc, getDocs, collection, query, where, updateDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { recordDownload } from '@/lib/analytics';
 
 // GET method for single file download via query params
 export async function GET(request: NextRequest) {
@@ -139,6 +140,22 @@ export async function POST(request: NextRequest) {
       // Get file info
       const fileDoc = await getDoc(doc(db, 'transfers', transferId, 'files', fileId));
       const fileName = fileDoc.exists() ? fileDoc.data().originalName : 'download';
+
+      // Record download analytics
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip')
+        || 'unknown';
+      const userAgent = request.headers.get('user-agent');
+      const country = request.headers.get('cf-ipcountry') || undefined;
+
+      recordDownload({
+        transferId,
+        fileId,
+        ip,
+        userAgent,
+        country,
+        downloadType: 'single',
+      }).catch(err => console.error('Analytics error:', err));
 
       return NextResponse.json({
         downloadUrl,

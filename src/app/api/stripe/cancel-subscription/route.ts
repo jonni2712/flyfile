@@ -1,0 +1,158 @@
+import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { PLANS } from '@/types';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-12-15.clover',
+});
+
+// POST - Cancel subscription
+export async function POST(request: NextRequest) {
+  try {
+    // Rate limiting: 5 requests per minute for sensitive operations
+    const rateLimitResponse = await checkRateLimit(request, 'sensitive');
+    if (rateLimitResponse) return rateLimitResponse;
+
+    const { userId, cancelImmediately = false } = await request.json();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'userId richiesto' },
+        { status: 400 }
+      );
+    }
+
+    // Get user data
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      return NextResponse.json(
+        { error: 'Utente non trovato' },
+        { status: 404 }
+      );
+    }
+
+    const userData = userSnap.data();
+
+    if (!userData.subscriptionId) {
+      return NextResponse.json(
+        { error: 'Nessun abbonamento attivo' },
+        { status: 400 }
+      );
+    }
+
+    // Cancel the subscription
+    if (cancelImmediately) {
+      // Cancel immediately
+      await stripe.subscriptions.cancel(userData.subscriptionId);
+
+      // Downgrade to free plan immediately
+      const freePlan = PLANS.free;
+      await updateDoc(userRef, {
+        plan: 'free',
+        storageLimit: freePlan.storageLimit,
+        maxMonthlyTransfers: freePlan.maxTransfers,
+        retentionDays: freePlan.retentionDays,
+        subscriptionId: null,
+        subscriptionStatus: 'canceled',
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Abbonamento cancellato con successo',
+        immediate: true,
+      });
+    } else {
+      // Cancel at period end
+      await stripe.subscriptions.update(userData.subscriptionId, {
+        cancel_at_period_end: true,
+      });
+
+      // Get subscription to know when it ends
+      const subscription = await stripe.subscriptions.retrieve(userData.subscriptionId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const periodEnd = (subscription as any).current_period_end as number;
+
+      await updateDoc(userRef, {
+        subscriptionStatus: 'canceling',
+        cancelAt: new Date(periodEnd * 1000).toISOString(),
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Abbonamento verrà cancellato alla fine del periodo',
+        cancelAt: new Date(periodEnd * 1000).toISOString(),
+      });
+    }
+  } catch (error) {
+    console.error('Error canceling subscription:', error);
+    return NextResponse.json(
+      { error: 'Impossibile cancellare l\'abbonamento' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Resume/reactivate subscription (undo cancel)
+export async function DELETE(request: NextRequest) {
+  try {
+    // Rate limiting
+    const rateLimitResponse = await checkRateLimit(request, 'sensitive');
+    if (rateLimitResponse) return rateLimitResponse;
+
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'userId richiesto' },
+        { status: 400 }
+      );
+    }
+
+    // Get user data
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      return NextResponse.json(
+        { error: 'Utente non trovato' },
+        { status: 404 }
+      );
+    }
+
+    const userData = userSnap.data();
+
+    if (!userData.subscriptionId) {
+      return NextResponse.json(
+        { error: 'Nessun abbonamento trovato' },
+        { status: 400 }
+      );
+    }
+
+    // Reactivate the subscription
+    await stripe.subscriptions.update(userData.subscriptionId, {
+      cancel_at_period_end: false,
+    });
+
+    await updateDoc(userRef, {
+      subscriptionStatus: 'active',
+      cancelAt: null,
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Abbonamento riattivato con successo',
+    });
+  } catch (error) {
+    console.error('Error reactivating subscription:', error);
+    return NextResponse.json(
+      { error: 'Impossibile riattivare l\'abbonamento' },
+      { status: 500 }
+    );
+  }
+}

@@ -14,7 +14,10 @@ import {
   FileText,
   Download,
   Calendar,
-  Check
+  Check,
+  Square,
+  CheckSquare,
+  Loader2
 } from 'lucide-react';
 import { collection, query, where, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -41,6 +44,8 @@ export default function FilesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expired'>('all');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -170,10 +175,81 @@ export default function FilesPage() {
 
       await deleteDoc(doc(db, 'files', transferId));
       setTransfers((prev) => prev.filter((t) => t.id !== transferId));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(transferId);
+        return next;
+      });
       showToast('Transfer eliminato con successo', 'success');
     } catch (error) {
       console.error('Error deleting transfer:', error);
       showToast('Errore durante l\'eliminazione', 'error');
+    }
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredTransfers.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredTransfers.map((t) => t.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+
+    const count = selectedIds.size;
+    if (!confirm(`Sei sicuro di voler eliminare ${count} file? Questa azione non può essere annullata.`)) {
+      return;
+    }
+
+    setBulkDeleting(true);
+
+    try {
+      const response = await fetch('/api/files/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.uid,
+          fileIds: Array.from(selectedIds),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Remove deleted files from state
+        setTransfers((prev) => prev.filter((t) => !data.results.deleted.includes(t.id)));
+        setSelectedIds(new Set());
+
+        if (data.results.failed.length > 0) {
+          showToast(
+            `${data.results.deleted.length} eliminati, ${data.results.failed.length} falliti`,
+            'error'
+          );
+        } else {
+          showToast(`${data.results.deleted.length} file eliminati con successo`, 'success');
+        }
+      } else {
+        showToast(data.error || 'Errore durante l\'eliminazione', 'error');
+      }
+    } catch (error) {
+      console.error('Error bulk deleting:', error);
+      showToast('Errore durante l\'eliminazione', 'error');
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -302,6 +378,53 @@ export default function FilesPage() {
             </div>
           </div>
 
+          {/* Bulk Actions Bar */}
+          {canDelete && filteredTransfers.length > 0 && (
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-6">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={toggleSelectAll}
+                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  {selectedIds.size === filteredTransfers.length && filteredTransfers.length > 0 ? (
+                    <CheckSquare className="w-5 h-5 text-blue-600" />
+                  ) : (
+                    <Square className="w-5 h-5" />
+                  )}
+                  <span>
+                    {selectedIds.size === filteredTransfers.length && filteredTransfers.length > 0
+                      ? 'Deseleziona tutti'
+                      : 'Seleziona tutti'}
+                  </span>
+                </button>
+                {selectedIds.size > 0 && (
+                  <span className="text-sm text-gray-500">
+                    {selectedIds.size} di {filteredTransfers.length} selezionati
+                  </span>
+                )}
+              </div>
+              {selectedIds.size > 0 && (
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleting}
+                  className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {bulkDeleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Eliminando...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Elimina selezionati ({selectedIds.size})
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-blue-50 rounded-lg p-4">
@@ -334,9 +457,24 @@ export default function FilesPage() {
             filteredTransfers.map((transfer) => (
               <div
                 key={transfer.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                className={`bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-all ${
+                  selectedIds.has(transfer.id) ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'
+                }`}
               >
                 <div className="flex items-start justify-between">
+                  {/* Checkbox */}
+                  {canDelete && (
+                    <button
+                      onClick={() => toggleSelection(transfer.id)}
+                      className="mr-4 mt-1 flex-shrink-0"
+                    >
+                      {selectedIds.has(transfer.id) ? (
+                        <CheckSquare className="w-5 h-5 text-blue-600" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                      )}
+                    </button>
+                  )}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">{transfer.title}</h3>

@@ -32,6 +32,31 @@ interface User {
   createdAt: string;
 }
 
+interface Transfer {
+  id: string;
+  transferId: string;
+  title: string;
+  userId: string;
+  userEmail: string;
+  fileCount: number;
+  totalSize: number;
+  downloadCount: number;
+  status: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  company?: string;
+  subject: string;
+  message: string;
+  status: 'new' | 'read' | 'replied';
+  createdAt: string;
+}
+
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
   const k = 1024;
@@ -45,11 +70,15 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [transfers, setTransfers] = useState<Transfer[]>([]);
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'transfers'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'transfers' | 'messages'>('stats');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [viewingMessage, setViewingMessage] = useState<ContactMessage | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -62,10 +91,14 @@ export default function AdminDashboard() {
     }
   }, [user, authLoading, router]);
 
-  const fetchData = async () => {
+  const fetchData = async (showRefreshing = false) => {
     if (!user) return;
 
-    setLoading(true);
+    if (showRefreshing) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -90,10 +123,27 @@ export default function AdminDashboard() {
       if (usersRes.ok) {
         setUsers(usersData.users);
       }
+
+      // Fetch transfers
+      const transfersRes = await fetch(`/api/admin/transfers?userId=${user.uid}&limit=100`);
+      const transfersData = await transfersRes.json();
+
+      if (transfersRes.ok) {
+        setTransfers(transfersData.transfers || []);
+      }
+
+      // Fetch contact messages
+      const messagesRes = await fetch(`/api/admin/messages?userId=${user.uid}`);
+      const messagesData = await messagesRes.json();
+
+      if (messagesRes.ok) {
+        setContactMessages(messagesData.messages || []);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore nel caricamento dei dati');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -179,24 +229,47 @@ export default function AdminDashboard() {
 
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex gap-4 border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-4 border-b flex-1">
+            <button
+              onClick={() => setActiveTab('stats')}
+              className={`pb-2 px-1 ${activeTab === 'stats' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+            >
+              Statistiche
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`pb-2 px-1 ${activeTab === 'users' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+            >
+              Utenti ({users.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('transfers')}
+              className={`pb-2 px-1 ${activeTab === 'transfers' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+            >
+              Trasferimenti ({transfers.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('messages')}
+              className={`pb-2 px-1 relative ${activeTab === 'messages' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+            >
+              Messaggi
+              {contactMessages.filter(m => m.status === 'new').length > 0 && (
+                <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {contactMessages.filter(m => m.status === 'new').length}
+                </span>
+              )}
+            </button>
+          </div>
           <button
-            onClick={() => setActiveTab('stats')}
-            className={`pb-2 px-1 ${activeTab === 'stats' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+            onClick={() => fetchData(true)}
+            disabled={refreshing}
+            className="ml-4 px-3 py-1 text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
           >
-            Statistiche
-          </button>
-          <button
-            onClick={() => setActiveTab('users')}
-            className={`pb-2 px-1 ${activeTab === 'users' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
-          >
-            Utenti ({users.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('transfers')}
-            className={`pb-2 px-1 ${activeTab === 'transfers' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
-          >
-            Trasferimenti
+            <svg className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {refreshing ? 'Aggiornamento...' : 'Aggiorna'}
           </button>
         </div>
       </div>
@@ -372,11 +445,135 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'transfers' && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-600">Gestione trasferimenti in arrivo...</p>
-            <Link href="/api/admin/transfers" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
-              Visualizza via API
-            </Link>
+          <div className="bg-white rounded-lg shadow">
+            {/* Search */}
+            <div className="p-4 border-b">
+              <input
+                type="text"
+                placeholder="Cerca trasferimenti per titolo o email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Transfers Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Titolo</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Utente</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">File</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Dimensione</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Download</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Stato</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Creato</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Scadenza</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {transfers
+                    .filter(t =>
+                      t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      t.userEmail?.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map((t) => {
+                      const isExpired = new Date(t.expiresAt) < new Date();
+                      return (
+                        <tr key={t.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <p className="font-medium text-gray-900">{t.title || 'Senza titolo'}</p>
+                            <p className="text-xs text-gray-400">{t.transferId}</p>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {t.userEmail || 'Anonimo'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {t.fileCount} file
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {formatBytes(t.totalSize)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {t.downloadCount}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              isExpired ? 'bg-red-100 text-red-800' :
+                              t.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {isExpired ? 'Scaduto' : t.status || 'Attivo'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {t.createdAt ? new Date(t.createdAt).toLocaleDateString('it-IT') : 'N/A'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {t.expiresAt ? new Date(t.expiresAt).toLocaleDateString('it-IT') : 'N/A'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+              {transfers.length === 0 && (
+                <div className="p-8 text-center text-gray-500">
+                  Nessun trasferimento trovato
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'messages' && (
+          <div className="bg-white rounded-lg shadow">
+            {/* Messages List */}
+            <div className="divide-y divide-gray-200">
+              {contactMessages.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  Nessun messaggio ricevuto
+                </div>
+              ) : (
+                contactMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    onClick={() => setViewingMessage(msg)}
+                    className={`p-4 cursor-pointer hover:bg-gray-50 ${msg.status === 'new' ? 'bg-blue-50' : ''}`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className={`font-medium ${msg.status === 'new' ? 'text-blue-900' : 'text-gray-900'}`}>
+                            {msg.subject}
+                          </h3>
+                          {msg.status === 'new' && (
+                            <span className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">Nuovo</span>
+                          )}
+                          {msg.status === 'replied' && (
+                            <span className="px-2 py-0.5 bg-green-600 text-white text-xs rounded-full">Risposto</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Da: <span className="font-medium">{msg.name}</span> ({msg.email})
+                          {msg.company && <span className="text-gray-400"> - {msg.company}</span>}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{msg.message}</p>
+                      </div>
+                      <div className="text-sm text-gray-400 ml-4 whitespace-nowrap">
+                        {msg.createdAt ? new Date(msg.createdAt).toLocaleDateString('it-IT', {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
       </main>
@@ -439,6 +636,67 @@ export default function AdminDashboard() {
               >
                 Salva
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Message Modal */}
+      {viewingMessage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{viewingMessage.subject}</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Da: <span className="font-medium">{viewingMessage.name}</span> ({viewingMessage.email})
+                    {viewingMessage.company && <span> - {viewingMessage.company}</span>}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {viewingMessage.createdAt ? new Date(viewingMessage.createdAt).toLocaleString('it-IT') : 'N/A'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setViewingMessage(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="bg-gray-50 rounded-lg p-4 whitespace-pre-wrap text-gray-700">
+                {viewingMessage.message}
+              </div>
+            </div>
+            <div className="p-6 border-t bg-gray-50 flex justify-between">
+              <div className="flex gap-2">
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  viewingMessage.status === 'new' ? 'bg-blue-100 text-blue-800' :
+                  viewingMessage.status === 'replied' ? 'bg-green-100 text-green-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {viewingMessage.status === 'new' ? 'Nuovo' :
+                   viewingMessage.status === 'replied' ? 'Risposto' : 'Letto'}
+                </span>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setViewingMessage(null)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Chiudi
+                </button>
+                <a
+                  href={`mailto:${viewingMessage.email}?subject=Re: ${encodeURIComponent(viewingMessage.subject)}`}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Rispondi via Email
+                </a>
+              </div>
             </div>
           </div>
         </div>
