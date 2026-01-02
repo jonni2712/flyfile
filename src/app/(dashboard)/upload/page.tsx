@@ -496,7 +496,15 @@ export default function UploadPage() {
       {/* Success Modal */}
       {showSuccessModal && uploadResult && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-3xl shadow-2xl max-w-lg w-full p-8 border border-white/20">
+          <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-3xl shadow-2xl max-w-lg w-full p-8 border border-white/20 relative">
+            {/* Close Button */}
+            <button
+              onClick={resetForm}
+              className="absolute top-4 right-4 p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-all"
+              aria-label="Chiudi"
+            >
+              <X className="w-6 h-6" />
+            </button>
             <div className="text-center mb-6">
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-tr from-green-400 to-emerald-500 rounded-full mb-4 animate-bounce">
                 <CheckCircle className="w-10 h-10 text-white" />
