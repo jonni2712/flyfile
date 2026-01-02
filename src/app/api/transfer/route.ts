@@ -1,17 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  collection,
-  doc,
-  addDoc,
-  getDocs,
-  getDoc,
-  query,
-  where,
-  orderBy,
-  serverTimestamp,
-  Timestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { getUploadUrl, generateFileKey } from '@/lib/r2';
 import { sendEmail, getTransferNotificationEmail, getUploadConfirmationEmail, formatFileSize } from '@/lib/email';
 import { v4 as uuidv4 } from 'uuid';
@@ -86,23 +75,26 @@ export async function POST(request: NextRequest) {
     let currentMonthlyTransfers = 0;
     let maxRetentionDays = 5;
 
+    // Get Admin Firestore instance
+    const db = getAdminFirestore();
+
     if (isAnonymous || !userId) {
       // Anonymous user - use free plan limits
       planLimits = ANONYMOUS_LIMITS;
       maxRetentionDays = ANONYMOUS_LIMITS.retentionDays;
     } else {
       // Registered user - fetch their plan
-      const userRef = doc(db, 'users', userId);
-      const userSnap = await getDoc(userRef);
+      const userRef = db.collection('users').doc(userId);
+      const userSnap = await userRef.get();
 
-      if (!userSnap.exists()) {
+      if (!userSnap.exists) {
         return NextResponse.json(
           { success: false, error: 'Utente non trovato' },
           { status: 404 }
         );
       }
 
-      const userData = userSnap.data();
+      const userData = userSnap.data() || {};
       const userPlan = userData.plan || 'free';
       planLimits = getPlanLimits(userPlan);
       currentStorageUsed = userData.storageUsed || 0;
@@ -226,14 +218,14 @@ export async function POST(request: NextRequest) {
       downloadCount: 0,
       maxDownloads: null,
       expiresAt: Timestamp.fromDate(expiresAt),
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
       // Encryption metadata
       isEncrypted: isEncrypted || false,
       encryptionAlgorithm: isEncrypted ? 'AES-256-GCM' : null,
     };
 
-    const transferRef = await addDoc(collection(db, 'transfers'), transferData);
+    const transferRef = await db.collection('transfers').add(transferData);
 
     // Generate upload URLs for each file
     const uploadUrls = await Promise.all(
@@ -244,7 +236,7 @@ export async function POST(request: NextRequest) {
         const uploadUrl = await getUploadUrl(r2Key, uploadContentType);
 
         // Create file document with encryption metadata
-        await addDoc(collection(db, 'transfers', transferRef.id, 'files'), {
+        await db.collection('transfers').doc(transferRef.id).collection('files').add({
           transferId: transferRef.id,
           originalName: file.name,
           storedName: r2Key,
@@ -253,7 +245,7 @@ export async function POST(request: NextRequest) {
           mimeType: file.type, // Original mime type for decryption
           downloadCount: 0,
           order: index,
-          createdAt: serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
           // Encryption metadata (stored per file)
           isEncrypted: isEncrypted || false,
           encryptionKey: file.encryptionKey || null,
@@ -377,22 +369,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const transfersRef = collection(db, 'transfers');
-    const q = query(
-      transfersRef,
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
-    );
+    const db = getAdminFirestore();
+    const snapshot = await db.collection('transfers')
+      .where('userId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .get();
 
-    const snapshot = await getDocs(q);
     const transfers = [];
 
     for (const docSnap of snapshot.docs) {
       const data = docSnap.data();
 
       // Fetch files for this transfer
-      const filesRef = collection(db, 'transfers', docSnap.id, 'files');
-      const filesSnapshot = await getDocs(filesRef);
+      const filesSnapshot = await db.collection('transfers').doc(docSnap.id).collection('files').get();
       const files = filesSnapshot.docs.map(fileDoc => ({
         id: fileDoc.id,
         ...fileDoc.data(),
