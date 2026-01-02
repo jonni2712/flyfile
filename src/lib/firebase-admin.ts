@@ -6,32 +6,76 @@ let app: App;
 let adminDb: Firestore;
 let adminAuth: Auth;
 
+function formatPrivateKey(key: string): string {
+  // Remove surrounding quotes if present
+  let formattedKey = key.replace(/^["']|["']$/g, '');
+
+  // Handle escaped newlines from environment variables
+  // Vercel and other platforms may store \n as literal characters
+  // Try multiple replacement patterns
+
+  // Pattern 1: Double-escaped newlines (\\n in the raw string)
+  if (formattedKey.includes('\\n')) {
+    formattedKey = formattedKey.split('\\n').join('\n');
+  }
+
+  // Pattern 2: Check if key has actual newlines already
+  if (!formattedKey.includes('\n') && formattedKey.includes('-----BEGIN')) {
+    // Key might be on a single line without any newlines
+    // Try to reconstruct proper PEM format
+    const beginMarker = '-----BEGIN PRIVATE KEY-----';
+    const endMarker = '-----END PRIVATE KEY-----';
+
+    if (formattedKey.includes(beginMarker) && formattedKey.includes(endMarker)) {
+      const start = formattedKey.indexOf(beginMarker) + beginMarker.length;
+      const end = formattedKey.indexOf(endMarker);
+      const keyContent = formattedKey.substring(start, end).trim();
+
+      // Split key content into 64-character lines (PEM standard)
+      const lines = keyContent.match(/.{1,64}/g) || [];
+      formattedKey = `${beginMarker}\n${lines.join('\n')}\n${endMarker}\n`;
+    }
+  }
+
+  // Ensure the key ends with a newline
+  if (!formattedKey.endsWith('\n')) {
+    formattedKey += '\n';
+  }
+
+  return formattedKey;
+}
+
 function getFirebaseAdmin() {
   if (!getApps().length) {
-    // Get private key and handle newline characters
-    // Vercel may store the key with literal \n or actual newlines
-    let privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+    const privateKeyRaw = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+    const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+    const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
 
-    if (!privateKey || !process.env.FIREBASE_ADMIN_CLIENT_EMAIL || !process.env.FIREBASE_ADMIN_PROJECT_ID) {
-      throw new Error('Firebase Admin SDK credentials not configured');
+    if (!privateKeyRaw || !clientEmail || !projectId) {
+      throw new Error('Firebase Admin SDK credentials not configured. Missing: ' +
+        [!privateKeyRaw && 'FIREBASE_ADMIN_PRIVATE_KEY', !clientEmail && 'FIREBASE_ADMIN_CLIENT_EMAIL', !projectId && 'FIREBASE_ADMIN_PROJECT_ID'].filter(Boolean).join(', '));
     }
 
-    // Handle different formats of private key
-    // If the key contains literal \n strings, replace them with actual newlines
-    if (privateKey.includes('\\n')) {
-      privateKey = privateKey.replace(/\\n/g, '\n');
+    // Format the private key to handle various environment variable formats
+    const privateKey = formatPrivateKey(privateKeyRaw);
+
+    // Validate key format
+    if (!privateKey.includes('-----BEGIN PRIVATE KEY-----') || !privateKey.includes('-----END PRIVATE KEY-----')) {
+      throw new Error('Invalid private key format. Key must be a valid PEM-encoded private key.');
     }
 
-    // Remove any surrounding quotes that might have been added
-    privateKey = privateKey.replace(/^["']|["']$/g, '');
-
-    app = initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-        privateKey: privateKey,
-      }),
-    });
+    try {
+      app = initializeApp({
+        credential: cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to initialize Firebase Admin SDK: ${errorMessage}`);
+    }
   } else {
     app = getApps()[0];
   }
