@@ -40,6 +40,7 @@ interface AuthContextType {
   deleteAccount: (currentPassword: string) => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
   reauthenticate: (password: string) => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -247,6 +248,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await sendEmailVerification(user);
   }
 
+  // Refresh user profile (to get updated storage, etc.)
+  async function refreshUserProfile() {
+    if (user) {
+      await fetchUserProfile(user.uid);
+    }
+  }
+
   const value = {
     user,
     userProfile,
@@ -264,6 +272,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     deleteAccount,
     sendVerificationEmail,
     reauthenticate,
+    refreshUserProfile,
   };
 
   return (

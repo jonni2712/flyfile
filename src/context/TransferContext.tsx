@@ -84,7 +84,7 @@ export const getFileIcon = (mimeType: string): string => {
 };
 
 export function TransferProvider({ children }: { children: ReactNode }) {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, refreshUserProfile } = useAuth();
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -337,12 +337,19 @@ export function TransferProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Confirm upload to activate transfer
-      await fetch('/api/files/confirm-upload', {
+      // Confirm upload to activate transfer and update user storage
+      const confirmResponse = await fetch('/api/transfer/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ transferId: internalId }),
       });
+
+      if (!confirmResponse.ok) {
+        console.error('Failed to confirm transfer:', await confirmResponse.text());
+      }
+
+      // Refresh user profile to get updated storage
+      await refreshUserProfile();
 
       // Refresh transfers list
       await fetchTransfers();
@@ -369,7 +376,7 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [user, fetchTransfers]);
+  }, [user, fetchTransfers, refreshUserProfile]);
 
   // Update transfer
   const updateTransfer = useCallback(async (
