@@ -17,8 +17,11 @@ export default function StorageQuota({
   pendingSize = 0,
   compact = false
 }: StorageQuotaProps) {
+  // Ensure storageUsed is never negative
+  const safeStorageUsed = Math.max(0, storageUsed || 0);
+
   const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (!bytes || bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(Math.abs(bytes)) / Math.log(k));
@@ -26,12 +29,12 @@ export default function StorageQuota({
   };
 
   const isUnlimited = storageLimit === -1;
-  const totalWithPending = storageUsed + pendingSize;
+  const totalWithPending = safeStorageUsed + pendingSize;
 
   const percentage = useMemo(() => {
     if (isUnlimited) return 0;
-    return Math.min(Math.round((storageUsed / storageLimit) * 100), 100);
-  }, [storageUsed, storageLimit, isUnlimited]);
+    return Math.min(Math.round((safeStorageUsed / storageLimit) * 100), 100);
+  }, [safeStorageUsed, storageLimit, isUnlimited]);
 
   const percentageWithPending = useMemo(() => {
     if (isUnlimited) return 0;
@@ -77,7 +80,7 @@ export default function StorageQuota({
           {isUnlimited ? (
             'Illimitato'
           ) : (
-            `${formatBytes(storageUsed)} / ${formatBytes(storageLimit)}`
+            `${formatBytes(safeStorageUsed)} / ${formatBytes(storageLimit)}`
           )}
         </span>
       </div>
@@ -98,7 +101,7 @@ export default function StorageQuota({
           </span>
         ) : (
           <span className="text-sm text-blue-200/80">
-            {formatBytes(storageUsed)} / {formatBytes(storageLimit)}
+            {formatBytes(safeStorageUsed)} / {formatBytes(storageLimit)}
           </span>
         )}
       </div>
@@ -125,7 +128,7 @@ export default function StorageQuota({
               {percentage}% utilizzato
             </span>
             <span className="text-blue-200/60">
-              {formatBytes(storageLimit - storageUsed)} disponibili
+              {formatBytes(Math.max(0, storageLimit - safeStorageUsed))} disponibili
             </span>
           </div>
         </>

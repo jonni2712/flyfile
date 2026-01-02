@@ -203,10 +203,15 @@ export async function DELETE(
     await db.collection('transfers').doc(transferDocId).delete();
 
     // Decrement user's storage usage (if logged in user)
-    if (transferUserId) {
+    if (transferUserId && totalSize > 0) {
       const userRef = db.collection('users').doc(transferUserId);
+      const userDoc = await userRef.get();
+      const currentStorage = userDoc.data()?.storageUsed || 0;
+
+      // Only decrement if we won't go negative
+      const newStorage = Math.max(0, currentStorage - totalSize);
       await userRef.update({
-        storageUsed: FieldValue.increment(-totalSize),
+        storageUsed: newStorage,
         updatedAt: FieldValue.serverTimestamp(),
       });
     }

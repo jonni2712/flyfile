@@ -274,7 +274,7 @@ export default function DashboardPage() {
                   <HardDrive className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-800">{formatBytes(userProfile.storageUsed)}</h3>
+              <h3 className="text-2xl font-bold text-gray-800">{formatBytes(Math.max(0, userProfile.storageUsed || 0))}</h3>
               <p className="text-gray-600">Spazio utilizzato</p>
             </div>
 

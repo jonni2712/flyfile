@@ -90,11 +90,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update user's storage usage
+    // Update user's storage usage (don't go negative)
     if (totalSizeDeleted > 0 && userId) {
       const userRef = db.collection('users').doc(userId);
+      const userDoc = await userRef.get();
+      const currentStorage = userDoc.data()?.storageUsed || 0;
+
+      const newStorage = Math.max(0, currentStorage - totalSizeDeleted);
       await userRef.update({
-        storageUsed: FieldValue.increment(-totalSizeDeleted),
+        storageUsed: newStorage,
         updatedAt: FieldValue.serverTimestamp(),
       });
     }
