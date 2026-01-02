@@ -50,8 +50,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get presigned download URL from R2
-    const downloadUrl = await getDownloadUrl(fileData.r2Key);
+    // Get presigned download URL from R2 with proper filename for download
+    const downloadUrl = await getDownloadUrl(fileData.r2Key, 3600, fileData.originalName);
 
     // Increment download count
     await updateDoc(doc(db, 'files', fileId), {
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       // For now, return the first file's download URL
       // TODO: Implement zip download for multiple files
       const firstFile = filesSnapshot.docs[0].data();
-      const downloadUrl = await getDownloadUrl(firstFile.path || firstFile.storedName);
+      const downloadUrl = await getDownloadUrl(firstFile.path || firstFile.storedName, 3600, firstFile.originalName);
 
       return NextResponse.json({
         downloadUrl,
@@ -135,11 +135,11 @@ export async function POST(request: NextRequest) {
 
     // Single file download
     if (fileId && path) {
-      const downloadUrl = await getDownloadUrl(path);
-
-      // Get file info
+      // Get file info first to have the filename
       const fileDoc = await getDoc(doc(db, 'transfers', transferId, 'files', fileId));
       const fileName = fileDoc.exists() ? fileDoc.data().originalName : 'download';
+
+      const downloadUrl = await getDownloadUrl(path, 3600, fileName);
 
       // Record download analytics
       const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()

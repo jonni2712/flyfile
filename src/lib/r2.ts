@@ -29,10 +29,15 @@ export async function getUploadUrl(key: string, contentType: string, expiresIn =
 }
 
 // Generate presigned URL for download
-export async function getDownloadUrl(key: string, expiresIn = 3600) {
+export async function getDownloadUrl(key: string, expiresIn = 3600, fileName?: string) {
+  // Extract filename from key if not provided
+  const downloadFileName = fileName || key.split('/').pop() || 'download';
+
   const command = new GetObjectCommand({
     Bucket: R2_BUCKET_NAME,
     Key: key,
+    // Force download instead of opening in browser
+    ResponseContentDisposition: `attachment; filename="${encodeURIComponent(downloadFileName)}"`,
   });
 
   return getSignedUrl(r2Client, command, { expiresIn });
