@@ -352,8 +352,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error creating transfer:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto';
     return NextResponse.json(
-      { success: false, error: 'Impossibile creare il trasferimento' },
+      { success: false, error: `Impossibile creare il trasferimento: ${errorMessage}` },
       { status: 500 }
     );
   }
