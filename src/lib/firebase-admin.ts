@@ -7,6 +7,19 @@ let adminDb: Firestore;
 let adminAuth: Auth;
 
 function formatPrivateKey(key: string): string {
+  // Check if the key is base64 encoded (doesn't start with -----)
+  if (!key.startsWith('-----') && !key.includes('BEGIN')) {
+    try {
+      // Try to decode from base64
+      const decoded = Buffer.from(key, 'base64').toString('utf-8');
+      if (decoded.includes('-----BEGIN PRIVATE KEY-----')) {
+        return decoded.endsWith('\n') ? decoded : decoded + '\n';
+      }
+    } catch {
+      // Not base64, continue with normal processing
+    }
+  }
+
   // Remove surrounding quotes if present
   let formattedKey = key.replace(/^["']|["']$/g, '');
 
