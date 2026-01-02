@@ -21,11 +21,13 @@ import {
   Eye,
   EyeOff,
   Loader2,
-  Search
+  Search,
+  Shield
 } from 'lucide-react';
 import { useTransfer, formatBytes, getTimeRemaining, getFileIcon } from '@/context/TransferContext';
 import { Transfer, TransferFile } from '@/types';
 import FilePreviewModal from '@/components/FilePreviewModal';
+import { decryptFile, isEncryptionSupported } from '@/lib/client-encryption';
 
 // File icon component
 const FileIcon = ({ mimeType, className }: { mimeType: string; className?: string }) => {
@@ -194,6 +196,12 @@ export default function DownloadPage() {
 
     setDownloadingFileId(file.id);
     try {
+      // Check if file is encrypted
+      const isFileEncrypted = file.isEncrypted || transfer.isEncrypted;
+      const encryptionKey = file.encryptionKey;
+      const encryptionIv = file.encryptionIv;
+
+      // Get presigned URL for download
       const response = await fetch('/api/files/download-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -210,12 +218,42 @@ export default function DownloadPage() {
 
       const { downloadUrl } = await response.json();
 
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = file.originalName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // If file is encrypted and we have decryption capability
+      if (isFileEncrypted && encryptionKey && encryptionIv && isEncryptionSupported()) {
+        // Fetch the encrypted file
+        const encryptedResponse = await fetch(downloadUrl);
+        if (!encryptedResponse.ok) {
+          throw new Error('Impossibile scaricare il file cifrato');
+        }
+
+        const encryptedBlob = await encryptedResponse.blob();
+
+        // Decrypt the file client-side
+        const decryptedBlob = await decryptFile(
+          encryptedBlob,
+          encryptionKey,
+          encryptionIv,
+          file.mimeType || 'application/octet-stream'
+        );
+
+        // Create download link for decrypted file
+        const url = window.URL.createObjectURL(decryptedBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = file.originalName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } else {
+        // Non-encrypted file - direct download
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = file.originalName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
 
       await incrementDownloadCount(transferId);
     } catch (err) {
@@ -497,13 +535,28 @@ export default function DownloadPage() {
         <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6">
           <div className="flex items-start">
             <div className="flex-shrink-0">
-              <CheckCircle className="w-6 h-6 text-green-400" />
+              {transfer.isEncrypted ? (
+                <Shield className="w-6 h-6 text-green-400" />
+              ) : (
+                <CheckCircle className="w-6 h-6 text-green-400" />
+              )}
             </div>
             <div className="ml-4">
-              <h4 className="text-white font-semibold mb-1">Transfer Sicuro</h4>
+              <h4 className="text-white font-semibold mb-1">
+                {transfer.isEncrypted ? 'Crittografia End-to-End Attiva' : 'Transfer Sicuro'}
+              </h4>
               <p className="text-blue-200/70 text-sm">
-                Questo trasferimento utilizza crittografia AES-256 per proteggere i tuoi file.
-                I file vengono automaticamente eliminati dopo la scadenza.
+                {transfer.isEncrypted ? (
+                  <>
+                    I file sono protetti con crittografia AES-256-GCM end-to-end.
+                    La decrittazione avviene direttamente nel tuo browser per la massima sicurezza.
+                  </>
+                ) : (
+                  <>
+                    Questo trasferimento utilizza una connessione sicura HTTPS.
+                    I file vengono automaticamente eliminati dopo la scadenza.
+                  </>
+                )}
               </p>
             </div>
           </div>

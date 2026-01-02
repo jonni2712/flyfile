@@ -49,7 +49,8 @@ export async function POST(request: NextRequest) {
       expiryDays,
       userId,
       isAnonymous,
-      files // Array of { name, type, size }
+      files, // Array of { name, type, size, encryptionKey?, encryptionIv? }
+      isEncrypted, // Whether files are client-side encrypted
     } = body;
 
     // Validation
@@ -227,27 +228,36 @@ export async function POST(request: NextRequest) {
       expiresAt: Timestamp.fromDate(expiresAt),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+      // Encryption metadata
+      isEncrypted: isEncrypted || false,
+      encryptionAlgorithm: isEncrypted ? 'AES-256-GCM' : null,
     };
 
     const transferRef = await addDoc(collection(db, 'transfers'), transferData);
 
     // Generate upload URLs for each file
     const uploadUrls = await Promise.all(
-      sanitizedFiles.map(async (file: { name: string; type: string; size: number }, index: number) => {
+      sanitizedFiles.map(async (file: { name: string; type: string; size: number; encryptionKey?: string; encryptionIv?: string }, index: number) => {
         const r2Key = generateFileKey(transferRef.id, file.name);
-        const uploadUrl = await getUploadUrl(r2Key, file.type);
+        // For encrypted files, use octet-stream; actual type stored in metadata
+        const uploadContentType = isEncrypted ? 'application/octet-stream' : file.type;
+        const uploadUrl = await getUploadUrl(r2Key, uploadContentType);
 
-        // Create file document
+        // Create file document with encryption metadata
         await addDoc(collection(db, 'transfers', transferRef.id, 'files'), {
           transferId: transferRef.id,
           originalName: file.name,
           storedName: r2Key,
           path: r2Key,
           size: file.size,
-          mimeType: file.type,
+          mimeType: file.type, // Original mime type for decryption
           downloadCount: 0,
           order: index,
           createdAt: serverTimestamp(),
+          // Encryption metadata (stored per file)
+          isEncrypted: isEncrypted || false,
+          encryptionKey: file.encryptionKey || null,
+          encryptionIv: file.encryptionIv || null,
         });
 
         return {

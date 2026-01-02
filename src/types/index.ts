@@ -114,8 +114,10 @@ export interface Transfer {
   updatedAt: Date;
   files?: TransferFile[];
   // End-to-end encryption
+  isEncrypted?: boolean;       // Transfer-level encryption flag
   isE2EEncrypted?: boolean;
   encryptionKeyId?: string;
+  encryptionAlgorithm?: string; // e.g., 'AES-256-GCM'
 }
 
 export interface TransferFile {
@@ -130,7 +132,8 @@ export interface TransferFile {
   createdAt: Date;
   // Encryption metadata
   isEncrypted?: boolean;
-  encryptionIv?: string;
+  encryptionKey?: string;    // Base64-encoded AES key
+  encryptionIv?: string;     // Base64-encoded IV
   encryptionAuthTag?: string;
   encryptionSalt?: string;
   encryptionKeyId?: string;

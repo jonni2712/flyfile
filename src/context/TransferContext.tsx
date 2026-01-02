@@ -16,6 +16,7 @@ import {
 import { db } from '@/lib/firebase';
 import { useAuth } from './AuthContext';
 import { Transfer, TransferFile, TransferUploadData, UploadResponse } from '@/types';
+import { encryptFile, isEncryptionSupported } from '@/lib/client-encryption';
 
 interface TransferContextType {
   transfers: Transfer[];
@@ -244,12 +245,50 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
+      // Check if encryption is supported in this browser
+      const canEncrypt = isEncryptionSupported();
+
+      // Encrypt files and prepare metadata
+      const encryptedFilesData: Array<{
+        file: File | Blob;
+        metadata: {
+          name: string;
+          type: string;
+          size: number;
+          encryptionKey?: string;
+          encryptionIv?: string;
+        };
+      }> = [];
+
+      for (const file of files) {
+        if (canEncrypt) {
+          // Encrypt the file
+          const { encryptedBlob, metadata } = await encryptFile(file);
+          encryptedFilesData.push({
+            file: encryptedBlob,
+            metadata: {
+              name: file.name,
+              type: file.type, // Original type for decryption
+              size: file.size, // Original size
+              encryptionKey: metadata.key,
+              encryptionIv: metadata.iv,
+            },
+          });
+        } else {
+          // No encryption available - upload as-is
+          encryptedFilesData.push({
+            file: file,
+            metadata: {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+            },
+          });
+        }
+      }
+
       // Prepare files metadata for API
-      const filesMetadata = files.map(file => ({
-        name: file.name,
-        type: file.type,
-        size: file.size,
-      }));
+      const filesMetadata = encryptedFilesData.map(({ metadata }) => metadata);
 
       // Call API to create transfer (with plan limit validation)
       const createResponse = await fetch('/api/transfer', {
@@ -267,6 +306,7 @@ export function TransferProvider({ children }: { children: ReactNode }) {
           userId: user?.uid || null,
           isAnonymous: !user,
           files: filesMetadata,
+          isEncrypted: canEncrypt, // Tell API that files are encrypted
         }),
       });
 
@@ -279,21 +319,21 @@ export function TransferProvider({ children }: { children: ReactNode }) {
       const { transferId, internalId, downloadUrl, uploadUrls, expiresAt, emailSent } = createResult;
 
       // Upload files to R2 using presigned URLs
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      for (let i = 0; i < encryptedFilesData.length; i++) {
+        const { file } = encryptedFilesData[i];
         const uploadUrl = uploadUrls[i].uploadUrl;
 
-        // Upload to R2
+        // Upload encrypted data to R2
         const uploadResponse = await fetch(uploadUrl, {
           method: 'PUT',
           body: file,
           headers: {
-            'Content-Type': file.type,
+            'Content-Type': canEncrypt ? 'application/octet-stream' : (file as File).type,
           },
         });
 
         if (!uploadResponse.ok) {
-          throw new Error(`Upload fallito per ${file.name}`);
+          throw new Error(`Upload fallito per ${filesMetadata[i].name}`);
         }
       }
 

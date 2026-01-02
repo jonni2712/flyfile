@@ -82,7 +82,7 @@ export async function recordDownload(params: {
   ip: string;
   userAgent: string | null;
   country?: string;
-  downloadType: 'single' | 'zip' | 'all';
+  downloadType: 'single' | 'zip' | 'all' | 'secure';
 }): Promise<string | null> {
   try {
     const { browser, os, device } = parseUserAgent(params.userAgent);
