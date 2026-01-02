@@ -71,12 +71,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     username?: string,
     billingData?: BillingInfo
   ) {
-    const userProfile: Omit<UserProfile, 'createdAt' | 'updatedAt'> = {
+    // Base profile data (Firestore doesn't accept undefined values)
+    const userProfileData: Record<string, unknown> = {
       uid: user.uid,
       email: user.email || '',
-      username: username || undefined,
       displayName: displayName || user.displayName || '',
-      photoURL: user.photoURL || undefined,
       plan: 'free',
       storageUsed: 0,
       storageLimit: 5 * 1024 * 1024 * 1024, // 5 GB for free plan
@@ -84,14 +83,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       maxMonthlyTransfers: 10,
       retentionDays: 5,
       filesCount: 0,
-      billing: billingData || undefined,
-    };
-
-    await setDoc(doc(db, 'users', user.uid), {
-      ...userProfile,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    });
+    };
+
+    // Only add optional fields if they have values
+    if (username) {
+      userProfileData.username = username;
+    }
+    if (user.photoURL) {
+      userProfileData.photoURL = user.photoURL;
+    }
+    if (billingData) {
+      userProfileData.billing = billingData;
+    }
+
+    await setDoc(doc(db, 'users', user.uid), userProfileData);
 
     await fetchUserProfile(user.uid);
   }
