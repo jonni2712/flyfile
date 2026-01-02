@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { deleteFile } from '@/lib/r2';
 
 // Simple password hashing
@@ -34,11 +24,11 @@ export async function GET(
 ) {
   try {
     const { id: transferId } = await params;
+    const db = getAdminFirestore();
 
     // First try to find by transferId (UUID for public access)
-    const transfersRef = collection(db, 'transfers');
-    const q = query(transfersRef, where('transferId', '==', transferId));
-    const snapshot = await getDocs(q);
+    const transfersRef = db.collection('transfers');
+    const snapshot = await transfersRef.where('transferId', '==', transferId).get();
 
     let docSnap;
     let docId;
@@ -48,8 +38,8 @@ export async function GET(
       docId = docSnap.id;
     } else {
       // Try by document ID (for authenticated access)
-      const directDoc = await getDoc(doc(db, 'transfers', transferId));
-      if (!directDoc.exists()) {
+      const directDoc = await db.collection('transfers').doc(transferId).get();
+      if (!directDoc.exists) {
         return NextResponse.json(
           { error: 'Transfer non trovato' },
           { status: 404 }
@@ -59,7 +49,7 @@ export async function GET(
       docId = transferId;
     }
 
-    const data = docSnap.data();
+    const data = docSnap.data() || {};
 
     // Check if expired
     const expiresAt = data.expiresAt?.toDate();
@@ -71,8 +61,7 @@ export async function GET(
     }
 
     // Fetch files
-    const filesRef = collection(db, 'transfers', docId, 'files');
-    const filesSnapshot = await getDocs(filesRef);
+    const filesSnapshot = await db.collection('transfers').doc(docId).collection('files').get();
     const files = filesSnapshot.docs.map(fileDoc => ({
       id: fileDoc.id,
       ...fileDoc.data(),
@@ -109,11 +98,10 @@ export async function PATCH(
     const { id: transferId } = await params;
     const body = await request.json();
     const { title, password, userId } = body;
+    const db = getAdminFirestore();
 
     // Find transfer
-    const transfersRef = collection(db, 'transfers');
-    const q = query(transfersRef, where('transferId', '==', transferId));
-    const snapshot = await getDocs(q);
+    const snapshot = await db.collection('transfers').where('transferId', '==', transferId).get();
 
     if (snapshot.empty) {
       return NextResponse.json(
@@ -123,7 +111,7 @@ export async function PATCH(
     }
 
     const docSnap = snapshot.docs[0];
-    const data = docSnap.data();
+    const data = docSnap.data() || {};
 
     // Check ownership
     if (userId && data.userId !== userId) {
@@ -135,7 +123,7 @@ export async function PATCH(
 
     // Prepare update data
     const updateData: Record<string, unknown> = {
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
     if (title !== undefined) {
@@ -146,7 +134,7 @@ export async function PATCH(
       updateData.password = password ? await hashPassword(password) : null;
     }
 
-    await updateDoc(doc(db, 'transfers', docSnap.id), updateData);
+    await db.collection('transfers').doc(docSnap.id).update(updateData);
 
     return NextResponse.json({
       success: true,
@@ -170,11 +158,10 @@ export async function DELETE(
     const { id: transferId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    const db = getAdminFirestore();
 
     // Find transfer
-    const transfersRef = collection(db, 'transfers');
-    const q = query(transfersRef, where('transferId', '==', transferId));
-    const snapshot = await getDocs(q);
+    const snapshot = await db.collection('transfers').where('transferId', '==', transferId).get();
 
     if (snapshot.empty) {
       return NextResponse.json(
@@ -184,7 +171,7 @@ export async function DELETE(
     }
 
     const docSnap = snapshot.docs[0];
-    const data = docSnap.data();
+    const data = docSnap.data() || {};
 
     // Check ownership
     if (userId && data.userId !== userId) {
@@ -194,9 +181,12 @@ export async function DELETE(
       );
     }
 
+    const transferDocId = docSnap.id;
+    const transferUserId = data.userId;
+    const totalSize = data.totalSize || 0;
+
     // Delete files from R2
-    const filesRef = collection(db, 'transfers', docSnap.id, 'files');
-    const filesSnapshot = await getDocs(filesRef);
+    const filesSnapshot = await db.collection('transfers').doc(transferDocId).collection('files').get();
 
     for (const fileDoc of filesSnapshot.docs) {
       const fileData = fileDoc.data();
@@ -206,11 +196,20 @@ export async function DELETE(
         console.error('Error deleting file from R2:', err);
       }
       // Delete file document
-      await deleteDoc(doc(db, 'transfers', docSnap.id, 'files', fileDoc.id));
+      await db.collection('transfers').doc(transferDocId).collection('files').doc(fileDoc.id).delete();
     }
 
     // Delete transfer document
-    await deleteDoc(doc(db, 'transfers', docSnap.id));
+    await db.collection('transfers').doc(transferDocId).delete();
+
+    // Decrement user's storage usage (if logged in user)
+    if (transferUserId) {
+      const userRef = db.collection('users').doc(transferUserId);
+      await userRef.update({
+        storageUsed: FieldValue.increment(-totalSize),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -234,11 +233,10 @@ export async function POST(
     const { id: transferId } = await params;
     const body = await request.json();
     const { password, action } = body;
+    const db = getAdminFirestore();
 
     // Find transfer
-    const transfersRef = collection(db, 'transfers');
-    const q = query(transfersRef, where('transferId', '==', transferId));
-    const snapshot = await getDocs(q);
+    const snapshot = await db.collection('transfers').where('transferId', '==', transferId).get();
 
     if (snapshot.empty) {
       return NextResponse.json(
@@ -247,7 +245,7 @@ export async function POST(
       );
     }
 
-    const data = snapshot.docs[0].data();
+    const data = snapshot.docs[0].data() || {};
 
     // Handle password verification
     if (action === 'verify-password') {
@@ -276,10 +274,9 @@ export async function POST(
 
     // Handle download count increment
     if (action === 'increment-download') {
-      const docRef = doc(db, 'transfers', snapshot.docs[0].id);
-      await updateDoc(docRef, {
-        downloadCount: (data.downloadCount || 0) + 1,
-        updatedAt: serverTimestamp(),
+      await db.collection('transfers').doc(snapshot.docs[0].id).update({
+        downloadCount: FieldValue.increment(1),
+        updatedAt: FieldValue.serverTimestamp(),
       });
 
       return NextResponse.json({ success: true });

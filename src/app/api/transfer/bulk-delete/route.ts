@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc, deleteDoc, getDocs, collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { deleteFile } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
 
@@ -34,23 +34,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const db = getAdminFirestore();
     const results = {
       deleted: [] as string[],
       failed: [] as { id: string; error: string }[],
     };
 
+    let totalSizeDeleted = 0;
+
     // Process each transfer
     for (const transferId of transferIds) {
       try {
-        const transferRef = doc(db, 'transfers', transferId);
-        const transferSnap = await getDoc(transferRef);
+        const transferRef = db.collection('transfers').doc(transferId);
+        const transferSnap = await transferRef.get();
 
-        if (!transferSnap.exists()) {
+        if (!transferSnap.exists) {
           results.failed.push({ id: transferId, error: 'Non trovato' });
           continue;
         }
 
-        const transferData = transferSnap.data();
+        const transferData = transferSnap.data() || {};
 
         // Verify ownership
         if (transferData.userId !== userId) {
@@ -58,9 +61,11 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        // Track size for storage update
+        totalSizeDeleted += transferData.totalSize || 0;
+
         // Delete files from R2
-        const filesRef = collection(db, 'transfers', transferId, 'files');
-        const filesSnapshot = await getDocs(filesRef);
+        const filesSnapshot = await db.collection('transfers').doc(transferId).collection('files').get();
 
         for (const fileDoc of filesSnapshot.docs) {
           const fileData = fileDoc.data();
@@ -72,17 +77,26 @@ export async function POST(request: NextRequest) {
             console.error(`Error deleting file from R2:`, err);
           }
           // Delete file document
-          await deleteDoc(doc(db, 'transfers', transferId, 'files', fileDoc.id));
+          await db.collection('transfers').doc(transferId).collection('files').doc(fileDoc.id).delete();
         }
 
         // Delete transfer document
-        await deleteDoc(transferRef);
+        await transferRef.delete();
         results.deleted.push(transferId);
 
       } catch (err) {
         console.error(`Error deleting transfer ${transferId}:`, err);
         results.failed.push({ id: transferId, error: 'Errore interno' });
       }
+    }
+
+    // Update user's storage usage
+    if (totalSizeDeleted > 0 && userId) {
+      const userRef = db.collection('users').doc(userId);
+      await userRef.update({
+        storageUsed: FieldValue.increment(-totalSizeDeleted),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
     }
 
     return NextResponse.json({
