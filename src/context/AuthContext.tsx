@@ -227,9 +227,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Reauthenticate first
     await reauthenticate(currentPassword);
 
+    // Get fresh ID token for API authentication
+    const idToken = await user.getIdToken(true);
+
     // Delete user data via API (handles files, transfers, etc.)
     const response = await fetch(`/api/profile?userId=${user.uid}`, {
       method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+      },
     });
 
     if (!response.ok) {

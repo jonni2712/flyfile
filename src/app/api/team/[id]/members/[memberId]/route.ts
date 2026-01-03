@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // DELETE - Remove member from team
 export async function DELETE(
@@ -14,6 +10,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { id: teamId, memberId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -25,18 +28,28 @@ export async function DELETE(
       );
     }
 
-    // Verify team exists
-    const teamRef = doc(db, 'teams', teamId);
-    const teamSnap = await getDoc(teamRef);
+    // CRITICAL: Verify the authenticated user matches the userId
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
 
-    if (!teamSnap.exists()) {
+    const db = getAdminFirestore();
+
+    // Verify team exists
+    const teamRef = db.collection('teams').doc(teamId);
+    const teamSnap = await teamRef.get();
+
+    if (!teamSnap.exists) {
       return NextResponse.json(
         { error: 'Team non trovato' },
         { status: 404 }
       );
     }
 
-    const teamData = teamSnap.data();
+    const teamData = teamSnap.data() || {};
 
     // Check if user is owner
     if (teamData.ownerId !== userId) {
@@ -47,17 +60,17 @@ export async function DELETE(
     }
 
     // Get member document
-    const memberRef = doc(db, 'teamMembers', memberId);
-    const memberSnap = await getDoc(memberRef);
+    const memberRef = db.collection('teamMembers').doc(memberId);
+    const memberSnap = await memberRef.get();
 
-    if (!memberSnap.exists()) {
+    if (!memberSnap.exists) {
       return NextResponse.json(
         { error: 'Membro non trovato' },
         { status: 404 }
       );
     }
 
-    const memberData = memberSnap.data();
+    const memberData = memberSnap.data() || {};
 
     // Check member belongs to this team
     if (memberData.teamId !== teamId) {
@@ -76,12 +89,12 @@ export async function DELETE(
     }
 
     // Delete member
-    await deleteDoc(memberRef);
+    await memberRef.delete();
 
     // Update team member count
-    await updateDoc(teamRef, {
+    await teamRef.update({
       memberCount: (teamData.memberCount || 1) - 1,
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json({
@@ -103,6 +116,13 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { id: teamId, memberId } = await params;
     const body = await request.json();
     const { userId, role } = body;
@@ -111,6 +131,14 @@ export async function PATCH(
       return NextResponse.json(
         { error: 'userId e role richiesti' },
         { status: 400 }
+      );
+    }
+
+    // CRITICAL: Verify the authenticated user matches the userId
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
       );
     }
 
@@ -123,18 +151,20 @@ export async function PATCH(
       );
     }
 
-    // Verify team exists
-    const teamRef = doc(db, 'teams', teamId);
-    const teamSnap = await getDoc(teamRef);
+    const db = getAdminFirestore();
 
-    if (!teamSnap.exists()) {
+    // Verify team exists
+    const teamRef = db.collection('teams').doc(teamId);
+    const teamSnap = await teamRef.get();
+
+    if (!teamSnap.exists) {
       return NextResponse.json(
         { error: 'Team non trovato' },
         { status: 404 }
       );
     }
 
-    const teamData = teamSnap.data();
+    const teamData = teamSnap.data() || {};
 
     // Check if user is owner
     if (teamData.ownerId !== userId) {
@@ -145,17 +175,17 @@ export async function PATCH(
     }
 
     // Get member document
-    const memberRef = doc(db, 'teamMembers', memberId);
-    const memberSnap = await getDoc(memberRef);
+    const memberRef = db.collection('teamMembers').doc(memberId);
+    const memberSnap = await memberRef.get();
 
-    if (!memberSnap.exists()) {
+    if (!memberSnap.exists) {
       return NextResponse.json(
         { error: 'Membro non trovato' },
         { status: 404 }
       );
     }
 
-    const memberData = memberSnap.data();
+    const memberData = memberSnap.data() || {};
 
     // Check member belongs to this team
     if (memberData.teamId !== teamId) {
@@ -174,9 +204,9 @@ export async function PATCH(
     }
 
     // Update member role
-    await updateDoc(memberRef, {
+    await memberRef.update({
       role,
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json({

@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
 import { generateTotpSecret, generateTotpUri, generateBackupCodes, enable2FA, verifyTotp } from '@/lib/two-factor';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 
 // GET - Generate 2FA setup data
 export async function GET(request: NextRequest) {
   try {
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
+
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -20,18 +24,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get user data
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    // Verify authorized
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
 
-    if (!userSnap.exists()) {
+    // Get user data using Admin SDK
+    const db = getAdminFirestore();
+    const userRef = db.collection('users').doc(userId);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
 
     // Check if 2FA is already enabled
     if (userData.twoFactorEnabled) {
@@ -66,6 +79,10 @@ export async function POST(request: NextRequest) {
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const body = await request.json();
     const { userId, secret, token } = body;
 
@@ -73,6 +90,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'userId, secret e token richiesti' },
         { status: 400 }
+      );
+    }
+
+    // Verify authorized
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
       );
     }
 

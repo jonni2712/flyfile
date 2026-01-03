@@ -112,13 +112,14 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Allowed fields to update
+    // CRITICAL: isAdmin is NOT in this list to prevent privilege escalation
+    // Admin status should only be managed through environment variables or direct database access
     const allowedFields = [
       'plan',
       'storageLimit',
       'maxMonthlyTransfers',
       'retentionDays',
       'isBetaTester',
-      'isAdmin',
       'disabled',
     ];
 

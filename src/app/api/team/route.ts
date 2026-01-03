@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  addDoc,
-  query,
-  where,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // POST - Create team
 export async function POST(request: NextRequest) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const body = await request.json();
     const { userId, name, description } = body;
 
@@ -24,18 +24,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify user exists and has business plan
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    // CRITICAL: Verify the authenticated user matches the userId
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
 
-    if (!userSnap.exists()) {
+    const db = getAdminFirestore();
+
+    // Verify user exists and has business plan
+    const userRef = db.collection('users').doc(userId);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
     if (userData.plan !== 'business') {
       return NextResponse.json(
         { error: 'Piano Business richiesto per creare un team' },
@@ -44,9 +54,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already owns a team
-    const teamsRef = collection(db, 'teams');
-    const existingTeamQuery = query(teamsRef, where('ownerId', '==', userId));
-    const existingTeamSnapshot = await getDocs(existingTeamQuery);
+    const existingTeamSnapshot = await db.collection('teams')
+      .where('ownerId', '==', userId)
+      .get();
 
     if (!existingTeamSnapshot.empty) {
       return NextResponse.json(
@@ -63,19 +73,19 @@ export async function POST(request: NextRequest) {
       memberCount: 1,
       storageUsed: 0,
       maxMembers: 3, // Base plan includes 3 members
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
-    const teamRef = await addDoc(collection(db, 'teams'), teamData);
+    const teamRef = await db.collection('teams').add(teamData);
 
     // Add owner as first member
-    await addDoc(collection(db, 'teamMembers'), {
+    await db.collection('teamMembers').add({
       teamId: teamRef.id,
       userId: userId,
       role: 'owner',
       storageUsed: 0,
-      joinedAt: serverTimestamp(),
+      joinedAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json({
@@ -95,6 +105,13 @@ export async function POST(request: NextRequest) {
 // GET - Get user's team
 export async function GET(request: NextRequest) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -105,48 +122,60 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // First check if user owns a team
-    const teamsRef = collection(db, 'teams');
-    let q = query(teamsRef, where('ownerId', '==', userId));
-    let snapshot = await getDocs(q);
+    // CRITICAL: Verify the authenticated user matches the userId
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
 
-    let teamDoc;
+    const db = getAdminFirestore();
+
+    // First check if user owns a team
+    let snapshot = await db.collection('teams')
+      .where('ownerId', '==', userId)
+      .get();
+
+    let teamDoc: FirebaseFirestore.DocumentSnapshot | null = null;
+    let teamId = '';
 
     if (snapshot.empty) {
       // Check if user is a member of a team
-      const membersRef = collection(db, 'teamMembers');
-      const memberQuery = query(membersRef, where('userId', '==', userId));
-      const memberSnapshot = await getDocs(memberQuery);
+      const memberSnapshot = await db.collection('teamMembers')
+        .where('userId', '==', userId)
+        .get();
 
       if (!memberSnapshot.empty) {
         const memberData = memberSnapshot.docs[0].data();
-        const teamDocRef = await getDoc(doc(db, 'teams', memberData.teamId));
-        if (teamDocRef.exists()) {
+        const teamDocRef = await db.collection('teams').doc(memberData.teamId).get();
+        if (teamDocRef.exists) {
           teamDoc = teamDocRef;
+          teamId = teamDocRef.id;
         }
       }
     } else {
       teamDoc = snapshot.docs[0];
+      teamId = teamDoc.id;
     }
 
     if (!teamDoc) {
       return NextResponse.json({ team: null });
     }
 
-    const teamData = teamDoc.data();
-    const teamId = teamDoc.id;
+    const teamData = teamDoc.data() || {};
 
     // Fetch members
-    const membersRef = collection(db, 'teamMembers');
-    const membersQuery = query(membersRef, where('teamId', '==', teamId));
-    const membersSnapshot = await getDocs(membersQuery);
+    const membersSnapshot = await db.collection('teamMembers')
+      .where('teamId', '==', teamId)
+      .get();
 
     const members = [];
     for (const memberDoc of membersSnapshot.docs) {
       const memberData = memberDoc.data();
       // Fetch user info
-      const userDocRef = await getDoc(doc(db, 'users', memberData.userId));
-      const userData = userDocRef.exists() ? userDocRef.data() : {};
+      const userDocRef = await db.collection('users').doc(memberData.userId).get();
+      const userData = userDocRef.exists ? userDocRef.data() || {} : {};
 
       members.push({
         id: memberDoc.id,
@@ -164,21 +193,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch pending invitations
-    const invitationsRef = collection(db, 'teamInvitations');
-    const invitationsQuery = query(
-      invitationsRef,
-      where('teamId', '==', teamId),
-      where('status', '==', 'pending')
-    );
-    const invitationsSnapshot = await getDocs(invitationsQuery);
+    const invitationsSnapshot = await db.collection('teamInvitations')
+      .where('teamId', '==', teamId)
+      .where('status', '==', 'pending')
+      .get();
 
-    const pendingInvitations = invitationsSnapshot.docs.map(invDoc => ({
-      id: invDoc.id,
-      email: invDoc.data().email,
-      status: invDoc.data().status,
-      expiresAt: invDoc.data().expiresAt?.toDate()?.toISOString() || null,
-      createdAt: invDoc.data().createdAt?.toDate()?.toISOString() || null,
-    }));
+    const pendingInvitations = invitationsSnapshot.docs.map(invDoc => {
+      const data = invDoc.data();
+      return {
+        id: invDoc.id,
+        email: data.email,
+        status: data.status,
+        expiresAt: data.expiresAt?.toDate()?.toISOString() || null,
+        createdAt: data.createdAt?.toDate()?.toISOString() || null,
+      };
+    });
 
     return NextResponse.json({
       team: {

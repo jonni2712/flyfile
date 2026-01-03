@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createWebhook, getUserWebhooks, canUseWebhooks, WebhookEvent, WEBHOOK_EVENTS } from '@/lib/webhooks';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 
 // GET - List all webhooks for a user
 export async function GET(request: NextRequest) {
   try {
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
+
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -15,6 +20,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'userId richiesto' },
         { status: 400 }
+      );
+    }
+
+    // Verify authorized
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
       );
     }
 
@@ -55,6 +68,10 @@ export async function POST(request: NextRequest) {
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const body = await request.json();
     const { userId, name, url, events } = body;
 
@@ -62,6 +79,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'userId richiesto' },
         { status: 400 }
+      );
+    }
+
+    // Verify authorized
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
       );
     }
 

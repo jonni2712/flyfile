@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, query, where, orderBy, getDocs, limit, addDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { authenticateApiRequest, hasPermission, unauthorizedResponse, forbiddenResponse } from '@/lib/api-auth';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { hashPassword } from '@/lib/password';
 import { v4 as uuidv4 } from 'uuid';
 
 // GET /api/v1/transfers - List user's transfers
@@ -29,16 +30,13 @@ export async function GET(request: NextRequest) {
     const limitParam = parseInt(searchParams.get('limit') || '20');
     const pageLimit = Math.min(Math.max(1, limitParam), 100);
 
-    // Build query
-    const transfersRef = collection(db, 'transfers');
-    let q = query(
-      transfersRef,
-      where('userId', '==', auth.userId),
-      orderBy('createdAt', 'desc'),
-      limit(pageLimit)
-    );
-
-    const snapshot = await getDocs(q);
+    // Build query using Admin SDK
+    const db = getAdminFirestore();
+    const snapshot = await db.collection('transfers')
+      .where('userId', '==', auth.userId)
+      .orderBy('createdAt', 'desc')
+      .limit(pageLimit)
+      .get();
 
     const transfers: Array<{
       id: string;
@@ -127,7 +125,11 @@ export async function POST(request: NextRequest) {
     const expiry = Math.min(Math.max(1, expiryDays || 7), 365);
     const expiresAt = new Date(Date.now() + expiry * 24 * 60 * 60 * 1000);
 
-    // Create transfer document
+    // Hash password if provided (SECURITY: never store plaintext)
+    const hashedPassword = password ? await hashPassword(password) : null;
+
+    // Create transfer document using Admin SDK
+    const db = getAdminFirestore();
     const transferId = uuidv4();
     const transferData = {
       transferId,
@@ -135,19 +137,19 @@ export async function POST(request: NextRequest) {
       title,
       message: message || null,
       recipientEmail: recipientEmail || null,
-      password: password || null, // Note: In production, this should be hashed
+      password: hashedPassword, // Securely hashed with bcrypt
       deliveryMethod: recipientEmail ? 'email' : 'link',
       status: 'pending', // Will be 'active' once files are uploaded
       totalSize: 0,
       fileCount: 0,
       downloadCount: 0,
-      expiresAt: Timestamp.fromDate(expiresAt),
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
+      expiresAt: expiresAt,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
       source: 'api', // Mark as created via API
     };
 
-    const docRef = await addDoc(collection(db, 'transfers'), transferData);
+    const docRef = await db.collection('transfers').add(transferData);
 
     return NextResponse.json({
       success: true,

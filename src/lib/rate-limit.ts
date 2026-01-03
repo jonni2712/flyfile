@@ -132,6 +132,36 @@ export const rateLimiters = {
         prefix: 'ratelimit:download',
       })
     : null,
+
+  // Anonymous: Stricter limits for unauthenticated requests
+  anonymous: upstashConfigured && redis
+    ? new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(20, '1m'), // 20 requests per minute (stricter than authenticated)
+        analytics: true,
+        prefix: 'ratelimit:anonymous',
+      })
+    : null,
+
+  // Password verification: Very strict to prevent brute force attacks
+  password: upstashConfigured && redis
+    ? new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(5, '5m'), // 5 attempts per 5 minutes
+        analytics: true,
+        prefix: 'ratelimit:password',
+      })
+    : null,
+
+  // 2FA verification: Strict to prevent brute force on TOTP codes
+  twoFactor: upstashConfigured && redis
+    ? new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(5, '5m'), // 5 attempts per 5 minutes
+        analytics: true,
+        prefix: 'ratelimit:2fa',
+      })
+    : null,
 };
 
 // Get client IP from request
@@ -165,22 +195,28 @@ export interface RateLimitResult {
   reset: number;
 }
 
+// Rate limit types
+export type RateLimitType = 'auth' | 'upload' | 'api' | 'sensitive' | 'download' | 'anonymous' | 'password' | 'twoFactor';
+
 // Main rate limit function
 export async function rateLimit(
   request: NextRequest,
-  type: 'auth' | 'upload' | 'api' | 'sensitive' | 'download' = 'api',
+  type: RateLimitType = 'api',
   customIdentifier?: string
 ): Promise<RateLimitResult> {
   const ip = customIdentifier || getClientIP(request);
   const identifier = `${type}:${ip}`;
 
   // Rate limit configurations for fallback
-  const configs: Record<string, { requests: number; window: string }> = {
+  const configs: Record<RateLimitType, { requests: number; window: string }> = {
     auth: { requests: 5, window: '1m' },
     upload: { requests: 10, window: '1m' },
     api: { requests: 60, window: '1m' },
     sensitive: { requests: 3, window: '1m' },
     download: { requests: 30, window: '1m' },
+    anonymous: { requests: 20, window: '1m' },
+    password: { requests: 5, window: '5m' },
+    twoFactor: { requests: 5, window: '5m' },
   };
 
   const config = configs[type];
@@ -239,7 +275,7 @@ export function rateLimitResponse(result: RateLimitResult): NextResponse {
 // Middleware-style rate limit check
 export async function checkRateLimit(
   request: NextRequest,
-  type: 'auth' | 'upload' | 'api' | 'sensitive' | 'download' = 'api',
+  type: RateLimitType = 'api',
   customIdentifier?: string
 ): Promise<NextResponse | null> {
   const result = await rateLimit(request, type, customIdentifier);
@@ -249,6 +285,28 @@ export async function checkRateLimit(
   }
 
   return null; // No rate limit hit, continue processing
+}
+
+// Check rate limit for password verification attempts
+export async function checkPasswordRateLimit(
+  request: NextRequest,
+  transferId: string
+): Promise<NextResponse | null> {
+  // Use both IP and transferId to prevent distributed attacks on a single transfer
+  const ip = getClientIP(request);
+  const identifier = `password:${transferId}:${ip}`;
+  return checkRateLimit(request, 'password', identifier);
+}
+
+// Check rate limit for 2FA verification attempts
+export async function check2FARateLimit(
+  request: NextRequest,
+  userId: string
+): Promise<NextResponse | null> {
+  // Use both IP and userId to prevent distributed attacks
+  const ip = getClientIP(request);
+  const identifier = `2fa:${userId}:${ip}`;
+  return checkRateLimit(request, 'twoFactor', identifier);
 }
 
 // Add rate limit headers to successful response

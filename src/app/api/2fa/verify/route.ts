@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verify2FA } from '@/lib/two-factor';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, check2FARateLimit } from '@/lib/rate-limit';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 
 // POST - Verify 2FA token
 export async function POST(request: NextRequest) {
   try {
-    // Stricter rate limiting for 2FA verification
+    // Basic rate limit
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
+
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
     const body = await request.json();
     const { userId, token } = body;
@@ -18,6 +23,18 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Verify authorized
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
+
+    // SECURITY: Stricter rate limiting for 2FA verification to prevent brute force
+    const twoFaRateLimitResponse = await check2FARateLimit(request, userId);
+    if (twoFaRateLimitResponse) return twoFaRateLimitResponse;
 
     // Clean token (remove spaces and dashes)
     const cleanToken = token.replace(/[\s-]/g, '');

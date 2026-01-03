@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getUploadUrl, deleteFile } from '@/lib/r2';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 
 // POST - Get presigned URL for avatar upload
 export async function POST(request: NextRequest) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const body = await request.json();
     const { userId, fileName, contentType } = body;
 
@@ -13,6 +22,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'userId, fileName e contentType richiesti' },
         { status: 400 }
+      );
+    }
+
+    // Verify authorized
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
       );
     }
 
@@ -25,11 +42,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify user exists
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    const db = getAdminFirestore();
+    const userRef = db.collection('users').doc(userId);
+    const userSnap = await userRef.get();
 
-    if (!userSnap.exists()) {
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
@@ -37,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Delete old avatar if exists
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
     if (userData.avatarPath) {
       try {
         await deleteFile(userData.avatarPath);
@@ -55,9 +72,9 @@ export async function POST(request: NextRequest) {
     const uploadUrl = await getUploadUrl(avatarPath, contentType, 3600);
 
     // Update user with new avatar path
-    await updateDoc(userRef, {
+    await userRef.update({
       avatarPath,
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json({
@@ -77,6 +94,13 @@ export async function POST(request: NextRequest) {
 // PATCH - Confirm avatar upload and update photoURL
 export async function PATCH(request: NextRequest) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const body = await request.json();
     const { userId, photoURL } = body;
 
@@ -87,11 +111,19 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Verify user exists
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    // Verify authorized
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
 
-    if (!userSnap.exists()) {
+    const db = getAdminFirestore();
+    const userRef = db.collection('users').doc(userId);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
@@ -99,9 +131,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update user photoURL
-    await updateDoc(userRef, {
+    await userRef.update({
       photoURL,
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json({
@@ -120,6 +152,13 @@ export async function PATCH(request: NextRequest) {
 // DELETE - Remove avatar
 export async function DELETE(request: NextRequest) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -130,18 +169,26 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Verify user exists
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    // Verify authorized
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
 
-    if (!userSnap.exists()) {
+    const db = getAdminFirestore();
+    const userRef = db.collection('users').doc(userId);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
 
     // Delete avatar from R2
     if (userData.avatarPath) {
@@ -153,10 +200,10 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Remove avatar from user profile
-    await updateDoc(userRef, {
+    await userRef.update({
       photoURL: null,
       avatarPath: null,
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json({

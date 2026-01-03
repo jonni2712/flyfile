@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, updateDoc, getDoc, setDoc, serverTimestamp, increment } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
+import { verifyAuth } from '@/lib/auth-utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,47 +16,70 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify authentication (optional for anonymous users)
+    const authResult = await verifyAuth(request);
+    const authenticatedUserId = authResult.authenticated ? authResult.userId : null;
+
+    const db = getAdminFirestore();
+
     if (fileId) {
       // Get file data to update user's storage
-      const fileRef = doc(db, 'files', fileId);
-      const fileSnap = await getDoc(fileRef);
+      const fileRef = db.collection('files').doc(fileId);
+      const fileSnap = await fileRef.get();
 
-      if (!fileSnap.exists()) {
+      if (!fileSnap.exists) {
         return NextResponse.json(
           { error: 'File not found' },
           { status: 404 }
         );
       }
 
-      const fileData = fileSnap.data();
+      const fileData = fileSnap.data() || {};
       const fileSize = fileData.size || 0;
-      const userId = fileData.userId;
+      const fileUserId = fileData.userId;
+
+      // CRITICAL: Verify ownership - authenticated user must match file owner
+      // Exception: anonymous uploads (userId starts with 'anon_') don't require auth
+      if (fileUserId && !fileUserId.startsWith('anon_')) {
+        if (!authenticatedUserId) {
+          return NextResponse.json(
+            { error: 'Authentication required' },
+            { status: 401 }
+          );
+        }
+        if (authenticatedUserId !== fileUserId) {
+          return NextResponse.json(
+            { error: 'Not authorized to confirm this upload' },
+            { status: 403 }
+          );
+        }
+      }
 
       // Update file status in files collection
-      await updateDoc(fileRef, {
+      await fileRef.update({
         status: 'completed',
-        updatedAt: serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       });
 
       // Update user's storage and transfer count
-      if (userId && !userId.startsWith('anon_')) {
+      if (fileUserId && !fileUserId.startsWith('anon_')) {
         // Registered user
-        const userRef = doc(db, 'users', userId);
-        await updateDoc(userRef, {
-          storageUsed: increment(fileSize),
-          monthlyTransfers: increment(1),
-          filesCount: increment(1),
-          updatedAt: serverTimestamp(),
+        const userRef = db.collection('users').doc(fileUserId);
+        await userRef.update({
+          storageUsed: FieldValue.increment(fileSize),
+          monthlyTransfers: FieldValue.increment(1),
+          filesCount: FieldValue.increment(1),
+          updatedAt: FieldValue.serverTimestamp(),
         });
-      } else if (userId && userId.startsWith('anon_')) {
+      } else if (fileUserId && fileUserId.startsWith('anon_')) {
         // Anonymous user
-        const anonUserRef = doc(db, 'anonymousUsers', userId);
-        const anonUserSnap = await getDoc(anonUserRef);
+        const anonUserRef = db.collection('anonymousUsers').doc(fileUserId);
+        const anonUserSnap = await anonUserRef.get();
 
-        if (anonUserSnap.exists()) {
-          await updateDoc(anonUserRef, {
-            transferCount: increment(1),
-            storageUsed: increment(fileSize),
+        if (anonUserSnap.exists) {
+          await anonUserRef.update({
+            transferCount: FieldValue.increment(1),
+            storageUsed: FieldValue.increment(fileSize),
           });
         }
       }
@@ -63,35 +87,51 @@ export async function POST(request: NextRequest) {
 
     if (transferId) {
       // Get transfer data to update user's storage
-      const transferRef = doc(db, 'transfers', transferId);
-      const transferSnap = await getDoc(transferRef);
+      const transferRef = db.collection('transfers').doc(transferId);
+      const transferSnap = await transferRef.get();
 
-      if (transferSnap.exists()) {
-        const transferData = transferSnap.data();
-        const userId = transferData.userId;
+      if (transferSnap.exists) {
+        const transferData = transferSnap.data() || {};
+        const transferUserId = transferData.userId;
         const totalSize = transferData.totalSize || 0;
 
+        // CRITICAL: Verify ownership - authenticated user must match transfer owner
+        // Exception: anonymous uploads (userId starts with 'anon_') don't require auth
+        if (transferUserId && !transferUserId.startsWith('anon_')) {
+          if (!authenticatedUserId) {
+            return NextResponse.json(
+              { error: 'Authentication required' },
+              { status: 401 }
+            );
+          }
+          if (authenticatedUserId !== transferUserId) {
+            return NextResponse.json(
+              { error: 'Not authorized to confirm this transfer' },
+              { status: 403 }
+            );
+          }
+        }
+
         // Update transfer status
-        await updateDoc(transferRef, {
+        await transferRef.update({
           status: 'active',
-          updatedAt: serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
         });
 
         // Update user's storage and transfer count
-        if (userId && !userId.startsWith('anon_')) {
-          const userRef = doc(db, 'users', userId);
-          await updateDoc(userRef, {
-            storageUsed: increment(totalSize),
-            monthlyTransfers: increment(1),
-            updatedAt: serverTimestamp(),
+        if (transferUserId && !transferUserId.startsWith('anon_')) {
+          const userRef = db.collection('users').doc(transferUserId);
+          await userRef.update({
+            storageUsed: FieldValue.increment(totalSize),
+            monthlyTransfers: FieldValue.increment(1),
+            updatedAt: FieldValue.serverTimestamp(),
           });
         }
       } else {
-        // Update transfer status even if not found in transfers collection
-        await updateDoc(transferRef, {
-          status: 'active',
-          updatedAt: serverTimestamp(),
-        });
+        return NextResponse.json(
+          { error: 'Transfer not found' },
+          { status: 404 }
+        );
       }
     }
 

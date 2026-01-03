@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { checkRateLimit, checkPasswordRateLimit } from '@/lib/rate-limit';
 import { verifyPassword, hashPassword, needsHashUpgrade } from '@/lib/password';
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting: 3 requests per minute for sensitive operations
+    // Basic rate limiting
     const rateLimitResponse = await checkRateLimit(request, 'sensitive');
     if (rateLimitResponse) return rateLimitResponse;
 
@@ -19,10 +18,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // SECURITY: Stricter rate limiting per transfer to prevent brute force attacks
+    const passwordRateLimitResponse = await checkPasswordRateLimit(request, transferId);
+    if (passwordRateLimitResponse) return passwordRateLimitResponse;
+
+    const db = getAdminFirestore();
+
     // Find transfer by transferId
-    const transfersRef = collection(db, 'transfers');
-    const q = query(transfersRef, where('transferId', '==', transferId));
-    const snapshot = await getDocs(q);
+    const snapshot = await db.collection('transfers')
+      .where('transferId', '==', transferId)
+      .get();
 
     if (snapshot.empty) {
       return NextResponse.json(
@@ -45,8 +50,7 @@ export async function POST(request: NextRequest) {
     if (isValid && needsHashUpgrade(transferData.password)) {
       try {
         const newHash = await hashPassword(password);
-        const transferDocRef = doc(db, 'transfers', snapshot.docs[0].id);
-        await updateDoc(transferDocRef, { password: newHash });
+        await db.collection('transfers').doc(snapshot.docs[0].id).update({ password: newHash });
         console.log('Password hash upgraded to bcrypt for transfer:', transferId);
       } catch (upgradeError) {
         console.error('Failed to upgrade password hash:', upgradeError);

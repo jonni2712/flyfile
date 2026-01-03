@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteApiKey, toggleApiKeyStatus } from '@/lib/api-keys';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 
 // DELETE - Delete an API key
 export async function DELETE(
@@ -11,6 +12,10 @@ export async function DELETE(
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { id: keyId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -19,6 +24,14 @@ export async function DELETE(
       return NextResponse.json(
         { error: 'userId richiesto' },
         { status: 400 }
+      );
+    }
+
+    // Verify authorized
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
       );
     }
 
@@ -53,6 +66,10 @@ export async function PATCH(
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { id: keyId } = await params;
     const body = await request.json();
     const { userId } = body;
@@ -61,6 +78,14 @@ export async function PATCH(
       return NextResponse.json(
         { error: 'userId richiesto' },
         { status: 400 }
+      );
+    }
+
+    // Verify authorized
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
       );
     }
 

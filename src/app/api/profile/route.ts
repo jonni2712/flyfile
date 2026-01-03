@@ -1,18 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  deleteDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { deleteFile } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 
 // PATCH - Update profile
 export async function PATCH(request: NextRequest) {
@@ -20,6 +11,10 @@ export async function PATCH(request: NextRequest) {
     // Rate limiting: 60 requests per minute for API operations
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
+
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
     const body = await request.json();
     const { userId, displayName, company, phone, address, city, postalCode, country, vatNumber } = body;
@@ -31,11 +26,19 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Verify user exists
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    // Verify authorized to update this user's profile
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato a modificare questo profilo' },
+        { status: 403 }
+      );
+    }
 
-    if (!userSnap.exists()) {
+    const db = getAdminFirestore();
+    const userRef = db.collection('users').doc(userId);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
@@ -44,7 +47,7 @@ export async function PATCH(request: NextRequest) {
 
     // Prepare update data
     const updateData: Record<string, unknown> = {
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
     if (displayName !== undefined) updateData.displayName = displayName;
@@ -56,7 +59,7 @@ export async function PATCH(request: NextRequest) {
     if (country !== undefined) updateData.country = country;
     if (vatNumber !== undefined) updateData.vatNumber = vatNumber;
 
-    await updateDoc(userRef, updateData);
+    await userRef.update(updateData);
 
     return NextResponse.json({
       success: true,
@@ -71,12 +74,16 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// DELETE - Delete account
+// DELETE - Delete account (CRITICAL: Requires authentication)
 export async function DELETE(request: NextRequest) {
   try {
     // Rate limiting: 3 requests per minute for sensitive operations
     const rateLimitResponse = await checkRateLimit(request, 'sensitive');
     if (rateLimitResponse) return rateLimitResponse;
+
+    // CRITICAL: Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -88,11 +95,21 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Verify user exists
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    // CRITICAL: Verify the authenticated user is deleting their own account
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato a eliminare questo account' },
+        { status: 403 }
+      );
+    }
 
-    if (!userSnap.exists()) {
+    const db = getAdminFirestore();
+
+    // Verify user exists
+    const userRef = db.collection('users').doc(userId);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
@@ -100,83 +117,93 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete all user's transfers and files
-    const transfersRef = collection(db, 'transfers');
-    const transfersQuery = query(transfersRef, where('userId', '==', userId));
-    const transfersSnapshot = await getDocs(transfersQuery);
+    const transfersSnapshot = await db.collection('transfers')
+      .where('userId', '==', userId)
+      .get();
 
     for (const transferDoc of transfersSnapshot.docs) {
       // Delete files from R2
-      const filesRef = collection(db, 'transfers', transferDoc.id, 'files');
-      const filesSnapshot = await getDocs(filesRef);
+      const filesSnapshot = await db.collection('transfers')
+        .doc(transferDoc.id)
+        .collection('files')
+        .get();
 
       for (const fileDoc of filesSnapshot.docs) {
         const fileData = fileDoc.data();
         try {
-          await deleteFile(fileData.path);
+          if (fileData.path) {
+            await deleteFile(fileData.path);
+          }
         } catch (err) {
           console.error('Error deleting file from R2:', err);
         }
-        await deleteDoc(doc(db, 'transfers', transferDoc.id, 'files', fileDoc.id));
+        await db.collection('transfers')
+          .doc(transferDoc.id)
+          .collection('files')
+          .doc(fileDoc.id)
+          .delete();
       }
 
       // Delete transfer
-      await deleteDoc(doc(db, 'transfers', transferDoc.id));
+      await db.collection('transfers').doc(transferDoc.id).delete();
     }
 
     // Delete user's files
-    const userFilesRef = collection(db, 'files');
-    const userFilesQuery = query(userFilesRef, where('userId', '==', userId));
-    const userFilesSnapshot = await getDocs(userFilesQuery);
+    const userFilesSnapshot = await db.collection('files')
+      .where('userId', '==', userId)
+      .get();
 
     for (const fileDoc of userFilesSnapshot.docs) {
       const fileData = fileDoc.data();
       try {
-        await deleteFile(fileData.path);
+        if (fileData.path) {
+          await deleteFile(fileData.path);
+        }
       } catch (err) {
         console.error('Error deleting file from R2:', err);
       }
-      await deleteDoc(doc(db, 'files', fileDoc.id));
+      await db.collection('files').doc(fileDoc.id).delete();
     }
 
     // Delete team memberships
-    const membersRef = collection(db, 'teamMembers');
-    const membersQuery = query(membersRef, where('userId', '==', userId));
-    const membersSnapshot = await getDocs(membersQuery);
+    const membersSnapshot = await db.collection('teamMembers')
+      .where('userId', '==', userId)
+      .get();
 
     for (const memberDoc of membersSnapshot.docs) {
-      await deleteDoc(doc(db, 'teamMembers', memberDoc.id));
+      await db.collection('teamMembers').doc(memberDoc.id).delete();
     }
 
     // Delete owned teams
-    const teamsRef = collection(db, 'teams');
-    const teamsQuery = query(teamsRef, where('ownerId', '==', userId));
-    const teamsSnapshot = await getDocs(teamsQuery);
+    const teamsSnapshot = await db.collection('teams')
+      .where('ownerId', '==', userId)
+      .get();
 
     for (const teamDoc of teamsSnapshot.docs) {
       // Delete team members
-      const teamMembersRef = collection(db, 'teamMembers');
-      const teamMembersQuery = query(teamMembersRef, where('teamId', '==', teamDoc.id));
-      const teamMembersSnapshot = await getDocs(teamMembersQuery);
+      const teamMembersSnapshot = await db.collection('teamMembers')
+        .where('teamId', '==', teamDoc.id)
+        .get();
 
       for (const memberDoc of teamMembersSnapshot.docs) {
-        await deleteDoc(doc(db, 'teamMembers', memberDoc.id));
+        await db.collection('teamMembers').doc(memberDoc.id).delete();
       }
 
       // Delete team invitations
-      const invitationsRef = collection(db, 'teamInvitations');
-      const invitationsQuery = query(invitationsRef, where('teamId', '==', teamDoc.id));
-      const invitationsSnapshot = await getDocs(invitationsQuery);
+      const invitationsSnapshot = await db.collection('teamInvitations')
+        .where('teamId', '==', teamDoc.id)
+        .get();
 
       for (const invDoc of invitationsSnapshot.docs) {
-        await deleteDoc(doc(db, 'teamInvitations', invDoc.id));
+        await db.collection('teamInvitations').doc(invDoc.id).delete();
       }
 
-      await deleteDoc(doc(db, 'teams', teamDoc.id));
+      await db.collection('teams').doc(teamDoc.id).delete();
     }
 
     // Delete avatar from R2 if exists
     const userData = userSnap.data();
-    if (userData.avatarPath) {
+    if (userData?.avatarPath) {
       try {
         await deleteFile(userData.avatarPath);
       } catch (err) {
@@ -185,7 +212,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete user profile
-    await deleteDoc(userRef);
+    await userRef.delete();
 
     return NextResponse.json({
       success: true,
@@ -207,6 +234,10 @@ export async function GET(request: NextRequest) {
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
+    // Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -217,17 +248,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    // Verify authorized to view this user's profile
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato a visualizzare questo profilo' },
+        { status: 403 }
+      );
+    }
 
-    if (!userSnap.exists()) {
+    const db = getAdminFirestore();
+    const userRef = db.collection('users').doc(userId);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    const data = userSnap.data();
+    const data = userSnap.data() || {};
 
     return NextResponse.json({
       uid: userId,

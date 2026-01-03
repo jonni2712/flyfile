@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc, deleteDoc, getDocs, collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { deleteFile } from '@/lib/r2';
 import { authenticateApiRequest, hasPermission, unauthorizedResponse, forbiddenResponse } from '@/lib/api-auth';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -28,18 +28,19 @@ export async function GET(
 
     const { id: transferId } = await params;
 
-    // Get transfer document
-    const transferRef = doc(db, 'transfers', transferId);
-    const transferSnap = await getDoc(transferRef);
+    // Get transfer document using Admin SDK
+    const db = getAdminFirestore();
+    const transferRef = db.collection('transfers').doc(transferId);
+    const transferSnap = await transferRef.get();
 
-    if (!transferSnap.exists()) {
+    if (!transferSnap.exists) {
       return NextResponse.json(
         { success: false, error: 'Transfer non trovato', code: 'NOT_FOUND' },
         { status: 404 }
       );
     }
 
-    const data = transferSnap.data();
+    const data = transferSnap.data() || {};
 
     // Verify ownership
     if (data.userId !== auth.userId) {
@@ -47,8 +48,7 @@ export async function GET(
     }
 
     // Get files
-    const filesRef = collection(db, 'transfers', transferId, 'files');
-    const filesSnapshot = await getDocs(filesRef);
+    const filesSnapshot = await db.collection('transfers').doc(transferId).collection('files').get();
 
     const files: Array<{
       id: string;
@@ -121,27 +121,29 @@ export async function DELETE(
 
     const { id: transferId } = await params;
 
-    // Get transfer document
-    const transferRef = doc(db, 'transfers', transferId);
-    const transferSnap = await getDoc(transferRef);
+    // Get transfer document using Admin SDK
+    const db = getAdminFirestore();
+    const transferRef = db.collection('transfers').doc(transferId);
+    const transferSnap = await transferRef.get();
 
-    if (!transferSnap.exists()) {
+    if (!transferSnap.exists) {
       return NextResponse.json(
         { success: false, error: 'Transfer non trovato', code: 'NOT_FOUND' },
         { status: 404 }
       );
     }
 
-    const data = transferSnap.data();
+    const data = transferSnap.data() || {};
 
     // Verify ownership
     if (data.userId !== auth.userId) {
       return forbiddenResponse('Non autorizzato ad eliminare questo transfer');
     }
 
+    const totalSize = data.totalSize || 0;
+
     // Delete files from R2
-    const filesRef = collection(db, 'transfers', transferId, 'files');
-    const filesSnapshot = await getDocs(filesRef);
+    const filesSnapshot = await db.collection('transfers').doc(transferId).collection('files').get();
 
     for (const fileDoc of filesSnapshot.docs) {
       const fileData = fileDoc.data();
@@ -153,11 +155,23 @@ export async function DELETE(
         console.error('Error deleting file from R2:', err);
       }
       // Delete file document
-      await deleteDoc(doc(db, 'transfers', transferId, 'files', fileDoc.id));
+      await db.collection('transfers').doc(transferId).collection('files').doc(fileDoc.id).delete();
     }
 
     // Delete transfer document
-    await deleteDoc(transferRef);
+    await transferRef.delete();
+
+    // Update user's storage (don't go negative)
+    if (data.userId && totalSize > 0) {
+      const userRef = db.collection('users').doc(data.userId);
+      const userDoc = await userRef.get();
+      const currentStorage = userDoc.data()?.storageUsed || 0;
+      const newStorage = Math.max(0, currentStorage - totalSize);
+      await userRef.update({
+        storageUsed: newStorage,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
 
     return NextResponse.json({
       success: true,

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { deleteFile } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,12 +11,24 @@ export async function POST(request: NextRequest) {
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
+    // CRITICAL: Verify authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { userId, fileIds } = await request.json();
 
     if (!userId) {
       return NextResponse.json(
         { success: false, error: 'userId richiesto' },
         { status: 400 }
+      );
+    }
+
+    // CRITICAL: Verify the authenticated user matches the requested userId
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { success: false, error: 'Non autorizzato' },
+        { status: 403 }
       );
     }
 
@@ -34,29 +47,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const db = getAdminFirestore();
     const results = {
       deleted: [] as string[],
       failed: [] as { id: string; error: string }[],
     };
 
+    let totalSizeDeleted = 0;
+    let totalFilesDeleted = 0;
+
     // Process each file
     for (const fileId of fileIds) {
       try {
-        const fileRef = doc(db, 'files', fileId);
-        const fileSnap = await getDoc(fileRef);
+        const fileRef = db.collection('files').doc(fileId);
+        const fileSnap = await fileRef.get();
 
-        if (!fileSnap.exists()) {
+        if (!fileSnap.exists) {
           results.failed.push({ id: fileId, error: 'Non trovato' });
           continue;
         }
 
-        const fileData = fileSnap.data();
+        const fileData = fileSnap.data() || {};
 
-        // Verify ownership
+        // Double-check ownership
         if (fileData.userId !== userId) {
           results.failed.push({ id: fileId, error: 'Non autorizzato' });
           continue;
         }
+
+        // Track size for storage update
+        totalSizeDeleted += fileData.size || 0;
+        totalFilesDeleted++;
 
         // Delete file from R2
         try {
@@ -69,13 +90,29 @@ export async function POST(request: NextRequest) {
         }
 
         // Delete file document from Firestore
-        await deleteDoc(fileRef);
+        await fileRef.delete();
         results.deleted.push(fileId);
 
       } catch (err) {
         console.error(`Error deleting file ${fileId}:`, err);
         results.failed.push({ id: fileId, error: 'Errore interno' });
       }
+    }
+
+    // Update user's storage usage (don't go negative)
+    if (totalSizeDeleted > 0 && userId) {
+      const userRef = db.collection('users').doc(userId);
+      const userDoc = await userRef.get();
+      const userData = userDoc.data() || {};
+
+      const currentStorage = userData.storageUsed || 0;
+      const currentFilesCount = userData.filesCount || 0;
+
+      await userRef.update({
+        storageUsed: Math.max(0, currentStorage - totalSizeDeleted),
+        filesCount: Math.max(0, currentFilesCount - totalFilesDeleted),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
     }
 
     return NextResponse.json({

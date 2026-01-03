@@ -2,20 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { deleteFile } from '@/lib/r2';
-
-// Simple password hashing
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + process.env.PASSWORD_SALT || 'flyfile-salt');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function verifyPasswordHash(password: string, hash: string): Promise<boolean> {
-  const passwordHash = await hashPassword(password);
-  return passwordHash === hash;
-}
+import { hashPassword, verifyPassword, needsHashUpgrade } from '@/lib/password';
 
 // GET - Get transfer by ID (public or by transferId)
 export async function GET(
@@ -265,13 +252,28 @@ export async function POST(
         );
       }
 
-      const isValid = await verifyPasswordHash(password, data.password);
+      // Use centralized password verification (supports bcrypt + legacy SHA-256)
+      const isValid = await verifyPassword(password, data.password);
 
       if (!isValid) {
         return NextResponse.json(
           { error: 'Password non corretta' },
           { status: 403 }
         );
+      }
+
+      // Upgrade legacy SHA-256 hashes to bcrypt
+      if (needsHashUpgrade(data.password)) {
+        try {
+          const newHash = await hashPassword(password);
+          await db.collection('transfers').doc(snapshot.docs[0].id).update({
+            password: newHash,
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+          console.log('Password hash upgraded to bcrypt for transfer:', transferId);
+        } catch (upgradeError) {
+          console.error('Failed to upgrade password hash:', upgradeError);
+        }
       }
 
       return NextResponse.json({ success: true, message: 'Password verificata' });
