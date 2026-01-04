@@ -137,9 +137,16 @@ export default function PricingPage() {
         ? (plan as { stripePriceIdAnnual?: string }).stripePriceIdAnnual
         : (plan as { stripePriceIdMonthly?: string }).stripePriceIdMonthly;
 
+      // Get Firebase auth token for API authentication
+      const token = await user.getIdToken();
+
       const response = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'x-csrf-token': 'client',
+        },
         body: JSON.stringify({
           planId,
           priceId,
@@ -149,9 +156,13 @@ export default function PricingPage() {
         }),
       });
 
-      const { url } = await response.json();
-      if (url) {
-        window.location.href = url;
+      const data = await response.json();
+      if (!response.ok) {
+        console.error('Checkout error:', data.error);
+        return;
+      }
+      if (data.url) {
+        window.location.href = data.url;
       }
     } catch (error) {
       console.error('Error creating checkout:', error);

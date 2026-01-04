@@ -17,7 +17,7 @@ const adminRoutes = ['/admin'];
 // Route auth (redirect se già loggato)
 const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip per asset statici, API, e file
