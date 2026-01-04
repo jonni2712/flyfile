@@ -166,13 +166,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Return detailed error in development, generic in production
-    const isDev = process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview';
+    // Return detailed error for debugging (temporarily enabled)
     return NextResponse.json(
       {
-        error: isDev ? errorMessage : 'Failed to create checkout session',
+        error: errorMessage,
         code: errorCode,
-        ...(isDev && { details: String(error) })
+        details: String(error)
       },
       { status: 500 }
     );
