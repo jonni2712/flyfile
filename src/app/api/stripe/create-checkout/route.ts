@@ -5,9 +5,7 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 import { csrfProtection } from '@/lib/csrf';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 // Price IDs mapping - supports all plans with monthly/annual billing
 const PRICE_IDS = {

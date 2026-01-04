@@ -6,9 +6,7 @@ import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 import { csrfProtection } from '@/lib/csrf';
 import { PLANS } from '@/types';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 // POST - Cancel subscription
 export async function POST(request: NextRequest) {
