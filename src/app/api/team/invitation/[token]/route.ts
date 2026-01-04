@@ -171,8 +171,9 @@ export async function POST(
 
     const teamData = teamSnap.data() || {};
 
-    // Add user as team member
-    await db.collection('teamMembers').add({
+    // Add user as team member (use composite ID for security rules)
+    const memberDocId = `${userId}_${invitation.teamId}`;
+    await db.collection('teamMembers').doc(memberDocId).set({
       teamId: invitation.teamId,
       userId: userId,
       role: 'member',

@@ -74,30 +74,36 @@ service cloud.firestore {
       allow delete: if isTeamOwner(teamId);
     }
 
-    // Team Members collection
+    // Team Members collection - SECURITY: Server-side operations only via Admin SDK
     match /teamMembers/{memberId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && (
+      // Read: Only team owner or the member themselves
+      allow read: if isAuthenticated() && (
         resource.data.userId == request.auth.uid ||
         isTeamOwner(resource.data.teamId)
       );
+      // Create: Server-only (via invitation acceptance or team creation)
+      allow create: if false;
+      // Update: Only team owner can update member roles
+      allow update: if isAuthenticated() && isTeamOwner(resource.data.teamId);
+      // Delete: User can leave, or team owner can remove
       allow delete: if isAuthenticated() && (
         resource.data.userId == request.auth.uid ||
         isTeamOwner(resource.data.teamId)
       );
     }
 
-    // Team Invitations collection
+    // Team Invitations collection - SECURITY: Server-side operations via Admin SDK
     match /teamInvitations/{invitationId} {
       // Only invitee (by email) or team owner can read
       allow read: if isAuthenticated() && (
         request.auth.token.email == resource.data.email ||
         isTeamOwner(resource.data.teamId)
       );
-      allow create: if isAuthenticated();
-      // SECURITY FIX: Only authenticated users can accept (verified in backend)
-      allow update: if isAuthenticated();
+      // Create: Server-only (team owner sends via API)
+      allow create: if false;
+      // Update: Server-only (invitation acceptance via API)
+      allow update: if false;
+      // Delete: Only team owner can revoke invitations
       allow delete: if isAuthenticated() &&
         isTeamOwner(resource.data.teamId);
     }
@@ -137,6 +143,11 @@ service cloud.firestore {
 
     // Processed Stripe Events - SECURITY: Admin SDK only (for idempotency)
     match /processedStripeEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    // Contact Messages - SECURITY: Admin SDK only (server-side operations)
+    match /contact_messages/{messageId} {
       allow read, write: if false;
     }
   }

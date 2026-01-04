@@ -79,8 +79,9 @@ export async function POST(request: NextRequest) {
 
     const teamRef = await db.collection('teams').add(teamData);
 
-    // Add owner as first member
-    await db.collection('teamMembers').add({
+    // Add owner as first member (use composite ID for security rules)
+    const memberDocId = `${userId}_${teamRef.id}`;
+    await db.collection('teamMembers').doc(memberDocId).set({
       teamId: teamRef.id,
       userId: userId,
       role: 'owner',
