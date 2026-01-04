@@ -148,15 +148,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error('Error creating checkout session:', error);
-    // Log more details for debugging
+
+    // Extract error details
+    let errorMessage = 'Failed to create checkout session';
+    let errorCode = 'UNKNOWN_ERROR';
+
     if (error instanceof Error) {
+      errorMessage = error.message;
       console.error('Error name:', error.name);
       console.error('Error message:', error.message);
-      if ('type' in error) console.error('Stripe error type:', (error as { type: string }).type);
-      if ('code' in error) console.error('Stripe error code:', (error as { code: string }).code);
+
+      // Stripe specific errors
+      if ('type' in error) {
+        errorCode = (error as { type: string }).type;
+        console.error('Stripe error type:', errorCode);
+      }
+      if ('code' in error) {
+        console.error('Stripe error code:', (error as { code: string }).code);
+      }
     }
+
+    // Return detailed error in development, generic in production
+    const isDev = process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview';
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      {
+        error: isDev ? errorMessage : 'Failed to create checkout session',
+        code: errorCode,
+        ...(isDev && { details: String(error) })
+      },
       { status: 500 }
     );
   }
