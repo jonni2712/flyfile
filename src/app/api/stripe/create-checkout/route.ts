@@ -82,9 +82,6 @@ export async function POST(request: NextRequest) {
     const userData = userDoc.data();
     const billing = userData?.billing;
 
-    // Prepare customer creation/update data for Stripe
-    const customerData: Stripe.Checkout.SessionCreateParams.CustomerCreation = 'always';
-
     // Build session parameters
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
@@ -97,7 +94,6 @@ export async function POST(request: NextRequest) {
       ],
       customer_email: userEmail,
       client_reference_id: userId,
-      customer_creation: customerData,
       success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/pricing?canceled=true`,
       metadata: {
