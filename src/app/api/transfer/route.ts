@@ -8,6 +8,8 @@ import { getPlanLimits } from '@/types';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { hashPassword } from '@/lib/password';
 import { validateFiles, sanitizeFilename } from '@/lib/file-validation';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 
 // Default limits for anonymous users (same as free plan)
 const ANONYMOUS_LIMITS = {
@@ -22,6 +24,10 @@ const ANONYMOUS_LIMITS = {
 // POST - Create a new transfer
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting: 10 requests per minute for upload operations
     const rateLimitResponse = await checkRateLimit(request, 'upload');
     if (rateLimitResponse) return rateLimitResponse;
@@ -41,6 +47,22 @@ export async function POST(request: NextRequest) {
       files, // Array of { name, type, size, encryptionKey?, encryptionIv? }
       isEncrypted, // Whether files are client-side encrypted
     } = body;
+
+    // SECURITY: For non-anonymous users, verify authentication
+    let verifiedUserId: string | null = null;
+    if (!isAnonymous && userId) {
+      const [authResult, authError] = await requireAuth(request);
+      if (authError) return authError;
+
+      // Verify the userId from body matches the authenticated user
+      if (!isAuthorizedForUser(authResult, userId)) {
+        return NextResponse.json(
+          { success: false, error: 'Non autorizzato' },
+          { status: 403 }
+        );
+      }
+      verifiedUserId = authResult.userId!;
+    }
 
     // Validation
     if (!title || !files || files.length === 0) {
@@ -78,13 +100,13 @@ export async function POST(request: NextRequest) {
     // Get Admin Firestore instance
     const db = getAdminFirestore();
 
-    if (isAnonymous || !userId) {
+    if (isAnonymous || !verifiedUserId) {
       // Anonymous user - use free plan limits
       planLimits = ANONYMOUS_LIMITS;
       maxRetentionDays = ANONYMOUS_LIMITS.retentionDays;
     } else {
-      // Registered user - fetch their plan
-      const userRef = db.collection('users').doc(userId);
+      // Registered user - fetch their plan (using verified userId)
+      const userRef = db.collection('users').doc(verifiedUserId);
       const userSnap = await userRef.get();
 
       if (!userSnap.exists) {
@@ -166,7 +188,7 @@ export async function POST(request: NextRequest) {
     }
 
     // For anonymous users, check limits
-    if (isAnonymous || !userId) {
+    if (isAnonymous || !verifiedUserId) {
       if (files.length > ANONYMOUS_LIMITS.maxFilesPerTransfer) {
         return NextResponse.json(
           {
@@ -204,7 +226,7 @@ export async function POST(request: NextRequest) {
     // Create transfer document
     const transferData = {
       transferId,
-      userId: userId || null,
+      userId: verifiedUserId || null,
       title,
       message: message || null,
       recipientEmail: recipientEmail || null,
@@ -359,6 +381,10 @@ export async function GET(request: NextRequest) {
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -366,6 +392,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'userId richiesto' },
         { status: 400 }
+      );
+    }
+
+    // SECURITY: Verify user is accessing their own transfers
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
       );
     }
 
