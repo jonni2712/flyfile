@@ -110,8 +110,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (user) {
         await fetchUserProfile(user.uid);
+        // Set session cookie for middleware authentication
+        const token = await user.getIdToken();
+        document.cookie = `__session=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
       } else {
         setUserProfile(null);
+        // Clear session cookie on logout
+        document.cookie = '__session=; path=/; max-age=0';
       }
 
       setLoading(false);
@@ -151,6 +156,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
+    // Clear session cookie before signing out
+    document.cookie = '__session=; path=/; max-age=0';
     await firebaseSignOut(auth);
     setUserProfile(null);
   }
