@@ -1,5 +1,5 @@
-import { collection, addDoc, query, where, getDocs, deleteDoc, doc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import crypto from 'crypto';
 
 export interface ApiKey {
@@ -42,6 +42,7 @@ export async function createApiKey(params: {
 }): Promise<{ apiKey: ApiKey; fullKey: string }> {
   const { key, prefix, hash } = generateApiKey();
 
+  const db = getAdminFirestore();
   const apiKeyData = {
     userId: params.userId,
     name: params.name,
@@ -57,7 +58,7 @@ export async function createApiKey(params: {
     isActive: true,
   };
 
-  const docRef = await addDoc(collection(db, 'apiKeys'), apiKeyData);
+  const docRef = await db.collection('apiKeys').add(apiKeyData);
 
   const apiKey: ApiKey = {
     id: docRef.id,
@@ -71,9 +72,10 @@ export async function createApiKey(params: {
 
 // Get all API keys for a user (without the actual key)
 export async function getUserApiKeys(userId: string): Promise<ApiKey[]> {
-  const apiKeysRef = collection(db, 'apiKeys');
-  const q = query(apiKeysRef, where('userId', '==', userId));
-  const snapshot = await getDocs(q);
+  const db = getAdminFirestore();
+  const snapshot = await db.collection('apiKeys')
+    .where('userId', '==', userId)
+    .get();
 
   const keys: ApiKey[] = [];
   snapshot.forEach((docSnap) => {
@@ -110,10 +112,11 @@ export async function validateApiKey(key: string): Promise<{
   }
 
   const hash = hashApiKey(key);
+  const db = getAdminFirestore();
 
-  const apiKeysRef = collection(db, 'apiKeys');
-  const q = query(apiKeysRef, where('keyHash', '==', hash));
-  const snapshot = await getDocs(q);
+  const snapshot = await db.collection('apiKeys')
+    .where('keyHash', '==', hash)
+    .get();
 
   if (snapshot.empty) {
     return { valid: false, error: 'API key not found' };
@@ -133,7 +136,7 @@ export async function validateApiKey(key: string): Promise<{
   }
 
   // Update last used timestamp and usage count
-  await updateDoc(doc(db, 'apiKeys', docSnap.id), {
+  await db.collection('apiKeys').doc(docSnap.id).update({
     lastUsedAt: Timestamp.now(),
     usageCount: (data.usageCount || 0) + 1,
   });
@@ -148,40 +151,42 @@ export async function validateApiKey(key: string): Promise<{
 
 // Delete an API key
 export async function deleteApiKey(keyId: string, userId: string): Promise<boolean> {
-  const keyRef = doc(db, 'apiKeys', keyId);
-  const keySnap = await getDoc(keyRef);
+  const db = getAdminFirestore();
+  const keyRef = db.collection('apiKeys').doc(keyId);
+  const keySnap = await keyRef.get();
 
-  if (!keySnap.exists()) {
+  if (!keySnap.exists) {
     return false;
   }
 
   // Verify ownership
-  if (keySnap.data().userId !== userId) {
+  if (keySnap.data()?.userId !== userId) {
     return false;
   }
 
-  await deleteDoc(keyRef);
+  await keyRef.delete();
   return true;
 }
 
 // Toggle API key active status
 export async function toggleApiKeyStatus(keyId: string, userId: string): Promise<boolean> {
-  const keyRef = doc(db, 'apiKeys', keyId);
-  const keySnap = await getDoc(keyRef);
+  const db = getAdminFirestore();
+  const keyRef = db.collection('apiKeys').doc(keyId);
+  const keySnap = await keyRef.get();
 
-  if (!keySnap.exists()) {
+  if (!keySnap.exists) {
     return false;
   }
 
   const data = keySnap.data();
 
   // Verify ownership
-  if (data.userId !== userId) {
+  if (data?.userId !== userId) {
     return false;
   }
 
-  await updateDoc(keyRef, {
-    isActive: !data.isActive,
+  await keyRef.update({
+    isActive: !data?.isActive,
   });
 
   return true;
@@ -189,14 +194,14 @@ export async function toggleApiKeyStatus(keyId: string, userId: string): Promise
 
 // Check if user can create API keys (Business plan only)
 export async function canUseApiKeys(userId: string): Promise<boolean> {
-  const userRef = doc(db, 'users', userId);
-  const userSnap = await getDoc(userRef);
+  const db = getAdminFirestore();
+  const userSnap = await db.collection('users').doc(userId).get();
 
-  if (!userSnap.exists()) {
+  if (!userSnap.exists) {
     return false;
   }
 
   const userData = userSnap.data();
   // Only Pro and Business plans can use API keys
-  return ['pro', 'business'].includes(userData.plan);
+  return ['pro', 'business'].includes(userData?.plan);
 }

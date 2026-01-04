@@ -1,6 +1,6 @@
 import crypto from 'crypto';
-import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
-import { db } from './firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import { encryptTotpSecret, decryptTotpSecret, isTotpSecretEncrypted } from './encryption';
 
 // TOTP Configuration
@@ -149,13 +149,14 @@ export async function enable2FA(
   backupCodes: string[]
 ): Promise<boolean> {
   try {
-    const userRef = doc(db, 'users', userId);
+    const db = getAdminFirestore();
+    const userRef = db.collection('users').doc(userId);
     const hashedCodes = hashBackupCodes(backupCodes);
 
     // SECURITY: Encrypt the TOTP secret before storing in database
     const encryptedSecret = encryptTotpSecret(secret);
 
-    await updateDoc(userRef, {
+    await userRef.update({
       twoFactorEnabled: true,
       twoFactorSecret: encryptedSecret,
       twoFactorBackupCodes: hashedCodes,
@@ -172,9 +173,10 @@ export async function enable2FA(
 // Disable 2FA for user
 export async function disable2FA(userId: string): Promise<boolean> {
   try {
-    const userRef = doc(db, 'users', userId);
+    const db = getAdminFirestore();
+    const userRef = db.collection('users').doc(userId);
 
-    await updateDoc(userRef, {
+    await userRef.update({
       twoFactorEnabled: false,
       twoFactorSecret: null,
       twoFactorBackupCodes: null,
@@ -191,19 +193,19 @@ export async function disable2FA(userId: string): Promise<boolean> {
 // Get 2FA status for user
 export async function get2FAStatus(userId: string): Promise<TwoFactorStatus> {
   try {
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    const db = getAdminFirestore();
+    const userSnap = await db.collection('users').doc(userId).get();
 
-    if (!userSnap.exists()) {
+    if (!userSnap.exists) {
       return { isEnabled: false };
     }
 
     const data = userSnap.data();
 
     return {
-      isEnabled: !!data.twoFactorEnabled,
-      backupCodesRemaining: data.twoFactorBackupCodes?.length || 0,
-      enabledAt: data.twoFactorEnabledAt?.toDate(),
+      isEnabled: !!data?.twoFactorEnabled,
+      backupCodesRemaining: data?.twoFactorBackupCodes?.length || 0,
+      enabledAt: data?.twoFactorEnabledAt?.toDate(),
     };
   } catch (error) {
     console.error('Error getting 2FA status:', error);
@@ -217,16 +219,17 @@ export async function verify2FA(
   token: string
 ): Promise<{ valid: boolean; usedBackupCode?: boolean }> {
   try {
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    const db = getAdminFirestore();
+    const userRef = db.collection('users').doc(userId);
+    const userSnap = await userRef.get();
 
-    if (!userSnap.exists()) {
+    if (!userSnap.exists) {
       return { valid: false };
     }
 
     const data = userSnap.data();
 
-    if (!data.twoFactorEnabled || !data.twoFactorSecret) {
+    if (!data?.twoFactorEnabled || !data?.twoFactorSecret) {
       return { valid: false };
     }
 
@@ -254,7 +257,7 @@ export async function verify2FA(
         const updatedCodes = [...data.twoFactorBackupCodes];
         updatedCodes.splice(codeIndex, 1);
 
-        await updateDoc(userRef, {
+        await userRef.update({
           twoFactorBackupCodes: updatedCodes,
         });
 
@@ -272,11 +275,11 @@ export async function verify2FA(
 // Regenerate backup codes
 export async function regenerateBackupCodes(userId: string): Promise<string[] | null> {
   try {
+    const db = getAdminFirestore();
     const newCodes = generateBackupCodes();
     const hashedCodes = hashBackupCodes(newCodes);
 
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
+    await db.collection('users').doc(userId).update({
       twoFactorBackupCodes: hashedCodes,
     });
 
