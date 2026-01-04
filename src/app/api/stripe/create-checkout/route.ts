@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
     const csrfError = csrfProtection(request);
     if (csrfError) return csrfError;
 
-    // Rate limiting: 5 requests per minute for payment operations
-    const rateLimitResponse = await checkRateLimit(request, 'auth');
+    // Rate limiting: 60 requests per minute (auth + CSRF already protect this endpoint)
+    const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
     // SECURITY: Require authentication
