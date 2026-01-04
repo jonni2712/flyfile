@@ -118,18 +118,12 @@ export async function POST(request: NextRequest) {
       billing_address_collection: 'required',
     };
 
-    // If user has billing data, pre-populate the checkout
+    // If user has billing data, add extra options
     if (billing) {
       // Set tax ID collection for business users
       if (billing.userType === 'business') {
         sessionParams.tax_id_collection = { enabled: true };
       }
-
-      // Add customer update to populate address
-      sessionParams.customer_update = {
-        address: 'auto',
-        name: 'auto',
-      };
 
       // Pre-fill phone number collection
       sessionParams.phone_number_collection = { enabled: true };
@@ -154,6 +148,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error('Error creating checkout session:', error);
+    // Log more details for debugging
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      if ('type' in error) console.error('Stripe error type:', (error as { type: string }).type);
+      if ('code' in error) console.error('Stripe error code:', (error as { code: string }).code);
+    }
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }
