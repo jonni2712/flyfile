@@ -114,12 +114,29 @@ export async function POST(request: NextRequest) {
     if (!userData.subscriptionId || userData.subscriptionStatus === 'canceled') {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
+      // Ensure user has a Stripe customer ID
+      let stripeCustomerId = userData.stripeCustomerId;
+      if (!stripeCustomerId) {
+        const customer = await stripe.customers.create({
+          email: userData.email,
+          metadata: {
+            userId,
+            source: 'flyfile_change_plan',
+          },
+        });
+        stripeCustomerId = customer.id;
+
+        // Save customer ID
+        await db.collection('users').doc(userId).update({
+          stripeCustomerId: customer.id,
+        });
+      }
+
       const sessionParams: Stripe.Checkout.SessionCreateParams = {
         mode: 'subscription',
         payment_method_types: ['card'],
         line_items: [{ price: priceId, quantity: 1 }],
-        customer: userData.stripeCustomerId || undefined,
-        customer_email: !userData.stripeCustomerId ? userData.email : undefined,
+        customer: stripeCustomerId,
         client_reference_id: userId,
         success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/pricing?canceled=true`,
@@ -135,7 +152,14 @@ export async function POST(request: NextRequest) {
             billingCycle,
           },
         },
+        // Enable promo codes
+        allow_promotion_codes: true,
         billing_address_collection: 'required',
+        customer_update: {
+          name: 'auto',
+          address: 'auto',
+        },
+        tax_id_collection: { enabled: true },
       };
 
       const session = await stripe.checkout.sessions.create(sessionParams);

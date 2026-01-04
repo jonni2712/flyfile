@@ -82,6 +82,26 @@ export async function POST(request: NextRequest) {
     const userData = userDoc.data();
     const billing = userData?.billing;
 
+    // Check if user already has a Stripe customer ID
+    let stripeCustomerId = userData?.stripeCustomerId;
+
+    // If no customer exists, create one
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: userEmail,
+        metadata: {
+          userId,
+          source: 'flyfile_checkout',
+        },
+      });
+      stripeCustomerId = customer.id;
+
+      // Save customer ID to user record
+      await db.collection('users').doc(userId).update({
+        stripeCustomerId: customer.id,
+      });
+    }
+
     // Build session parameters
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
@@ -92,7 +112,8 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
-      customer_email: userEmail,
+      // Use customer ID instead of email for better management
+      customer: stripeCustomerId,
       client_reference_id: userId,
       success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/pricing?canceled=true`,
@@ -108,17 +129,21 @@ export async function POST(request: NextRequest) {
           billingCycle: cycle,
         },
       },
-      // Pre-fill billing address if available
+      // Enable promo/coupon codes
+      allow_promotion_codes: true,
+      // Pre-fill billing address
       billing_address_collection: 'required',
+      // Auto-update customer info from checkout
+      customer_update: {
+        name: 'auto',
+        address: 'auto',
+      },
+      // Enable tax ID collection for all users (VAT, etc.)
+      tax_id_collection: { enabled: true },
     };
 
     // If user has billing data, add extra options
     if (billing) {
-      // Set tax ID collection for business users
-      if (billing.userType === 'business') {
-        sessionParams.tax_id_collection = { enabled: true };
-      }
-
       // Pre-fill phone number collection
       sessionParams.phone_number_collection = { enabled: true };
 
