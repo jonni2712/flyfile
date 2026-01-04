@@ -126,7 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function signIn(email: string, password: string) {
-    await signInWithEmailAndPassword(auth, email, password);
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
+    // Set session cookie immediately for middleware
+    const token = await user.getIdToken();
+    document.cookie = `__session=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
   }
 
   async function signUp(
@@ -139,6 +142,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(user, { displayName });
     await createUserProfile(user, displayName, username, billingData);
+    // Set session cookie immediately for middleware
+    const token = await user.getIdToken();
+    document.cookie = `__session=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
   }
 
   async function signInWithGoogle() {
@@ -153,6 +159,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       await fetchUserProfile(user.uid);
     }
+
+    // Set session cookie immediately for middleware
+    const token = await user.getIdToken();
+    document.cookie = `__session=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
   }
 
   async function signOut() {
