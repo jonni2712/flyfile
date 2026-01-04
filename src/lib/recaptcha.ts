@@ -45,8 +45,17 @@ export async function verifyRecaptchaToken(
   expectedAction?: RecaptchaAction
 ): Promise<RecaptchaVerificationResult> {
   if (!RECAPTCHA_SECRET_KEY) {
-    console.warn('reCAPTCHA secret key not configured');
+    // SECURITY: Fail-closed in production if reCAPTCHA is not configured
+    if (process.env.NODE_ENV === 'production') {
+      console.error('SECURITY: reCAPTCHA secret key not configured in production');
+      return {
+        success: false,
+        isBot: true,
+        error: 'reCAPTCHA not configured'
+      };
+    }
     // In development, allow through if not configured
+    console.warn('reCAPTCHA secret key not configured (development mode)');
     return {
       success: true,
       isBot: false,

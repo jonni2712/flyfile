@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, getDocs, doc, getDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
 import { checkAdminAccess } from '@/lib/admin';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { deleteFile } from '@/lib/r2';
@@ -20,9 +19,10 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get('pageSize') || '50');
     const status = searchParams.get('status'); // 'active', 'expired', 'pending'
 
+    const db = getAdminFirestore();
+
     // Get transfers
-    const transfersRef = collection(db, 'transfers');
-    const transfersSnapshot = await getDocs(transfersRef);
+    const transfersSnapshot = await db.collection('transfers').get();
 
     const now = new Date();
     let transfers: Array<Record<string, unknown>> = [];
@@ -106,10 +106,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const transferRef = doc(db, 'transfers', transferId);
-    const transferSnap = await getDoc(transferRef);
+    const db = getAdminFirestore();
+    const transferSnap = await db.collection('transfers').doc(transferId).get();
 
-    if (!transferSnap.exists()) {
+    if (!transferSnap.exists) {
       return NextResponse.json(
         { success: false, error: 'Trasferimento non trovato' },
         { status: 404 }
@@ -117,8 +117,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete files from R2
-    const filesRef = collection(db, 'transfers', transferId, 'files');
-    const filesSnapshot = await getDocs(filesRef);
+    const filesSnapshot = await db.collection('transfers').doc(transferId).collection('files').get();
 
     for (const fileDoc of filesSnapshot.docs) {
       const fileData = fileDoc.data();
@@ -129,11 +128,11 @@ export async function DELETE(request: NextRequest) {
       } catch (err) {
         console.error('Error deleting file from R2:', err);
       }
-      await deleteDoc(doc(db, 'transfers', transferId, 'files', fileDoc.id));
+      await db.collection('transfers').doc(transferId).collection('files').doc(fileDoc.id).delete();
     }
 
     // Delete transfer document
-    await deleteDoc(transferRef);
+    await db.collection('transfers').doc(transferId).delete();
 
     return NextResponse.json({
       success: true,

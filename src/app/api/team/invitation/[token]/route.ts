@@ -1,19 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
+import { requireAuth } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 
-// GET - Get invitation by token
+// GET - Get invitation by token (public, no auth required)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
@@ -21,27 +12,27 @@ export async function GET(
   try {
     const { token } = await params;
 
-    // Find invitation by token
-    const invitationsRef = collection(db, 'teamInvitations');
-    const q = query(
-      invitationsRef,
-      where('token', '==', token),
-      where('status', '==', 'pending')
-    );
-    const snapshot = await getDocs(q);
+    const db = getAdminFirestore();
 
-    if (snapshot.empty) {
+    // Find invitation by token
+    const invSnapshot = await db.collection('teamInvitations')
+      .where('token', '==', token)
+      .where('status', '==', 'pending')
+      .get();
+
+    if (invSnapshot.empty) {
       return NextResponse.json(
         { error: 'Invito non trovato o già utilizzato' },
         { status: 404 }
       );
     }
 
-    const invDoc = snapshot.docs[0];
+    const invDoc = invSnapshot.docs[0];
     const invitation = invDoc.data();
 
     // Check if expired
-    if (invitation.expiresAt?.toDate() < new Date()) {
+    const expiresAt = invitation.expiresAt?.toDate?.();
+    if (expiresAt && expiresAt < new Date()) {
       return NextResponse.json(
         { error: 'Invito scaduto', status: 'expired' },
         { status: 410 }
@@ -49,29 +40,27 @@ export async function GET(
     }
 
     // Get team info
-    const teamRef = doc(db, 'teams', invitation.teamId);
-    const teamSnap = await getDoc(teamRef);
+    const teamSnap = await db.collection('teams').doc(invitation.teamId).get();
 
-    if (!teamSnap.exists()) {
+    if (!teamSnap.exists) {
       return NextResponse.json(
         { error: 'Team non trovato' },
         { status: 404 }
       );
     }
 
-    const teamData = teamSnap.data();
+    const teamData = teamSnap.data() || {};
 
     // Get owner info
-    const ownerRef = doc(db, 'users', teamData.ownerId);
-    const ownerSnap = await getDoc(ownerRef);
-    const ownerData = ownerSnap.exists() ? ownerSnap.data() : {};
+    const ownerSnap = await db.collection('users').doc(teamData.ownerId).get();
+    const ownerData = ownerSnap.exists ? ownerSnap.data() || {} : {};
 
     return NextResponse.json({
       invitation: {
         id: invDoc.id,
         email: invitation.email,
-        expiresAt: invitation.expiresAt?.toDate()?.toISOString() || null,
-        createdAt: invitation.createdAt?.toDate()?.toISOString() || null,
+        expiresAt: invitation.expiresAt?.toDate?.()?.toISOString() || null,
+        createdAt: invitation.createdAt?.toDate?.()?.toISOString() || null,
       },
       team: {
         id: invitation.teamId,
@@ -99,51 +88,51 @@ export async function POST(
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const { token } = await params;
-    const body = await request.json();
-    const { userId } = body;
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'userId richiesto' },
-        { status: 400 }
-      );
-    }
+    const { token } = await params;
+
+    // SECURITY: Require authentication - don't trust userId from body
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
+    const userId = authResult.userId!;  // Use verified userId from token
+
+    const db = getAdminFirestore();
 
     // Get user info
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    const userSnap = await db.collection('users').doc(userId).get();
 
-    if (!userSnap.exists()) {
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
 
     // Find invitation by token
-    const invitationsRef = collection(db, 'teamInvitations');
-    const q = query(
-      invitationsRef,
-      where('token', '==', token),
-      where('status', '==', 'pending')
-    );
-    const snapshot = await getDocs(q);
+    const invSnapshot = await db.collection('teamInvitations')
+      .where('token', '==', token)
+      .where('status', '==', 'pending')
+      .get();
 
-    if (snapshot.empty) {
+    if (invSnapshot.empty) {
       return NextResponse.json(
         { error: 'Invito non valido o già utilizzato' },
         { status: 404 }
       );
     }
 
-    const invDoc = snapshot.docs[0];
+    const invDoc = invSnapshot.docs[0];
     const invitation = invDoc.data();
 
     // Check if expired
-    if (invitation.expiresAt?.toDate() < new Date()) {
+    const expiresAt = invitation.expiresAt?.toDate?.();
+    if (expiresAt && expiresAt < new Date()) {
       return NextResponse.json(
         { error: 'Invito scaduto' },
         { status: 410 }
@@ -159,9 +148,9 @@ export async function POST(
     }
 
     // Check if user is already a member of any team
-    const membersRef = collection(db, 'teamMembers');
-    const existingMemberQuery = query(membersRef, where('userId', '==', userId));
-    const existingMemberSnapshot = await getDocs(existingMemberQuery);
+    const existingMemberSnapshot = await db.collection('teamMembers')
+      .where('userId', '==', userId)
+      .get();
 
     if (!existingMemberSnapshot.empty) {
       return NextResponse.json(
@@ -171,37 +160,36 @@ export async function POST(
     }
 
     // Get team
-    const teamRef = doc(db, 'teams', invitation.teamId);
-    const teamSnap = await getDoc(teamRef);
+    const teamSnap = await db.collection('teams').doc(invitation.teamId).get();
 
-    if (!teamSnap.exists()) {
+    if (!teamSnap.exists) {
       return NextResponse.json(
         { error: 'Team non trovato' },
         { status: 404 }
       );
     }
 
-    const teamData = teamSnap.data();
+    const teamData = teamSnap.data() || {};
 
     // Add user as team member
-    await addDoc(collection(db, 'teamMembers'), {
+    await db.collection('teamMembers').add({
       teamId: invitation.teamId,
       userId: userId,
       role: 'member',
       storageUsed: 0,
-      joinedAt: serverTimestamp(),
+      joinedAt: FieldValue.serverTimestamp(),
     });
 
     // Update invitation status
-    await updateDoc(doc(db, 'teamInvitations', invDoc.id), {
+    await db.collection('teamInvitations').doc(invDoc.id).update({
       status: 'accepted',
-      acceptedAt: serverTimestamp(),
+      acceptedAt: FieldValue.serverTimestamp(),
     });
 
     // Update team member count
-    await updateDoc(teamRef, {
+    await db.collection('teams').doc(invitation.teamId).update({
       memberCount: (teamData.memberCount || 1) + 1,
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json({
@@ -224,43 +212,50 @@ export async function DELETE(
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
+    const userId = authResult.userId!;
+
     const { token } = await params;
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
     const action = searchParams.get('action'); // 'cancel' or 'decline'
 
-    // Find invitation by token
-    const invitationsRef = collection(db, 'teamInvitations');
-    const q = query(
-      invitationsRef,
-      where('token', '==', token),
-      where('status', '==', 'pending')
-    );
-    const snapshot = await getDocs(q);
+    const db = getAdminFirestore();
 
-    if (snapshot.empty) {
+    // Find invitation by token
+    const invSnapshot = await db.collection('teamInvitations')
+      .where('token', '==', token)
+      .where('status', '==', 'pending')
+      .get();
+
+    if (invSnapshot.empty) {
       return NextResponse.json(
         { error: 'Invito non trovato' },
         { status: 404 }
       );
     }
 
-    const invDoc = snapshot.docs[0];
+    const invDoc = invSnapshot.docs[0];
     const invitation = invDoc.data();
 
     // If canceling (owner action), verify ownership
-    if (action === 'cancel' && userId) {
-      const teamRef = doc(db, 'teams', invitation.teamId);
-      const teamSnap = await getDoc(teamRef);
+    if (action === 'cancel') {
+      const teamSnap = await db.collection('teams').doc(invitation.teamId).get();
 
-      if (!teamSnap.exists()) {
+      if (!teamSnap.exists) {
         return NextResponse.json(
           { error: 'Team non trovato' },
           { status: 404 }
         );
       }
 
-      const teamData = teamSnap.data();
+      const teamData = teamSnap.data() || {};
 
       if (teamData.ownerId !== userId) {
         return NextResponse.json(
@@ -268,10 +263,21 @@ export async function DELETE(
           { status: 403 }
         );
       }
+    } else if (action === 'decline') {
+      // For declining, verify the invitation is for this user's email
+      const userSnap = await db.collection('users').doc(userId).get();
+      const userData = userSnap.exists ? userSnap.data() || {} : {};
+
+      if (invitation.email.toLowerCase() !== userData.email?.toLowerCase()) {
+        return NextResponse.json(
+          { error: 'Non autorizzato a rifiutare questo invito' },
+          { status: 403 }
+        );
+      }
     }
 
     // Delete invitation
-    await deleteDoc(doc(db, 'teamInvitations', invDoc.id));
+    await db.collection('teamInvitations').doc(invDoc.id).delete();
 
     return NextResponse.json({
       success: true,

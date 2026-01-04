@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
 import { authenticateApiRequest, unauthorizedResponse } from '@/lib/api-auth';
 import { checkRateLimit } from '@/lib/rate-limit';
 
@@ -17,25 +16,26 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse(auth.error || 'Non autorizzato');
     }
 
+    const db = getAdminFirestore();
+
     // Get user profile for plan info
-    const userRef = doc(db, 'users', auth.userId!);
-    const userSnap = await getDoc(userRef);
+    const userSnap = await db.collection('users').doc(auth.userId!).get();
 
     let plan = 'pro';
     let storageUsed = 0;
     let storageLimit = 500 * 1024 * 1024 * 1024; // 500GB default
 
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
+    if (userSnap.exists) {
+      const userData = userSnap.data() || {};
       plan = userData.plan || 'pro';
       storageUsed = userData.storageUsed || 0;
       storageLimit = userData.storageLimit || storageLimit;
     }
 
     // Get transfer stats
-    const transfersRef = collection(db, 'transfers');
-    const transfersQuery = query(transfersRef, where('userId', '==', auth.userId));
-    const transfersSnapshot = await getDocs(transfersQuery);
+    const transfersSnapshot = await db.collection('transfers')
+      .where('userId', '==', auth.userId)
+      .get();
 
     let totalTransfers = 0;
     let activeTransfers = 0;
@@ -63,9 +63,9 @@ export async function GET(request: NextRequest) {
     });
 
     // Get API key usage
-    const apiKeysRef = collection(db, 'apiKeys');
-    const apiKeysQuery = query(apiKeysRef, where('userId', '==', auth.userId));
-    const apiKeysSnapshot = await getDocs(apiKeysQuery);
+    const apiKeysSnapshot = await db.collection('apiKeys')
+      .where('userId', '==', auth.userId)
+      .get();
 
     let totalApiCalls = 0;
     let activeKeys = 0;

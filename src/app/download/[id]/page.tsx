@@ -202,18 +202,26 @@ export default function DownloadPage() {
       const encryptionIv = file.encryptionIv;
 
       // Get presigned URL for download
+      // SECURITY FIX: Include password in request for server-side verification
       const response = await fetch('/api/files/download-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           transferId: transfer.id,
           fileId: file.id,
-          path: file.path
+          path: file.path,
+          password: transfer.password ? password : undefined,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Download non disponibile');
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.requiresPassword) {
+          setShowPasswordModal(true);
+          setDownloadingFileId(null);
+          return;
+        }
+        throw new Error(errorData.error || 'Download non disponibile');
       }
 
       const { downloadUrl } = await response.json();

@@ -5,6 +5,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { recordDownload } from '@/lib/analytics';
 import { verifyAuth } from '@/lib/auth-utils';
+import { verifyPassword } from '@/lib/password';
 
 // GET method for single file download via query params
 export async function GET(request: NextRequest) {
@@ -104,7 +105,8 @@ export async function POST(request: NextRequest) {
     if (rateLimitResponse) return rateLimitResponse;
 
     const body = await request.json();
-    const { transferId, fileId, path, all, passwordVerified } = body;
+    // SECURITY FIX: Removed passwordVerified - now verify password server-side
+    const { transferId, fileId, path, all, password } = body;
 
     if (!transferId) {
       return NextResponse.json(
@@ -128,14 +130,22 @@ export async function POST(request: NextRequest) {
 
     const transferData = transferDoc.data() || {};
 
-    // SECURITY: Check if transfer is password-protected
-    // Password verification happens on the download page, but we need to ensure
-    // direct API calls also require verification
-    if (transferData.password && !passwordVerified) {
-      return NextResponse.json(
-        { error: 'Password verification required' },
-        { status: 401 }
-      );
+    // SECURITY FIX: Server-side password verification (no client-side bypass)
+    if (transferData.password) {
+      if (!password) {
+        return NextResponse.json(
+          { error: 'Password richiesta per questo transfer', requiresPassword: true },
+          { status: 401 }
+        );
+      }
+
+      const isValidPassword = await verifyPassword(password, transferData.password);
+      if (!isValidPassword) {
+        return NextResponse.json(
+          { error: 'Password non corretta' },
+          { status: 401 }
+        );
+      }
     }
 
     // SECURITY: Check if transfer is private (not public link)

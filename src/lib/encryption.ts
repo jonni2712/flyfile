@@ -244,3 +244,117 @@ export function createEncryptionMetadata(
     encryptedAt: new Date(),
   };
 }
+
+// ============================================
+// TOTP Secret Encryption (Environment Key Based)
+// ============================================
+
+/**
+ * Get TOTP encryption key from environment variable
+ * In production, TOTP_ENCRYPTION_KEY must be set (64 hex chars = 32 bytes)
+ */
+function getTotpEncryptionKey(): Buffer {
+  const keyHex = process.env.TOTP_ENCRYPTION_KEY;
+
+  if (!keyHex) {
+    // In development, use a deterministic fallback key (NOT for production)
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('TOTP_ENCRYPTION_KEY not set, using development fallback');
+      return crypto.createHash('sha256').update('dev-only-totp-key-not-for-prod').digest();
+    }
+    throw new Error('TOTP_ENCRYPTION_KEY environment variable is required in production');
+  }
+
+  // Key should be 64 hex characters (32 bytes)
+  if (keyHex.length !== 64) {
+    throw new Error('TOTP_ENCRYPTION_KEY must be 64 hex characters (32 bytes)');
+  }
+
+  return Buffer.from(keyHex, 'hex');
+}
+
+/**
+ * Encrypt TOTP secret using AES-256-GCM with environment key
+ * Returns base64-encoded string containing: IV + encrypted data + auth tag
+ */
+export function encryptTotpSecret(plainSecret: string): string {
+  const key = getTotpEncryptionKey();
+  const iv = crypto.randomBytes(IV_LENGTH);
+
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv, {
+    authTagLength: AUTH_TAG_LENGTH,
+  });
+
+  const encrypted = Buffer.concat([
+    cipher.update(plainSecret, 'utf8'),
+    cipher.final(),
+  ]);
+
+  const authTag = cipher.getAuthTag();
+
+  // Combine IV + encrypted + authTag
+  const combined = Buffer.concat([iv, encrypted, authTag]);
+
+  return combined.toString('base64');
+}
+
+/**
+ * Decrypt TOTP secret that was encrypted with encryptTotpSecret()
+ * Expects base64-encoded string containing: IV + encrypted data + auth tag
+ */
+export function decryptTotpSecret(ciphertext: string): string {
+  const key = getTotpEncryptionKey();
+  const combined = Buffer.from(ciphertext, 'base64');
+
+  // Extract components
+  const iv = combined.subarray(0, IV_LENGTH);
+  const authTag = combined.subarray(combined.length - AUTH_TAG_LENGTH);
+  const encrypted = combined.subarray(IV_LENGTH, combined.length - AUTH_TAG_LENGTH);
+
+  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv, {
+    authTagLength: AUTH_TAG_LENGTH,
+  });
+
+  decipher.setAuthTag(authTag);
+
+  const decrypted = Buffer.concat([
+    decipher.update(encrypted),
+    decipher.final(),
+  ]);
+
+  return decrypted.toString('utf8');
+}
+
+/**
+ * Check if a TOTP secret appears to be encrypted
+ * Used to detect if data needs decryption or is stored in legacy plaintext format
+ */
+export function isTotpSecretEncrypted(data: string): boolean {
+  // Plaintext TOTP secrets are base32 encoded (uppercase letters A-Z and digits 2-7)
+  // Encrypted secrets are base64 encoded with mixed case and more characters
+
+  // Check if it looks like base32 (plaintext TOTP secret)
+  if (/^[A-Z2-7]+$/.test(data)) {
+    return false; // This is a plaintext base32 TOTP secret
+  }
+
+  // Minimum length for encrypted: IV (12) + at least 1 byte + tag (16) = 29 bytes
+  // In base64: ceil(29 * 4/3) = 39 characters
+  if (data.length < 39) return false;
+
+  // Check if it's valid base64
+  try {
+    const decoded = Buffer.from(data, 'base64');
+    return decoded.length >= IV_LENGTH + AUTH_TAG_LENGTH + 1;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Generate a new random TOTP encryption key (for setup)
+ * Returns 64 hex characters suitable for TOTP_ENCRYPTION_KEY env var
+ */
+export function generateTotpEncryptionKey(): string {
+  return crypto.randomBytes(KEY_LENGTH).toString('hex');
+}

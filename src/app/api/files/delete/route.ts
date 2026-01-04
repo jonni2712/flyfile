@@ -4,9 +4,14 @@ import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 
 export async function DELETE(request: NextRequest) {
   try {
+    // CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting: 60 requests per minute for API operations
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { sendEmail, getContactNotificationEmail } from '@/lib/email';
 
 interface ContactFormData {
@@ -45,9 +45,10 @@ export async function POST(request: NextRequest) {
                'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
+    const db = getAdminFirestore();
+
     // Store message in Firestore
-    const contactRef = collection(db, 'contact_messages');
-    const docRef = await addDoc(contactRef, {
+    const docRef = await db.collection('contact_messages').add({
       name,
       email,
       company: company || null,
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
       ip,
       userAgent,
       status: 'new',
-      createdAt: Timestamp.now(),
+      createdAt: FieldValue.serverTimestamp(),
       readAt: null,
       repliedAt: null,
     });

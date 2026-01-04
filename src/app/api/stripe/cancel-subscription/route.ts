@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 import { PLANS } from '@/types';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -12,9 +13,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // POST - Cancel subscription
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting: 5 requests per minute for sensitive operations
     const rateLimitResponse = await checkRateLimit(request, 'sensitive');
     if (rateLimitResponse) return rateLimitResponse;
+
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
     const { userId, cancelImmediately = false } = await request.json();
 
@@ -25,18 +34,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user data
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    // SECURITY: Verify user is canceling their own subscription
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
 
-    if (!userSnap.exists()) {
+    const db = getAdminFirestore();
+
+    // Get user data
+    const userSnap = await db.collection('users').doc(userId).get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
 
     if (!userData.subscriptionId) {
       return NextResponse.json(
@@ -52,7 +70,7 @@ export async function POST(request: NextRequest) {
 
       // Downgrade to free plan immediately
       const freePlan = PLANS.free;
-      await updateDoc(userRef, {
+      await db.collection('users').doc(userId).update({
         plan: 'free',
         storageLimit: freePlan.storageLimit,
         maxMonthlyTransfers: freePlan.maxTransfers,
@@ -77,7 +95,7 @@ export async function POST(request: NextRequest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const periodEnd = (subscription as any).current_period_end as number;
 
-      await updateDoc(userRef, {
+      await db.collection('users').doc(userId).update({
         subscriptionStatus: 'canceling',
         cancelAt: new Date(periodEnd * 1000).toISOString(),
       });
@@ -100,9 +118,17 @@ export async function POST(request: NextRequest) {
 // DELETE - Resume/reactivate subscription (undo cancel)
 export async function DELETE(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting
     const rateLimitResponse = await checkRateLimit(request, 'sensitive');
     if (rateLimitResponse) return rateLimitResponse;
+
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -114,18 +140,27 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Get user data
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    // SECURITY: Verify user is reactivating their own subscription
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
 
-    if (!userSnap.exists()) {
+    const db = getAdminFirestore();
+
+    // Get user data
+    const userSnap = await db.collection('users').doc(userId).get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
 
     if (!userData.subscriptionId) {
       return NextResponse.json(
@@ -139,7 +174,7 @@ export async function DELETE(request: NextRequest) {
       cancel_at_period_end: false,
     });
 
-    await updateDoc(userRef, {
+    await db.collection('users').doc(userId).update({
       subscriptionStatus: 'active',
       cancelAt: null,
     });

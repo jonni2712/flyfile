@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, getDocs, query, where, orderBy, limit, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
 import { checkAdminAccess, AdminStats } from '@/lib/admin';
 import { checkRateLimit } from '@/lib/rate-limit';
 
@@ -14,9 +13,10 @@ export async function GET(request: NextRequest) {
     const adminCheck = await checkAdminAccess(request);
     if (adminCheck) return adminCheck;
 
+    const db = getAdminFirestore();
+
     // Get all users
-    const usersRef = collection(db, 'users');
-    const usersSnapshot = await getDocs(usersRef);
+    const usersSnapshot = await db.collection('users').get();
 
     let totalUsers = 0;
     let totalStorageUsed = 0;
@@ -64,8 +64,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Get all transfers
-    const transfersRef = collection(db, 'transfers');
-    const transfersSnapshot = await getDocs(transfersRef);
+    const transfersSnapshot = await db.collection('transfers').get();
 
     let totalTransfers = 0;
     let totalDownloads = 0;

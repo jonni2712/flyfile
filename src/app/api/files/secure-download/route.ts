@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getDownloadUrl } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { decryptData } from '@/lib/encryption';
@@ -26,19 +26,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const db = getAdminFirestore();
+
     // Get transfer document
-    const transferDoc = await getDoc(doc(db, 'transfers', transferId));
-    if (!transferDoc.exists()) {
+    const transferDoc = await db.collection('transfers').doc(transferId).get();
+    if (!transferDoc.exists) {
       return NextResponse.json(
         { error: 'Transfer not found' },
         { status: 404 }
       );
     }
 
-    const transferData = transferDoc.data();
+    const transferData = transferDoc.data() || {};
 
     // Check if transfer is expired
-    if (transferData.expiresAt && transferData.expiresAt.toDate() < new Date()) {
+    const expiresAt = transferData.expiresAt?.toDate?.();
+    if (expiresAt && expiresAt < new Date()) {
       return NextResponse.json(
         { error: 'Transfer expired' },
         { status: 410 }
@@ -46,15 +49,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Get file document
-    const fileDoc = await getDoc(doc(db, 'transfers', transferId, 'files', fileId));
-    if (!fileDoc.exists()) {
+    const fileDoc = await db.collection('transfers').doc(transferId).collection('files').doc(fileId).get();
+    if (!fileDoc.exists) {
       return NextResponse.json(
         { error: 'File not found' },
         { status: 404 }
       );
     }
 
-    const fileData = fileDoc.data();
+    const fileData = fileDoc.data() || {};
     const filePath = path || fileData.path || fileData.storedName;
     const fileName = fileData.originalName || 'download';
     const mimeType = fileData.mimeType || 'application/octet-stream';
@@ -113,11 +116,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Update download count
-    await updateDoc(doc(db, 'transfers', transferId, 'files', fileId), {
-      downloadCount: increment(1),
+    await db.collection('transfers').doc(transferId).collection('files').doc(fileId).update({
+      downloadCount: FieldValue.increment(1),
     });
-    await updateDoc(doc(db, 'transfers', transferId), {
-      downloadCount: increment(1),
+    await db.collection('transfers').doc(transferId).update({
+      downloadCount: FieldValue.increment(1),
     });
 
     // Record analytics

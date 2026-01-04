@@ -42,15 +42,10 @@ export async function GET(request: NextRequest) {
 
     const webhooks = await getUserWebhooks(userId);
 
-    // Hide secrets in response
-    const safeWebhooks = webhooks.map((w) => ({
-      ...w,
-      secret: `${w.secret.substring(0, 12)}...`, // Only show prefix
-    }));
-
+    // Webhooks already have masked secrets from getUserWebhooks
     return NextResponse.json({
       success: true,
-      webhooks: safeWebhooks,
+      webhooks,
       availableEvents: WEBHOOK_EVENTS,
     });
   } catch (error) {
@@ -146,12 +141,10 @@ export async function POST(request: NextRequest) {
       events: events as WebhookEvent[],
     });
 
+    // Return webhook with masked secret and full secret shown only once
     return NextResponse.json({
       success: true,
-      webhook: {
-        ...webhook,
-        secret: `${secret.substring(0, 12)}...`, // Hide most of secret
-      },
+      webhook, // Already has secretMask from createWebhook
       fullSecret: secret, // This is shown only once!
       message: 'Webhook creato. Salva il secret, non sarà più visibile!',
     });

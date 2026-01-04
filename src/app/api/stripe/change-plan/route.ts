@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 import { PLANS } from '@/types';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -36,9 +38,17 @@ const PLAN_HIERARCHY: Record<string, number> = {
 // POST - Change subscription plan
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting
     const rateLimitResponse = await checkRateLimit(request, 'sensitive');
     if (rateLimitResponse) return rateLimitResponse;
+
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
     const { userId, newPlan, billingCycle = 'monthly' } = await request.json();
 
@@ -46,6 +56,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'userId e newPlan richiesti' },
         { status: 400 }
+      );
+    }
+
+    // SECURITY: Verify user is changing their own plan
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
       );
     }
 
@@ -57,18 +75,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user data
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    const db = getAdminFirestore();
 
-    if (!userSnap.exists()) {
+    // Get user data
+    const userSnap = await db.collection('users').doc(userId).get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
     const currentPlan = userData.plan || 'free';
 
     // Check if already on the same plan
@@ -148,12 +167,13 @@ export async function POST(request: NextRequest) {
 
       // Update user plan immediately
       const plan = PLANS[newPlan as keyof typeof PLANS];
-      await updateDoc(userRef, {
+      await db.collection('users').doc(userId).update({
         plan: newPlan,
         storageLimit: plan.storageLimit,
         maxMonthlyTransfers: plan.maxTransfers,
         retentionDays: plan.retentionDays,
         billingCycle,
+        updatedAt: FieldValue.serverTimestamp(),
       });
 
       return NextResponse.json({
@@ -177,10 +197,11 @@ export async function POST(request: NextRequest) {
       // Store pending downgrade info
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const periodEnd = (subscription as any).current_period_end as number;
-      await updateDoc(userRef, {
+      await db.collection('users').doc(userId).update({
         pendingPlan: newPlan,
         pendingBillingCycle: billingCycle,
         planChangeAt: new Date(periodEnd * 1000).toISOString(),
+        updatedAt: FieldValue.serverTimestamp(),
       });
 
       return NextResponse.json({
@@ -203,6 +224,10 @@ export async function POST(request: NextRequest) {
 // GET - Get available plans for user
 export async function GET(request: NextRequest) {
   try {
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -213,18 +238,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get user data
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    // SECURITY: Verify user is checking their own plans
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
 
-    if (!userSnap.exists()) {
+    const db = getAdminFirestore();
+
+    // Get user data
+    const userSnap = await db.collection('users').doc(userId).get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
     const currentPlan = userData.plan || 'free';
 
     // Return available plans with upgrade/downgrade info

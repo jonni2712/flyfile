@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc, query, orderBy, limit, startAfter, where, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { checkAdminAccess } from '@/lib/admin';
 import { checkRateLimit } from '@/lib/rate-limit';
 
@@ -21,9 +21,10 @@ export async function GET(request: NextRequest) {
     const planFilter = searchParams.get('plan');
     const betaOnly = searchParams.get('betaOnly') === 'true';
 
+    const db = getAdminFirestore();
+
     // Get users
-    const usersRef = collection(db, 'users');
-    const usersSnapshot = await getDocs(usersRef);
+    const usersSnapshot = await db.collection('users').get();
 
     let users: Array<Record<string, unknown>> = [];
 
@@ -124,7 +125,7 @@ export async function PATCH(request: NextRequest) {
     ];
 
     const sanitizedUpdates: Record<string, unknown> = {
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
     for (const field of allowedFields) {
@@ -133,17 +134,17 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    const userRef = doc(db, 'users', targetUserId);
-    const userSnap = await getDoc(userRef);
+    const db = getAdminFirestore();
+    const userSnap = await db.collection('users').doc(targetUserId).get();
 
-    if (!userSnap.exists()) {
+    if (!userSnap.exists) {
       return NextResponse.json(
         { success: false, error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    await updateDoc(userRef, sanitizedUpdates);
+    await db.collection('users').doc(targetUserId).update(sanitizedUpdates);
 
     return NextResponse.json({
       success: true,
@@ -179,10 +180,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const userRef = doc(db, 'users', targetUserId);
-    const userSnap = await getDoc(userRef);
+    const db = getAdminFirestore();
+    const userSnap = await db.collection('users').doc(targetUserId).get();
 
-    if (!userSnap.exists()) {
+    if (!userSnap.exists) {
       return NextResponse.json(
         { success: false, error: 'Utente non trovato' },
         { status: 404 }
@@ -190,7 +191,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if trying to delete an admin
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
     if (userData.isAdmin) {
       return NextResponse.json(
         { success: false, error: 'Non puoi eliminare un account admin' },
@@ -199,7 +200,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete user
-    await deleteDoc(userRef);
+    await db.collection('users').doc(targetUserId).delete();
 
     return NextResponse.json({
       success: true,

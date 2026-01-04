@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { checkRateLimit } from '@/lib/rate-limit';
+import crypto from 'crypto';
+
+// SECURITY: Hash verification code for comparison
+function hashVerificationCode(code: string): string {
+  return crypto.createHash('sha256').update(code).digest('hex');
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,21 +34,30 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Get anonymous user record
-    const anonRef = doc(db, 'anonymousUsers', normalizedEmail);
-    const anonSnap = await getDoc(anonRef);
+    const db = getAdminFirestore();
 
-    if (!anonSnap.exists()) {
+    // Get anonymous user record
+    const anonSnap = await db.collection('anonymousUsers').doc(normalizedEmail).get();
+
+    if (!anonSnap.exists) {
       return NextResponse.json(
         { success: false, error: 'Utente non trovato. Richiedi un nuovo codice.' },
         { status: 404 }
       );
     }
 
-    const anonData = anonSnap.data();
+    const anonData = anonSnap.data() || {};
 
-    // Check if code matches
-    if (anonData.verificationCode !== code) {
+    // SECURITY: Compare hashed codes (constant-time comparison)
+    const inputHash = hashVerificationCode(code);
+    const storedHash = anonData.verificationCodeHash as string | undefined;
+
+    // Use timing-safe comparison to prevent timing attacks
+    const hashesMatch = storedHash &&
+      inputHash.length === storedHash.length &&
+      crypto.timingSafeEqual(Buffer.from(inputHash), Buffer.from(storedHash));
+
+    if (!hashesMatch) {
       return NextResponse.json(
         { success: false, error: 'Codice di verifica non valido.' },
         { status: 400 }
@@ -50,7 +65,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if code is expired
-    const codeExpiresAt = anonData.codeExpiresAt?.toDate ? anonData.codeExpiresAt.toDate() : new Date(anonData.codeExpiresAt);
+    const codeExpiresAtField = anonData.codeExpiresAt as FirebaseFirestore.Timestamp | Date | undefined;
+    const codeExpiresAt = codeExpiresAtField && 'toDate' in codeExpiresAtField
+      ? codeExpiresAtField.toDate()
+      : new Date(codeExpiresAtField as unknown as string);
+
     if (codeExpiresAt < new Date()) {
       return NextResponse.json(
         { success: false, error: 'Codice scaduto. Richiedi un nuovo codice.' },
@@ -59,9 +78,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark as verified
-    await updateDoc(anonRef, {
-      verifiedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+    await db.collection('anonymousUsers').doc(normalizedEmail).update({
+      verifiedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json({
@@ -69,8 +88,8 @@ export async function POST(request: NextRequest) {
       message: 'Email verificata con successo',
       anonymousUserId: normalizedEmail,
       usage: {
-        transfersUsed: anonData.monthlyTransfersUsed || 0,
-        quotaUsed: anonData.monthlyQuotaUsed || 0,
+        transfersUsed: anonData.monthlyTransfersUsed as number || 0,
+        quotaUsed: anonData.monthlyQuotaUsed as number || 0,
       },
     });
   } catch (error) {

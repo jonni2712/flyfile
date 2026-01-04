@@ -198,6 +198,9 @@ export interface RateLimitResult {
 // Rate limit types
 export type RateLimitType = 'auth' | 'upload' | 'api' | 'sensitive' | 'download' | 'anonymous' | 'password' | 'twoFactor';
 
+// Security-sensitive rate limit types that require Redis in production
+const SECURITY_SENSITIVE_TYPES: RateLimitType[] = ['auth', 'sensitive', 'password', 'twoFactor'];
+
 // Main rate limit function
 export async function rateLimit(
   request: NextRequest,
@@ -233,11 +236,33 @@ export async function rateLimit(
         reset: result.reset,
       };
     } catch (error) {
-      console.error('Upstash rate limit error, falling back to in-memory:', error);
+      console.error('Upstash rate limit error:', error);
+      // In production, fail-closed for security-sensitive endpoints
+      if (process.env.NODE_ENV === 'production' && SECURITY_SENSITIVE_TYPES.includes(type)) {
+        console.error(`SECURITY: Rate limit Redis error for ${type}, blocking request`);
+        return {
+          success: false,
+          limit: config.requests,
+          remaining: 0,
+          reset: Date.now() + 60000, // Retry in 1 minute
+        };
+      }
     }
   }
 
-  // Fallback to in-memory
+  // SECURITY: In production, fail-closed if Redis is not configured for sensitive endpoints
+  // In-memory rate limiting doesn't work reliably in serverless environments
+  if (process.env.NODE_ENV === 'production' && SECURITY_SENSITIVE_TYPES.includes(type)) {
+    console.error(`SECURITY: Upstash Redis not configured for ${type} rate limiting in production`);
+    return {
+      success: false,
+      limit: config.requests,
+      remaining: 0,
+      reset: Date.now() + 60000, // Retry in 1 minute
+    };
+  }
+
+  // Fallback to in-memory for non-sensitive endpoints in development
   const windowMs = parseWindow(config.window);
   const result = inMemoryRateLimit(identifier, config.requests, windowMs);
 

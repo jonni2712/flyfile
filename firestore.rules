@@ -57,8 +57,8 @@ service cloud.firestore {
       allow read: if true;
       // Anyone can create files (supports anonymous uploads)
       allow create: if true;
-      // Only server-side or owner can update (status changes)
-      allow update: if true;
+      // SECURITY FIX: Only authenticated owner can update
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
       // Only authenticated owner can delete
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
@@ -90,25 +90,54 @@ service cloud.firestore {
 
     // Team Invitations collection
     match /teamInvitations/{invitationId} {
-      // Anyone can read invitations (to accept via token)
-      allow read: if true;
+      // Only invitee (by email) or team owner can read
+      allow read: if isAuthenticated() && (
+        request.auth.token.email == resource.data.email ||
+        isTeamOwner(resource.data.teamId)
+      );
       allow create: if isAuthenticated();
-      allow update: if true; // Allow accepting invitation
+      // SECURITY FIX: Only authenticated users can accept (verified in backend)
+      allow update: if isAuthenticated();
       allow delete: if isAuthenticated() &&
         isTeamOwner(resource.data.teamId);
     }
 
     // Anonymous Users collection
     match /anonymousUsers/{anonId} {
-      allow read: if true;
+      // SECURITY FIX: No client reads - only server-side via Admin SDK
+      allow read: if false;
+      // Allow creation for anonymous uploads
       allow create: if true;
-      allow update: if true;
+      // SECURITY FIX: No client updates - only server-side
+      allow update: if false;
+      allow delete: if false;
     }
 
     // Transfer Downloads (analytics)
     match /transferDownloads/{downloadId} {
       allow read: if isAuthenticated();
       allow create: if true;
+    }
+
+    // API Keys collection - SECURITY: Only owner can access their keys
+    match /apiKeys/{keyId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Webhooks collection - SECURITY: Only owner can access their webhooks
+    match /webhooks/{webhookId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Processed Stripe Events - SECURITY: Admin SDK only (for idempotency)
+    match /processedStripeEvents/{eventId} {
+      allow read, write: if false;
     }
   }
 }

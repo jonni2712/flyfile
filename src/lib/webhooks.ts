@@ -15,7 +15,7 @@ export interface Webhook {
   userId: string;
   name: string;
   url: string;
-  secret: string; // Used to sign payloads
+  secretMask: string; // Masked version for display (only last 4 chars shown)
   events: WebhookEvent[];
   isActive: boolean;
   failureCount: number;
@@ -23,6 +23,17 @@ export interface Webhook {
   lastStatus?: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+// Internal type with full secret for signing
+interface WebhookWithSecret extends Omit<Webhook, 'secretMask'> {
+  secret: string;
+}
+
+// SECURITY: Mask webhook secret for display (only show last 4 characters)
+function maskSecret(secret: string): string {
+  if (secret.length <= 8) return '••••••••';
+  return `${'•'.repeat(secret.length - 4)}${secret.slice(-4)}`;
 }
 
 export interface WebhookPayload {
@@ -48,6 +59,7 @@ export function signWebhookPayload(payload: string, secret: string): string {
 }
 
 // Create a new webhook
+// SECURITY: Returns the full secret only once during creation
 export async function createWebhook(params: {
   userId: string;
   name: string;
@@ -60,7 +72,7 @@ export async function createWebhook(params: {
     userId: params.userId,
     name: params.name,
     url: params.url,
-    secret,
+    secret, // Stored in Firestore for signing payloads
     events: params.events,
     isActive: true,
     failureCount: 0,
@@ -70,17 +82,25 @@ export async function createWebhook(params: {
 
   const docRef = await addDoc(collection(db, 'webhooks'), webhookData);
 
+  // Return webhook with masked secret for display
   const webhook: Webhook = {
     id: docRef.id,
-    ...webhookData,
+    userId: webhookData.userId,
+    name: webhookData.name,
+    url: webhookData.url,
+    secretMask: maskSecret(secret), // Masked for subsequent displays
+    events: webhookData.events,
+    isActive: webhookData.isActive,
+    failureCount: webhookData.failureCount,
     createdAt: webhookData.createdAt.toDate(),
     updatedAt: webhookData.updatedAt.toDate(),
   };
 
+  // Return full secret only once for user to save
   return { webhook, secret };
 }
 
-// Get all webhooks for a user
+// Get all webhooks for a user (SECURITY: secrets are masked)
 export async function getUserWebhooks(userId: string): Promise<Webhook[]> {
   const webhooksRef = collection(db, 'webhooks');
   const q = query(webhooksRef, where('userId', '==', userId));
@@ -94,7 +114,8 @@ export async function getUserWebhooks(userId: string): Promise<Webhook[]> {
       userId: data.userId,
       name: data.name,
       url: data.url,
-      secret: data.secret,
+      // SECURITY: Never expose full secret - only show masked version
+      secretMask: maskSecret(data.secret || ''),
       events: data.events,
       isActive: data.isActive,
       failureCount: data.failureCount || 0,
@@ -170,6 +191,33 @@ export async function updateWebhook(
   });
 
   return true;
+}
+
+// Regenerate webhook secret
+// SECURITY: Returns new secret only once - user must save it
+export async function regenerateWebhookSecret(
+  webhookId: string,
+  userId: string
+): Promise<string | null> {
+  const webhookRef = doc(db, 'webhooks', webhookId);
+  const webhookSnap = await getDoc(webhookRef);
+
+  if (!webhookSnap.exists()) {
+    return null;
+  }
+
+  if (webhookSnap.data().userId !== userId) {
+    return null;
+  }
+
+  const newSecret = generateWebhookSecret();
+
+  await updateDoc(webhookRef, {
+    secret: newSecret,
+    updatedAt: Timestamp.now(),
+  });
+
+  return newSecret;
 }
 
 // Trigger webhooks for an event

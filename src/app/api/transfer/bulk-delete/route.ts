@@ -3,21 +3,24 @@ import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { deleteFile } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { csrfProtection } from '@/lib/csrf';
+import { requireAuth } from '@/lib/auth-utils';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
-    const { userId, transferIds } = await request.json();
+    // SECURITY: Require authentication - don't trust userId from body
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'userId richiesto' },
-        { status: 400 }
-      );
-    }
+    const { transferIds } = await request.json();
 
     if (!transferIds || !Array.isArray(transferIds) || transferIds.length === 0) {
       return NextResponse.json(
@@ -55,8 +58,8 @@ export async function POST(request: NextRequest) {
 
         const transferData = transferSnap.data() || {};
 
-        // Verify ownership
-        if (transferData.userId !== userId) {
+        // SECURITY: Verify ownership using verified userId from token
+        if (transferData.userId !== authResult.userId) {
           results.failed.push({ id: transferId, error: 'Non autorizzato' });
           continue;
         }
@@ -91,8 +94,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user's storage usage (don't go negative)
-    if (totalSizeDeleted > 0 && userId) {
-      const userRef = db.collection('users').doc(userId);
+    if (totalSizeDeleted > 0 && authResult.userId) {
+      const userRef = db.collection('users').doc(authResult.userId);
       const userDoc = await userRef.get();
       const currentStorage = userDoc.data()?.storageUsed || 0;
 

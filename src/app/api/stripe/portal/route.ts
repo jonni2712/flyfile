@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -11,9 +12,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // POST - Create Stripe Customer Portal session
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
+
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
     const { userId, returnUrl } = await request.json();
 
@@ -24,18 +33,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user data
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    // SECURITY: Verify user is accessing their own portal
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
 
-    if (!userSnap.exists()) {
+    const db = getAdminFirestore();
+
+    // Get user data
+    const userSnap = await db.collection('users').doc(userId).get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
 
     if (!userData.stripeCustomerId) {
       return NextResponse.json(

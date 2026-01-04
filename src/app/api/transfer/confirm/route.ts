@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { csrfProtection } from '@/lib/csrf';
+import { requireAuth } from '@/lib/auth-utils';
 
 // POST - Confirm transfer upload is complete
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { transferId } = await request.json();
 
     if (!transferId) {
@@ -30,6 +40,14 @@ export async function POST(request: NextRequest) {
     const transferData = transferSnap.data();
     const userId = transferData?.userId;
     const totalSize = transferData?.totalSize || 0;
+
+    // SECURITY: Verify ownership - only owner can confirm their transfer
+    if (userId && userId !== authResult.userId) {
+      return NextResponse.json(
+        { error: 'Non autorizzato a confermare questo transfer' },
+        { status: 403 }
+      );
+    }
 
     // Update transfer status to active
     await transferRef.update({

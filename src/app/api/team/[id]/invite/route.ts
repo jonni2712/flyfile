@@ -1,16 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  addDoc,
-  query,
-  where,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { sendEmail, getTeamInviteEmail } from '@/lib/email';
+import { requireAuth } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 
 // POST - Invite member to team
 export async function POST(
@@ -18,32 +11,41 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { id: teamId } = await params;
     const body = await request.json();
-    const { userId, email } = body;
+    const { email } = body;
 
-    if (!userId || !email) {
+    if (!email) {
       return NextResponse.json(
-        { error: 'userId e email richiesti' },
+        { error: 'email richiesta' },
         { status: 400 }
       );
     }
 
-    // Verify team exists
-    const teamRef = doc(db, 'teams', teamId);
-    const teamSnap = await getDoc(teamRef);
+    const db = getAdminFirestore();
 
-    if (!teamSnap.exists()) {
+    // Verify team exists
+    const teamSnap = await db.collection('teams').doc(teamId).get();
+
+    if (!teamSnap.exists) {
       return NextResponse.json(
         { error: 'Team non trovato' },
         { status: 404 }
       );
     }
 
-    const teamData = teamSnap.data();
+    const teamData = teamSnap.data() || {};
 
-    // Check if user is owner
-    if (teamData.ownerId !== userId) {
+    // SECURITY: Check if authenticated user is owner
+    if (teamData.ownerId !== authResult.userId) {
       return NextResponse.json(
         { error: 'Solo il proprietario può invitare membri' },
         { status: 403 }
@@ -51,17 +53,14 @@ export async function POST(
     }
 
     // Check member limit
-    const membersRef = collection(db, 'teamMembers');
-    const membersQuery = query(membersRef, where('teamId', '==', teamId));
-    const membersSnapshot = await getDocs(membersQuery);
+    const membersSnapshot = await db.collection('teamMembers')
+      .where('teamId', '==', teamId)
+      .get();
 
-    const invitationsRef = collection(db, 'teamInvitations');
-    const pendingInvitationsQuery = query(
-      invitationsRef,
-      where('teamId', '==', teamId),
-      where('status', '==', 'pending')
-    );
-    const pendingInvitationsSnapshot = await getDocs(pendingInvitationsQuery);
+    const pendingInvitationsSnapshot = await db.collection('teamInvitations')
+      .where('teamId', '==', teamId)
+      .where('status', '==', 'pending')
+      .get();
 
     const currentCount = membersSnapshot.size + pendingInvitationsSnapshot.size;
     const maxMembers = teamData.maxMembers || 3;
@@ -73,14 +72,12 @@ export async function POST(
       );
     }
 
-    // Check if email is already invited or is a member
-    const existingInviteQuery = query(
-      invitationsRef,
-      where('teamId', '==', teamId),
-      where('email', '==', email),
-      where('status', '==', 'pending')
-    );
-    const existingInviteSnapshot = await getDocs(existingInviteQuery);
+    // Check if email is already invited
+    const existingInviteSnapshot = await db.collection('teamInvitations')
+      .where('teamId', '==', teamId)
+      .where('email', '==', email)
+      .where('status', '==', 'pending')
+      .get();
 
     if (!existingInviteSnapshot.empty) {
       return NextResponse.json(
@@ -90,18 +87,16 @@ export async function POST(
     }
 
     // Check if email is already a member
-    const usersRef = collection(db, 'users');
-    const userQuery = query(usersRef, where('email', '==', email));
-    const userSnapshot = await getDocs(userQuery);
+    const userSnapshot = await db.collection('users')
+      .where('email', '==', email)
+      .get();
 
     if (!userSnapshot.empty) {
       const invitedUserId = userSnapshot.docs[0].id;
-      const existingMemberQuery = query(
-        membersRef,
-        where('teamId', '==', teamId),
-        where('userId', '==', invitedUserId)
-      );
-      const existingMemberSnapshot = await getDocs(existingMemberQuery);
+      const existingMemberSnapshot = await db.collection('teamMembers')
+        .where('teamId', '==', teamId)
+        .where('userId', '==', invitedUserId)
+        .get();
 
       if (!existingMemberSnapshot.empty) {
         return NextResponse.json(
@@ -116,13 +111,13 @@ export async function POST(
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
 
-    const invitationRef = await addDoc(collection(db, 'teamInvitations'), {
+    const invitationRef = await db.collection('teamInvitations').add({
       teamId,
       email,
       token,
       status: 'pending',
       expiresAt,
-      createdAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
     });
 
     // Send invitation email
@@ -130,8 +125,9 @@ export async function POST(
     const inviteLink = `${baseUrl}/team/invite/${token}`;
 
     // Get inviter name
-    const inviterDoc = await getDoc(doc(db, 'users', userId));
-    const inviterName = inviterDoc.exists() ? inviterDoc.data().displayName || 'Un utente' : 'Un utente';
+    const inviterDoc = await db.collection('users').doc(authResult.userId!).get();
+    const inviterData = inviterDoc.exists ? inviterDoc.data() || {} : {};
+    const inviterName = inviterData.displayName || 'Un utente';
 
     try {
       const { html, text } = getTeamInviteEmail({

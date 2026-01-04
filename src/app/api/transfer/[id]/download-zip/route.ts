@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc, getDocs, collection, updateDoc, increment } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getDownloadUrl } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { sendEmail, getDownloadNotificationEmail } from '@/lib/email';
 import { recordDownload } from '@/lib/analytics';
 import { triggerWebhooks } from '@/lib/webhooks';
 import archiver from 'archiver';
-import { Readable, PassThrough } from 'stream';
+import { PassThrough } from 'stream';
 
 // Stream wrapper for Response
 async function streamToResponse(archive: archiver.Archiver): Promise<ReadableStream<Uint8Array>> {
@@ -50,18 +50,19 @@ export async function GET(
       );
     }
 
-    // Get transfer document
-    const transferRef = doc(db, 'transfers', transferId);
-    const transferSnap = await getDoc(transferRef);
+    const db = getAdminFirestore();
 
-    if (!transferSnap.exists()) {
+    // Get transfer document
+    const transferSnap = await db.collection('transfers').doc(transferId).get();
+
+    if (!transferSnap.exists) {
       return NextResponse.json(
         { error: 'Trasferimento non trovato' },
         { status: 404 }
       );
     }
 
-    const transferData = transferSnap.data();
+    const transferData = transferSnap.data() || {};
 
     // Check if transfer is expired
     const expiresAt = transferData.expiresAt?.toDate?.();
@@ -73,8 +74,7 @@ export async function GET(
     }
 
     // Get all files for this transfer
-    const filesRef = collection(db, 'transfers', transferId, 'files');
-    const filesSnapshot = await getDocs(filesRef);
+    const filesSnapshot = await db.collection('transfers').doc(transferId).collection('files').get();
 
     if (filesSnapshot.empty) {
       return NextResponse.json(
@@ -132,8 +132,8 @@ export async function GET(
     const stream = await streamToResponse(archive);
 
     // Update download count
-    await updateDoc(transferRef, {
-      downloadCount: increment(1),
+    await db.collection('transfers').doc(transferId).update({
+      downloadCount: FieldValue.increment(1),
     });
 
     // Calculate new download count
@@ -174,10 +174,9 @@ export async function GET(
 
       if (transferData.userId) {
         try {
-          const userRef = doc(db, 'users', transferData.userId);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
+          const userSnap = await db.collection('users').doc(transferData.userId).get();
+          if (userSnap.exists) {
+            const userData = userSnap.data() || {};
             senderName = userData.displayName || userData.email || senderName;
 
             // Only send notification if user has email notifications enabled

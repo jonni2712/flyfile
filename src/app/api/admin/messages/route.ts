@@ -1,66 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  query,
-  orderBy,
-  limit as firestoreLimit,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
+import { checkAdminAccess } from '@/lib/admin';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { csrfProtection } from '@/lib/csrf';
 
 // GET - Get all contact messages (admin only)
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
+    // SECURITY: Check admin access via JWT token
+    const adminCheck = await checkAdminAccess(request);
+    if (adminCheck) return adminCheck;
+
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
     const limitParam = searchParams.get('limit');
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'userId richiesto' },
-        { status: 400 }
-      );
-    }
-
-    // Verify admin
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      return NextResponse.json(
-        { error: 'Utente non trovato' },
-        { status: 404 }
-      );
-    }
-
-    const userData = userSnap.data();
-    if (!userData.isAdmin) {
-      return NextResponse.json(
-        { error: 'Accesso non autorizzato' },
-        { status: 403 }
-      );
-    }
+    const db = getAdminFirestore();
 
     // Get contact messages
-    const messagesRef = collection(db, 'contact_messages');
-    const messagesQuery = query(
-      messagesRef,
-      orderBy('createdAt', 'desc'),
-      firestoreLimit(parseInt(limitParam || '100'))
-    );
-    const messagesSnapshot = await getDocs(messagesQuery);
+    const messagesSnapshot = await db.collection('contact_messages')
+      .orderBy('createdAt', 'desc')
+      .limit(parseInt(limitParam || '100'))
+      .get();
 
-    const messages = messagesSnapshot.docs.map(docSnap => ({
-      id: docSnap.id,
-      ...docSnap.data(),
-      createdAt: docSnap.data().createdAt?.toDate()?.toISOString() || null,
-      readAt: docSnap.data().readAt?.toDate()?.toISOString() || null,
-      repliedAt: docSnap.data().repliedAt?.toDate()?.toISOString() || null,
-    }));
+    const messages = messagesSnapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        ...data,
+        createdAt: data.createdAt?.toDate()?.toISOString() || null,
+        readAt: data.readAt?.toDate()?.toISOString() || null,
+        repliedAt: data.repliedAt?.toDate()?.toISOString() || null,
+      };
+    });
 
     return NextResponse.json({ messages });
   } catch (error) {
@@ -75,48 +51,42 @@ export async function GET(request: NextRequest) {
 // PATCH - Update message status (mark as read/replied)
 export async function PATCH(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { userId, messageId, status } = body;
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
 
-    if (!userId || !messageId) {
+    // Rate limiting
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
+    // SECURITY: Check admin access via JWT token
+    const adminCheck = await checkAdminAccess(request);
+    if (adminCheck) return adminCheck;
+
+    const body = await request.json();
+    const { messageId, status } = body;
+
+    if (!messageId) {
       return NextResponse.json(
-        { error: 'userId e messageId richiesti' },
+        { error: 'messageId richiesto' },
         { status: 400 }
       );
     }
 
-    // Verify admin
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      return NextResponse.json(
-        { error: 'Utente non trovato' },
-        { status: 404 }
-      );
-    }
-
-    const userData = userSnap.data();
-    if (!userData.isAdmin) {
-      return NextResponse.json(
-        { error: 'Accesso non autorizzato' },
-        { status: 403 }
-      );
-    }
+    const db = getAdminFirestore();
 
     // Update message
-    const messageRef = doc(db, 'contact_messages', messageId);
     const updateData: Record<string, unknown> = {
       status: status || 'read',
     };
 
     if (status === 'read') {
-      updateData.readAt = serverTimestamp();
+      updateData.readAt = FieldValue.serverTimestamp();
     } else if (status === 'replied') {
-      updateData.repliedAt = serverTimestamp();
+      updateData.repliedAt = FieldValue.serverTimestamp();
     }
 
-    await updateDoc(messageRef, updateData);
+    await db.collection('contact_messages').doc(messageId).update(updateData);
 
     return NextResponse.json({
       success: true,

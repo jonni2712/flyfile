@@ -4,10 +4,15 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { deleteFile } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 
 // PATCH - Update profile
 export async function PATCH(request: NextRequest) {
   try {
+    // CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting: 60 requests per minute for API operations
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
@@ -77,6 +82,10 @@ export async function PATCH(request: NextRequest) {
 // DELETE - Delete account (CRITICAL: Requires authentication)
 export async function DELETE(request: NextRequest) {
   try {
+    // CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting: 3 requests per minute for sensitive operations
     const rateLimitResponse = await checkRateLimit(request, 'sensitive');
     if (rateLimitResponse) return rateLimitResponse;

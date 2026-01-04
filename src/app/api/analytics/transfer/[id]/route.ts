@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
 import { getTransferAnalytics } from '@/lib/analytics';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAuth } from '@/lib/auth-utils';
 
 export async function GET(
   request: NextRequest,
@@ -13,6 +13,12 @@ export async function GET(
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
+    const userId = authResult.userId!;
+
     const { id: transferId } = await params;
 
     if (!transferId) {
@@ -22,31 +28,21 @@ export async function GET(
       );
     }
 
-    // Get userId from query params (for authorization)
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'userId richiesto' },
-        { status: 400 }
-      );
-    }
+    const db = getAdminFirestore();
 
     // Verify transfer exists and belongs to user
-    const transferRef = doc(db, 'transfers', transferId);
-    const transferSnap = await getDoc(transferRef);
+    const transferSnap = await db.collection('transfers').doc(transferId).get();
 
-    if (!transferSnap.exists()) {
+    if (!transferSnap.exists) {
       return NextResponse.json(
         { error: 'Transfer non trovato' },
         { status: 404 }
       );
     }
 
-    const transferData = transferSnap.data();
+    const transferData = transferSnap.data() || {};
 
-    // Verify ownership
+    // SECURITY: Verify ownership using authenticated userId
     if (transferData.userId !== userId) {
       return NextResponse.json(
         { error: 'Non autorizzato' },

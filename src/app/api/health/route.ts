@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, limit, query } from 'firebase/firestore';
+import { getAdminFirestore } from '@/lib/firebase-admin';
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -36,11 +35,11 @@ export async function GET(request: NextRequest) {
     },
   };
 
-  // Check Firebase
+  // Check Firebase using Admin SDK
   try {
     const startFirebase = Date.now();
-    const testQuery = query(collection(db, 'users'), limit(1));
-    await getDocs(testQuery);
+    const db = getAdminFirestore();
+    await db.collection('users').limit(1).get();
     health.services.firebase = {
       status: 'up',
       latency: Date.now() - startFirebase,
@@ -111,8 +110,8 @@ export async function GET(request: NextRequest) {
 export async function HEAD() {
   try {
     // Quick check - just verify Firebase is accessible
-    const testQuery = query(collection(db, 'users'), limit(1));
-    await getDocs(testQuery);
+    const db = getAdminFirestore();
+    await db.collection('users').limit(1).get();
     return new NextResponse(null, { status: 200 });
   } catch {
     return new NextResponse(null, { status: 503 });

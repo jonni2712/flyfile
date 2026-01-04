@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { sendEmail, getVerificationCodeEmail } from '@/lib/email';
 import { checkRateLimit } from '@/lib/rate-limit';
+import crypto from 'crypto';
 
 // Generate 6-digit verification code
 function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// SECURITY: Hash verification code before storing
+function hashVerificationCode(code: string): string {
+  return crypto.createHash('sha256').update(code).digest('hex');
 }
 
 // Anonymous user limits (same as free plan)
@@ -42,34 +48,36 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Find or create anonymous user record
-    const anonRef = doc(db, 'anonymousUsers', normalizedEmail);
-    const anonSnap = await getDoc(anonRef);
+    const db = getAdminFirestore();
 
-    let anonData;
+    // Find or create anonymous user record
+    const anonSnap = await db.collection('anonymousUsers').doc(normalizedEmail).get();
+
+    let anonData: Record<string, unknown>;
     const now = new Date();
 
-    if (anonSnap.exists()) {
-      anonData = anonSnap.data();
+    if (anonSnap.exists) {
+      anonData = anonSnap.data() || {};
 
       // Check if monthly limits need reset (30 days)
-      const lastReset = anonData.lastResetAt?.toDate();
-      if (lastReset) {
-        const daysSinceReset = Math.floor((now.getTime() - lastReset.getTime()) / (1000 * 60 * 60 * 24));
+      const lastReset = anonData.lastResetAt as FirebaseFirestore.Timestamp | undefined;
+      const lastResetDate = lastReset?.toDate?.();
+      if (lastResetDate) {
+        const daysSinceReset = Math.floor((now.getTime() - lastResetDate.getTime()) / (1000 * 60 * 60 * 24));
         if (daysSinceReset >= 30) {
           // Reset monthly limits
           anonData = {
             ...anonData,
             monthlyQuotaUsed: 0,
             monthlyTransfersUsed: 0,
-            lastResetAt: serverTimestamp(),
+            lastResetAt: FieldValue.serverTimestamp(),
           };
-          await setDoc(anonRef, anonData, { merge: true });
+          await db.collection('anonymousUsers').doc(normalizedEmail).set(anonData, { merge: true });
         }
       }
 
       // Check transfer limit
-      if ((anonData.monthlyTransfersUsed || 0) >= ANONYMOUS_LIMITS.monthlyTransfers) {
+      if ((anonData.monthlyTransfersUsed as number || 0) >= ANONYMOUS_LIMITS.monthlyTransfers) {
         return NextResponse.json(
           {
             success: false,
@@ -85,8 +93,8 @@ export async function POST(request: NextRequest) {
         email: normalizedEmail,
         monthlyQuotaUsed: 0,
         monthlyTransfersUsed: 0,
-        lastResetAt: serverTimestamp(),
-        createdAt: serverTimestamp(),
+        lastResetAt: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
       };
     }
 
@@ -94,13 +102,13 @@ export async function POST(request: NextRequest) {
     const verificationCode = generateVerificationCode();
     const codeExpiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes
 
-    // Update user with new code
-    await setDoc(anonRef, {
+    // SECURITY: Store hashed verification code, not plain text
+    await db.collection('anonymousUsers').doc(normalizedEmail).set({
       ...anonData,
-      verificationCode,
+      verificationCodeHash: hashVerificationCode(verificationCode),
       codeExpiresAt,
       verifiedAt: null, // Reset verification for new code
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
 
     // Send verification email
@@ -117,7 +125,8 @@ export async function POST(request: NextRequest) {
         text,
       });
 
-      console.log('Verification code sent to:', normalizedEmail);
+      // SECURITY: Don't log PII (email addresses)
+      console.log('Verification code sent successfully');
     } catch (emailError) {
       console.error('Error sending verification email:', emailError);
       return NextResponse.json(
@@ -130,9 +139,9 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Codice di verifica inviato alla tua email',
       usage: {
-        transfersUsed: anonData.monthlyTransfersUsed || 0,
+        transfersUsed: anonData.monthlyTransfersUsed as number || 0,
         transfersLimit: ANONYMOUS_LIMITS.monthlyTransfers,
-        quotaUsed: anonData.monthlyQuotaUsed || 0,
+        quotaUsed: anonData.monthlyQuotaUsed as number || 0,
         quotaLimit: ANONYMOUS_LIMITS.monthlyQuota,
       },
     });

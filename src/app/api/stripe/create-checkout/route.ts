@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -26,9 +27,17 @@ const PRICE_IDS = {
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting: 5 requests per minute for payment operations
     const rateLimitResponse = await checkRateLimit(request, 'auth');
     if (rateLimitResponse) return rateLimitResponse;
+
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
     const { planId, priceId, billingCycle, userId, userEmail } = await request.json();
 
@@ -36,6 +45,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
+      );
+    }
+
+    // SECURITY: Verify user is creating checkout for themselves
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
       );
     }
 
@@ -60,8 +77,10 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
+    const db = getAdminFirestore();
+
     // Fetch user billing data from Firestore
-    const userDoc = await getDoc(doc(db, 'users', userId));
+    const userDoc = await db.collection('users').doc(userId).get();
     const userData = userDoc.data();
     const billing = userData?.billing;
 

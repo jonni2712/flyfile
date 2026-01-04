@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 
 // GET - Get team by ID
 export async function GET(
@@ -18,29 +10,50 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: teamId } = await params;
-    const teamRef = doc(db, 'teams', teamId);
-    const teamSnap = await getDoc(teamRef);
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
-    if (!teamSnap.exists()) {
+    const { id: teamId } = await params;
+    const db = getAdminFirestore();
+
+    const teamSnap = await db.collection('teams').doc(teamId).get();
+
+    if (!teamSnap.exists) {
       return NextResponse.json(
         { error: 'Team non trovato' },
         { status: 404 }
       );
     }
 
-    const teamData = teamSnap.data();
+    const teamData = teamSnap.data() || {};
+
+    // SECURITY: Verify user is owner or member of the team
+    const membershipSnapshot = await db.collection('teamMembers')
+      .where('teamId', '==', teamId)
+      .where('userId', '==', authResult.userId)
+      .get();
+
+    const isOwner = teamData.ownerId === authResult.userId;
+    const isMember = !membershipSnapshot.empty;
+
+    if (!isOwner && !isMember) {
+      return NextResponse.json(
+        { error: 'Non autorizzato a visualizzare questo team' },
+        { status: 403 }
+      );
+    }
 
     // Fetch members
-    const membersRef = collection(db, 'teamMembers');
-    const membersQuery = query(membersRef, where('teamId', '==', teamId));
-    const membersSnapshot = await getDocs(membersQuery);
+    const membersSnapshot = await db.collection('teamMembers')
+      .where('teamId', '==', teamId)
+      .get();
 
     const members = [];
     for (const memberDoc of membersSnapshot.docs) {
       const memberData = memberDoc.data();
-      const userDocRef = await getDoc(doc(db, 'users', memberData.userId));
-      const userData = userDocRef.exists() ? userDocRef.data() : {};
+      const userDoc = await db.collection('users').doc(memberData.userId).get();
+      const userData = userDoc.exists ? userDoc.data() || {} : {};
 
       members.push({
         id: memberDoc.id,
@@ -81,32 +94,34 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { id: teamId } = await params;
     const body = await request.json();
-    const { userId, name, description } = body;
+    const { name, description } = body;
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'userId richiesto' },
-        { status: 400 }
-      );
-    }
+    const db = getAdminFirestore();
 
     // Verify team exists
-    const teamRef = doc(db, 'teams', teamId);
-    const teamSnap = await getDoc(teamRef);
+    const teamSnap = await db.collection('teams').doc(teamId).get();
 
-    if (!teamSnap.exists()) {
+    if (!teamSnap.exists) {
       return NextResponse.json(
         { error: 'Team non trovato' },
         { status: 404 }
       );
     }
 
-    const teamData = teamSnap.data();
+    const teamData = teamSnap.data() || {};
 
-    // Check if user is owner
-    if (teamData.ownerId !== userId) {
+    // SECURITY: Check if authenticated user is owner
+    if (teamData.ownerId !== authResult.userId) {
       return NextResponse.json(
         { error: 'Solo il proprietario può modificare il team' },
         { status: 403 }
@@ -115,13 +130,13 @@ export async function PATCH(
 
     // Prepare update data
     const updateData: Record<string, unknown> = {
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
 
-    await updateDoc(teamRef, updateData);
+    await db.collection('teams').doc(teamId).update(updateData);
 
     return NextResponse.json({
       success: true,
@@ -142,32 +157,31 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: teamId } = await params;
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'userId richiesto' },
-        { status: 400 }
-      );
-    }
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
+    const { id: teamId } = await params;
+    const db = getAdminFirestore();
 
     // Verify team exists
-    const teamRef = doc(db, 'teams', teamId);
-    const teamSnap = await getDoc(teamRef);
+    const teamSnap = await db.collection('teams').doc(teamId).get();
 
-    if (!teamSnap.exists()) {
+    if (!teamSnap.exists) {
       return NextResponse.json(
         { error: 'Team non trovato' },
         { status: 404 }
       );
     }
 
-    const teamData = teamSnap.data();
+    const teamData = teamSnap.data() || {};
 
-    // Check if user is owner
-    if (teamData.ownerId !== userId) {
+    // SECURITY: Check if authenticated user is owner
+    if (teamData.ownerId !== authResult.userId) {
       return NextResponse.json(
         { error: 'Solo il proprietario può eliminare il team' },
         { status: 403 }
@@ -175,25 +189,25 @@ export async function DELETE(
     }
 
     // Delete all members
-    const membersRef = collection(db, 'teamMembers');
-    const membersQuery = query(membersRef, where('teamId', '==', teamId));
-    const membersSnapshot = await getDocs(membersQuery);
+    const membersSnapshot = await db.collection('teamMembers')
+      .where('teamId', '==', teamId)
+      .get();
 
     for (const memberDoc of membersSnapshot.docs) {
-      await deleteDoc(doc(db, 'teamMembers', memberDoc.id));
+      await db.collection('teamMembers').doc(memberDoc.id).delete();
     }
 
     // Delete all invitations
-    const invitationsRef = collection(db, 'teamInvitations');
-    const invitationsQuery = query(invitationsRef, where('teamId', '==', teamId));
-    const invitationsSnapshot = await getDocs(invitationsQuery);
+    const invitationsSnapshot = await db.collection('teamInvitations')
+      .where('teamId', '==', teamId)
+      .get();
 
     for (const invDoc of invitationsSnapshot.docs) {
-      await deleteDoc(doc(db, 'teamInvitations', invDoc.id));
+      await db.collection('teamInvitations').doc(invDoc.id).delete();
     }
 
     // Delete team
-    await deleteDoc(teamRef);
+    await db.collection('teams').doc(teamId).delete();
 
     return NextResponse.json({
       success: true,

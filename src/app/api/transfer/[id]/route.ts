@@ -3,6 +3,9 @@ import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { deleteFile } from '@/lib/r2';
 import { hashPassword, verifyPassword, needsHashUpgrade } from '@/lib/password';
+import { requireAuth } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // GET - Get transfer by ID (public or by transferId)
 export async function GET(
@@ -82,9 +85,17 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
+    // SECURITY: Require authentication - don't trust userId from body
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { id: transferId } = await params;
     const body = await request.json();
-    const { title, password, userId } = body;
+    const { title, password } = body;  // Remove userId from destructuring
     const db = getAdminFirestore();
 
     // Find transfer
@@ -100,10 +111,10 @@ export async function PATCH(
     const docSnap = snapshot.docs[0];
     const data = docSnap.data() || {};
 
-    // Check ownership
-    if (userId && data.userId !== userId) {
+    // SECURITY: Check ownership using verified userId from token
+    if (data.userId !== authResult.userId) {
       return NextResponse.json(
-        { error: 'Non autorizzato' },
+        { error: 'Non autorizzato a modificare questo transfer' },
         { status: 403 }
       );
     }
@@ -142,9 +153,15 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
+    // SECURITY: Require authentication - don't trust userId from query params
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { id: transferId } = await params;
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
     const db = getAdminFirestore();
 
     // Find transfer
@@ -160,10 +177,10 @@ export async function DELETE(
     const docSnap = snapshot.docs[0];
     const data = docSnap.data() || {};
 
-    // Check ownership
-    if (userId && data.userId !== userId) {
+    // SECURITY: Check ownership using verified userId from token
+    if (data.userId !== authResult.userId) {
       return NextResponse.json(
-        { error: 'Non autorizzato' },
+        { error: 'Non autorizzato a eliminare questo transfer' },
         { status: 403 }
       );
     }
@@ -241,6 +258,10 @@ export async function POST(
 
     // Handle password verification
     if (action === 'verify-password') {
+      // SECURITY: Rate limit password verification to prevent brute force
+      const passwordRateLimitResponse = await checkRateLimit(request, 'password');
+      if (passwordRateLimitResponse) return passwordRateLimitResponse;
+
       if (!data.password) {
         return NextResponse.json({ success: true, message: 'Nessuna password richiesta' });
       }

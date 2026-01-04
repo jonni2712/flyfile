@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,17 +13,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get file metadata from Firestore
-    const fileDoc = await getDoc(doc(db, 'files', fileId));
+    const db = getAdminFirestore();
 
-    if (!fileDoc.exists()) {
+    // Get file metadata from Firestore
+    const fileDoc = await db.collection('files').doc(fileId).get();
+
+    if (!fileDoc.exists) {
       return NextResponse.json(
         { error: 'File not found' },
         { status: 404 }
       );
     }
 
-    const fileData = fileDoc.data();
+    const fileData = fileDoc.data() || {};
 
     return NextResponse.json({
       shareLink: fileData.shareLink,

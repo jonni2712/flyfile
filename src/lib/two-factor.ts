@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from './firebase';
+import { encryptTotpSecret, decryptTotpSecret, isTotpSecretEncrypted } from './encryption';
 
 // TOTP Configuration
 const TOTP_PERIOD = 30; // seconds
@@ -151,9 +152,12 @@ export async function enable2FA(
     const userRef = doc(db, 'users', userId);
     const hashedCodes = hashBackupCodes(backupCodes);
 
+    // SECURITY: Encrypt the TOTP secret before storing in database
+    const encryptedSecret = encryptTotpSecret(secret);
+
     await updateDoc(userRef, {
       twoFactorEnabled: true,
-      twoFactorSecret: secret,
+      twoFactorSecret: encryptedSecret,
       twoFactorBackupCodes: hashedCodes,
       twoFactorEnabledAt: Timestamp.now(),
     });
@@ -226,8 +230,19 @@ export async function verify2FA(
       return { valid: false };
     }
 
+    // SECURITY: Decrypt the secret if it's encrypted
+    // Also handle legacy plaintext secrets for backwards compatibility
+    let secret: string;
+    if (isTotpSecretEncrypted(data.twoFactorSecret)) {
+      secret = decryptTotpSecret(data.twoFactorSecret);
+    } else {
+      // Legacy plaintext secret - should migrate these over time
+      secret = data.twoFactorSecret;
+      console.warn(`User ${userId} has legacy plaintext TOTP secret - consider migration`);
+    }
+
     // First try TOTP
-    if (verifyTotp(data.twoFactorSecret, token)) {
+    if (verifyTotp(secret, token)) {
       return { valid: true };
     }
 

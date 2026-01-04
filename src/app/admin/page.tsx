@@ -102,8 +102,21 @@ export default function AdminDashboard() {
     setError(null);
 
     try {
-      // Fetch stats
-      const statsRes = await fetch(`/api/admin/stats?userId=${user.uid}`);
+      // SECURITY FIX: Use Authorization header instead of userId query param
+      const idToken = await user.getIdToken();
+      const headers = {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json',
+      };
+
+      // Fetch all data in parallel for better performance
+      const [statsRes, usersRes, transfersRes, messagesRes] = await Promise.all([
+        fetch('/api/admin/stats', { headers }),
+        fetch('/api/admin/users', { headers }),
+        fetch('/api/admin/transfers?limit=100', { headers }),
+        fetch('/api/admin/messages', { headers }),
+      ]);
+
       const statsData = await statsRes.json();
 
       if (!statsRes.ok) {
@@ -116,26 +129,17 @@ export default function AdminDashboard() {
 
       setStats(statsData.stats);
 
-      // Fetch users
-      const usersRes = await fetch(`/api/admin/users?userId=${user.uid}`);
       const usersData = await usersRes.json();
-
       if (usersRes.ok) {
         setUsers(usersData.users);
       }
 
-      // Fetch transfers
-      const transfersRes = await fetch(`/api/admin/transfers?userId=${user.uid}&limit=100`);
       const transfersData = await transfersRes.json();
-
       if (transfersRes.ok) {
         setTransfers(transfersData.transfers || []);
       }
 
-      // Fetch contact messages
-      const messagesRes = await fetch(`/api/admin/messages?userId=${user.uid}`);
       const messagesData = await messagesRes.json();
-
       if (messagesRes.ok) {
         setContactMessages(messagesData.messages || []);
       }
@@ -147,16 +151,21 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUpdateUser = async (userId: string, updates: Record<string, unknown>) => {
+  const handleUpdateUser = async (targetUserId: string, updates: Record<string, unknown>) => {
     if (!user) return;
 
     try {
+      // SECURITY FIX: Use Authorization header
+      const idToken = await user.getIdToken();
+
       const res = await fetch('/api/admin/users', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          userId: user.uid,
-          targetUserId: userId,
+          targetUserId,
           updates,
         }),
       });

@@ -3,6 +3,7 @@ import { getAdminFirestore } from '@/lib/firebase-admin';
 import { generateTotpSecret, generateTotpUri, generateBackupCodes, enable2FA, verifyTotp } from '@/lib/two-factor';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 
 // GET - Generate 2FA setup data
 export async function GET(request: NextRequest) {
@@ -76,6 +77,10 @@ export async function GET(request: NextRequest) {
 // POST - Verify and enable 2FA
 export async function POST(request: NextRequest) {
   try {
+    // CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 

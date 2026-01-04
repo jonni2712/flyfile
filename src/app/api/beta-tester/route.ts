@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 
 // Valid beta tester codes
 const VALID_BETA_CODES = [
@@ -14,9 +16,17 @@ const VALID_BETA_CODES = [
 // POST - Activate beta tester status
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting: 5 requests per minute for auth-like operations
     const rateLimitResponse = await checkRateLimit(request, 'auth');
     if (rateLimitResponse) return rateLimitResponse;
+
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
 
     const { userId, code } = await request.json();
 
@@ -24,6 +34,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Missing userId or code' },
         { status: 400 }
+      );
+    }
+
+    // SECURITY: Verify user is activating their own beta status
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { success: false, error: 'Non autorizzato' },
+        { status: 403 }
       );
     }
 
@@ -36,11 +54,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user exists
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    const db = getAdminFirestore();
 
-    if (!userSnap.exists()) {
+    // Check if user exists
+    const userSnap = await db.collection('users').doc(userId).get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { success: false, error: 'Utente non trovato' },
         { status: 404 }
@@ -48,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already a beta tester
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
     if (userData.isBetaTester) {
       return NextResponse.json(
         { success: false, error: 'Sei già un beta tester!' },
@@ -57,16 +76,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Activate beta tester status
-    await updateDoc(userRef, {
+    await db.collection('users').doc(userId).update({
       isBetaTester: true,
       betaTesterCode: normalizedCode,
-      betaTesterSince: serverTimestamp(),
+      betaTesterSince: FieldValue.serverTimestamp(),
       // Give beta testers Pro plan benefits
       plan: 'pro',
       storageLimit: 500 * 1024 * 1024 * 1024, // 500 GB
       maxMonthlyTransfers: 30,
       retentionDays: 30,
-      updatedAt: serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json({
@@ -89,6 +108,10 @@ export async function GET(request: NextRequest) {
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
+    // SECURITY: Require authentication
+    const [authResult, authError] = await requireAuth(request);
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -99,22 +122,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await getDoc(userRef);
+    // SECURITY: Verify user is checking their own status
+    if (!isAuthorizedForUser(authResult, userId)) {
+      return NextResponse.json(
+        { success: false, error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
 
-    if (!userSnap.exists()) {
+    const db = getAdminFirestore();
+
+    const userSnap = await db.collection('users').doc(userId).get();
+
+    if (!userSnap.exists) {
       return NextResponse.json(
         { success: false, error: 'Utente non trovato' },
         { status: 404 }
       );
     }
 
-    const userData = userSnap.data();
+    const userData = userSnap.data() || {};
 
     return NextResponse.json({
       success: true,
       isBetaTester: userData.isBetaTester || false,
-      betaTesterSince: userData.betaTesterSince?.toDate()?.toISOString() || null,
+      betaTesterSince: userData.betaTesterSince?.toDate?.()?.toISOString() || null,
     });
   } catch (error) {
     console.error('Error checking beta tester status:', error);
