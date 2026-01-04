@@ -150,27 +150,29 @@ export async function POST(request: NextRequest) {
     // Extract error details
     let errorMessage = 'Failed to create checkout session';
     let errorCode = 'UNKNOWN_ERROR';
+    let stripeMessage = '';
 
     if (error instanceof Error) {
       errorMessage = error.message;
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
+      stripeMessage = error.message;
 
       // Stripe specific errors
       if ('type' in error) {
         errorCode = (error as { type: string }).type;
-        console.error('Stripe error type:', errorCode);
       }
-      if ('code' in error) {
-        console.error('Stripe error code:', (error as { code: string }).code);
+      // Get Stripe's specific error message
+      if ('raw' in error) {
+        const raw = (error as { raw?: { message?: string } }).raw;
+        if (raw?.message) stripeMessage = raw.message;
       }
     }
 
-    // Return detailed error for debugging (temporarily enabled)
+    // Return detailed error for debugging
     return NextResponse.json(
       {
         error: errorMessage,
         code: errorCode,
+        stripeMessage,
         details: String(error)
       },
       { status: 500 }
