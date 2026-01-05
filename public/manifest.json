@@ -1,0 +1,20 @@
+{
+  "name": "FlyFile - Condivisione File Sicura",
+  "short_name": "FlyFile",
+  "description": "La piattaforma più sicura per condividere file con crittografia AES-256 end-to-end. Invia file di grandi dimensioni in modo sicuro e veloce.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "it",
+  "categories": ["productivity", "utilities", "business"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+# FlyFile Robots.txt
+# https://flyfile.it
+
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /features
+Allow: /security
+Allow: /privacy
+Allow: /terms
+Allow: /contact
+Allow: /cookies
+Allow: /documentation
+
+# Disallow protected/private routes
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /upload
+Disallow: /files
+Disallow: /profile
+Disallow: /settings
+Disallow: /team
+Disallow: /api-keys
+Disallow: /analytics
+Disallow: /webhooks
+Disallow: /account-security
+Disallow: /subscription
+
+# Disallow API routes
+Disallow: /api/
+
+# Disallow auth routes (no value in indexing)
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+
+# Disallow dynamic download pages (user-specific content)
+Disallow: /download/
+Disallow: /s/
+
+# Sitemap location
+Sitemap: https://flyfile.it/sitemap.xml
