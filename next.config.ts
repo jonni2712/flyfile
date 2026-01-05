@@ -46,8 +46,8 @@ const securityHeaders = [
       "font-src 'self' https://fonts.gstatic.com data:",
       // Connect: API calls to self, Firebase, Cloudflare R2, Stripe, Vercel, Google
       "connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.r2.cloudflarestorage.com https://api.stripe.com https://vitals.vercel-insights.com wss://*.firebaseio.com https://accounts.google.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com",
-      // Frames: Stripe checkout, Google Auth
-      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://*.firebaseapp.com",
+      // Frames: Stripe checkout, Google Auth, Firebase Auth
+      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://*.firebaseapp.com https://flyfile.it",
       // Workers: self for service workers
       "worker-src 'self' blob:",
       // Object: none
@@ -75,6 +75,17 @@ const nextConfig: NextConfig = {
         // Apply to all routes
         source: '/:path*',
         headers: securityHeaders,
+      },
+    ];
+  },
+
+  // Rewrites for Firebase Auth custom domain
+  async rewrites() {
+    return [
+      {
+        // Proxy Firebase Auth requests to allow custom authDomain
+        source: '/__/auth/:path*',
+        destination: 'https://flyfile-7f676.firebaseapp.com/__/auth/:path*',
       },
     ];
   },
