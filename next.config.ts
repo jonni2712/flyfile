@@ -1,11 +1,8 @@
 import type { NextConfig } from "next";
 
 const securityHeaders = [
-  // Prevent clickjacking attacks
-  {
-    key: 'X-Frame-Options',
-    value: 'DENY'
-  },
+  // Note: X-Frame-Options removed - using CSP frame-ancestors instead
+  // which allows Google OAuth and Firebase auth framing
   // Prevent MIME type sniffing
   {
     key: 'X-Content-Type-Options',

@@ -117,7 +117,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (!docSnap.exists()) {
             await createUserProfile(result.user);
+          } else {
+            await fetchUserProfile(result.user.uid);
           }
+
+          // Set session cookie BEFORE redirect
+          const token = await result.user.getIdToken();
+          document.cookie = `__session=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+
+          // Small delay to ensure cookie is set
+          await new Promise(resolve => setTimeout(resolve, 100));
 
           // Redirect to dashboard after successful Google sign-in
           window.location.href = '/dashboard';

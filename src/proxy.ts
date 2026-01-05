@@ -61,8 +61,7 @@ export async function proxy(request: NextRequest) {
  * Add security headers to response
  */
 function addSecurityHeaders(response: NextResponse): NextResponse {
-  // Prevent clickjacking
-  response.headers.set('X-Frame-Options', 'DENY');
+  // Note: X-Frame-Options removed - using CSP frame-ancestors instead
 
   // Prevent MIME type sniffing
   response.headers.set('X-Content-Type-Options', 'nosniff');
