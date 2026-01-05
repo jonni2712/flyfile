@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { TransferProvider } from "@/context/TransferContext";
@@ -7,6 +8,9 @@ import { TeamProvider } from "@/context/TeamContext";
 import CookieBanner from "@/components/CookieBanner";
 import ToastContainer from "@/components/Toast";
 import { Analytics } from "@vercel/analytics/next";
+
+// Google Analytics ID
+const GA_MEASUREMENT_ID = "G-W4J7Q31Y7B";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -153,6 +157,19 @@ export default function RootLayout({
   return (
     <html lang="it">
       <head>
+        {/* Google Analytics */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
         {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"
