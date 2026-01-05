@@ -242,8 +242,8 @@ export default function BrandingPage() {
 
   // Copy custom link to clipboard
   const copyCustomLink = () => {
-    const brandedDomain = 'flyfile.it';
-    const customUrl = `https://${slugInput}.${brandedDomain}`;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://flyfile.it';
+    const customUrl = `${baseUrl}/t/${slugInput}`;
     navigator.clipboard.writeText(customUrl).then(() => {
       showMessage('Link copiato negli appunti!', 'success');
     });
@@ -853,9 +853,9 @@ export default function BrandingPage() {
             </h2>
 
             <p className="text-sm text-gray-600 mb-4">
-              Crea un sottodominio personalizzato per i tuoi trasferimenti. Invece di{' '}
+              Crea un link personalizzato per i tuoi trasferimenti. Invece di{' '}
               <code className="bg-gray-100 px-1 rounded">flyfile.it/download/abc123</code>, avrai{' '}
-              <code className="bg-gray-100 px-1 rounded">tuoslug.flyfile.it/abc123</code>
+              <code className="bg-gray-100 px-1 rounded">flyfile.it/t/tuoslug/abc123</code>
             </p>
 
             <div className="space-y-4">
@@ -881,7 +881,6 @@ export default function BrandingPage() {
                       maxLength={30}
                     />
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-2">
-                      <span className="text-gray-500 text-sm">.flyfile.it</span>
                       {slugStatus === 'checking' && (
                         <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
                       )}
@@ -962,7 +961,7 @@ export default function BrandingPage() {
                 <div className="p-4 bg-indigo-50 rounded-lg">
                   <p className="text-sm font-medium text-indigo-900 mb-1">Anteprima link:</p>
                   <code className="text-indigo-700">
-                    https://{slugInput}.flyfile.it/[transfer-id]
+                    {process.env.NEXT_PUBLIC_BASE_URL || 'https://flyfile.it'}/t/{slugInput}/[transfer-id]
                   </code>
                 </div>
               )}
