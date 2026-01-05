@@ -6,6 +6,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
@@ -105,6 +107,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    // Handle redirect result from Google sign-in
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          // Check if user profile exists
+          const docRef = doc(db, 'users', result.user.uid);
+          const docSnap = await getDoc(docRef);
+
+          if (!docSnap.exists()) {
+            await createUserProfile(result.user);
+          }
+        }
+      } catch (error) {
+        console.error('Redirect result error:', error);
+      }
+    };
+
+    handleRedirectResult();
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
 
@@ -148,8 +170,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signInWithGoogle() {
-    const { user } = await signInWithPopup(auth, googleProvider);
+    try {
+      // Try popup first (better UX)
+      const { user } = await signInWithPopup(auth, googleProvider);
+      await handleGoogleUser(user);
+    } catch (error: unknown) {
+      // If popup fails (blocked, closed, or cross-origin issues), use redirect
+      const errorCode = (error as { code?: string })?.code;
+      if (errorCode === 'auth/popup-closed-by-user' ||
+          errorCode === 'auth/popup-blocked' ||
+          errorCode === 'auth/cancelled-popup-request') {
+        // Fall back to redirect flow
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        throw error;
+      }
+    }
+  }
 
+  // Handle Google user after sign-in (used by both popup and redirect)
+  async function handleGoogleUser(user: User) {
     // Check if user profile exists
     const docRef = doc(db, 'users', user.uid);
     const docSnap = await getDoc(docRef);
