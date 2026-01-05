@@ -25,7 +25,7 @@ import {
   Shield
 } from 'lucide-react';
 import { useTransfer, formatBytes, getTimeRemaining, getFileIcon } from '@/context/TransferContext';
-import { Transfer, TransferFile } from '@/types';
+import { Transfer, TransferFile, BrandSettings } from '@/types';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { decryptFile, isEncryptionSupported } from '@/lib/client-encryption';
 
@@ -77,6 +77,24 @@ export default function DownloadPage() {
   // File preview state
   const [previewFile, setPreviewFile] = useState<TransferFile | null>(null);
 
+  // Brand customization state
+  const [brand, setBrand] = useState<BrandSettings | null>(null);
+
+  // Fetch brand settings for transfer owner
+  const fetchBrandSettings = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/brand?userId=${userId}&public=true`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.brand && data.canCustomize) {
+          setBrand(data.brand);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching brand settings:', err);
+    }
+  };
+
   // Fetch transfer data
   useEffect(() => {
     const fetchTransfer = async () => {
@@ -97,6 +115,11 @@ export default function DownloadPage() {
         }
 
         setTransfer(data);
+
+        // Fetch brand settings if transfer has a userId
+        if (data.userId) {
+          fetchBrandSettings(data.userId);
+        }
 
         // Check if password protected
         if (data.password && !passwordVerified) {
@@ -332,18 +355,55 @@ export default function DownloadPage() {
 
   if (!transfer) return null;
 
+  // Determine background style based on brand settings
+  const getBackgroundStyle = () => {
+    if (brand?.backgroundType === 'gradient' && brand.primaryColor && brand.secondaryColor) {
+      return {
+        background: `linear-gradient(135deg, ${brand.primaryColor}, ${brand.secondaryColor})`,
+      };
+    }
+    // Default gradient
+    return {
+      background: 'linear-gradient(135deg, #0f172a, #1e3a8a, #312e81)',
+    };
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
-      {/* Animated Background Pattern */}
-      <div className="absolute inset-0 bg-black/20"></div>
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                           radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                           radial-gradient(circle at 40% 80%, rgba(120, 200, 255, 0.3) 0%, transparent 50%)`
-        }}
-      ></div>
+    <div className="min-h-screen relative overflow-hidden" style={getBackgroundStyle()}>
+      {/* Custom Background Image */}
+      {brand?.backgroundType === 'image' && brand.backgroundUrl && (
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${brand.backgroundUrl})` }}
+        />
+      )}
+
+      {/* Custom Background Video */}
+      {brand?.backgroundType === 'video' && brand.backgroundVideoUrl && (
+        <video
+          className="absolute inset-0 w-full h-full object-cover"
+          src={brand.backgroundVideoUrl}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      )}
+
+      {/* Overlay for better readability */}
+      <div className="absolute inset-0 bg-black/40"></div>
+
+      {/* Animated Background Pattern (only when no custom background) */}
+      {!brand?.backgroundUrl && !brand?.backgroundVideoUrl && (
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                             radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                             radial-gradient(circle at 40% 80%, rgba(120, 200, 255, 0.3) 0%, transparent 50%)`
+          }}
+        />
+      )}
 
       {/* Password Modal */}
       {showPasswordModal && (
@@ -411,9 +471,26 @@ export default function DownloadPage() {
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-tr from-cyan-400 to-blue-500 rounded-full mb-6 animate-pulse shadow-2xl shadow-cyan-500/50">
-            <Cloud className="w-10 h-10 text-white" />
-          </div>
+          {/* Custom Logo or Default Icon */}
+          {brand?.logoUrl ? (
+            <div className="mb-6">
+              <img
+                src={brand.logoUrl}
+                alt={brand.companyName || 'Logo'}
+                className="h-16 md:h-20 mx-auto object-contain"
+              />
+            </div>
+          ) : (
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-tr from-cyan-400 to-blue-500 rounded-full mb-6 animate-pulse shadow-2xl shadow-cyan-500/50">
+              <Cloud className="w-10 h-10 text-white" />
+            </div>
+          )}
+
+          {/* Company Name (if branded) */}
+          {brand?.companyName && (
+            <p className="text-lg text-white/70 mb-2">{brand.companyName}</p>
+          )}
+
           <h1 className="text-4xl lg:text-5xl font-bold text-white mb-3">
             {transfer.title}
           </h1>
@@ -423,6 +500,13 @@ export default function DownloadPage() {
               Inviato da <span className="font-semibold text-cyan-400">{transfer.senderName || 'Utente'}</span>
             </span>
           </div>
+
+          {/* Custom Message */}
+          {brand?.customMessage && (
+            <p className="mt-4 text-white/80 max-w-xl mx-auto">
+              {brand.customMessage}
+            </p>
+          )}
         </div>
 
         {/* Statistics Cards */}
@@ -570,15 +654,18 @@ export default function DownloadPage() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-blue-200/50 text-sm">
-            Vuoi inviare file in modo sicuro?{' '}
-            <Link href="/upload" className="text-cyan-400 hover:text-cyan-300 font-medium">
-              Prova FlyFile gratuitamente
-            </Link>
-          </p>
-        </div>
+        {/* Footer - Powered by FlyFile (show unless branded user disabled it) */}
+        {(brand?.showPoweredBy !== false) && (
+          <div className="mt-8 text-center">
+            <p className="text-blue-200/50 text-sm">
+              {brand ? 'Powered by ' : 'Vuoi inviare file in modo sicuro? '}
+              <Link href="/" className="text-cyan-400 hover:text-cyan-300 font-medium">
+                FlyFile
+              </Link>
+              {!brand && ' - Prova gratis'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* File Preview Modal */}

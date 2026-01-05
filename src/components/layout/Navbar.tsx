@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, X, ChevronDown, LayoutDashboard, User, LogOut, HelpCircle } from 'lucide-react';
+import { Menu, X, ChevronDown, LayoutDashboard, User, LogOut, HelpCircle, Palette } from 'lucide-react';
+import { getPlanLimits } from '@/types';
 
 export default function Navbar() {
   const { user, userProfile, signOut } = useAuth();
@@ -111,6 +112,18 @@ export default function Navbar() {
                         Profilo
                       </Link>
 
+                      {/* Branding link - visible for Pro and Business plans */}
+                      {userProfile?.plan && getPlanLimits(userProfile.plan).customBranding && (
+                        <Link
+                          href="/branding"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <Palette className="w-4 h-4 mr-3" />
+                          Branding
+                        </Link>
+                      )}
+
                       <div className="border-t border-gray-200/50 mt-2 pt-2">
                         <button
                           onClick={() => {
@@ -212,6 +225,16 @@ export default function Navbar() {
                 >
                   Profilo
                 </Link>
+                {/* Branding link - mobile menu */}
+                {userProfile?.plan && getPlanLimits(userProfile.plan).customBranding && (
+                  <Link
+                    href="/branding"
+                    className="block pl-3 pr-4 py-2 text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Branding
+                  </Link>
+                )}
                 <button
                   onClick={() => {
                     signOut();

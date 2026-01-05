@@ -24,6 +24,23 @@ export interface BillingInfo {
   phone?: string;
 }
 
+// Brand customization types
+export interface BrandSettings {
+  logoUrl?: string;           // R2 URL for logo
+  logoPath?: string;          // R2 key for logo
+  backgroundUrl?: string;     // R2 URL for background image
+  backgroundPath?: string;    // R2 key for background
+  backgroundType?: 'image' | 'video' | 'gradient'; // Type of background
+  backgroundVideoUrl?: string; // R2 URL for video background
+  backgroundVideoPath?: string; // R2 key for video
+  primaryColor?: string;      // Brand primary color (hex)
+  secondaryColor?: string;    // Brand secondary color (hex)
+  companyName?: string;       // Company name to display
+  customMessage?: string;     // Custom message on download page
+  showPoweredBy?: boolean;    // Show "Powered by FlyFile" (always true for non-business)
+  updatedAt?: Date;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -47,6 +64,8 @@ export interface UserProfile {
   isBetaTester?: boolean;
   betaTesterCode?: string;
   betaTesterSince?: Date;
+  // Brand customization (Pro and Business plans)
+  brand?: BrandSettings;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -235,6 +254,8 @@ export interface PlanLimits {
   apiAccess: boolean;
   prioritySupport: boolean;
   canDelete: boolean;
+  customBranding: boolean;       // Logo and background customization
+  removePoweredBy: boolean;      // Remove "Powered by FlyFile" badge
 }
 
 export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
@@ -250,6 +271,8 @@ export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
       apiAccess: false,
       prioritySupport: false,
       canDelete: false,
+      customBranding: false,
+      removePoweredBy: false,
     },
     starter: {
       storageLimit: 500 * 1024 * 1024 * 1024, // 500 GB (was 300)
@@ -262,6 +285,8 @@ export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
       apiAccess: false,
       prioritySupport: false,
       canDelete: true, // Can delete transfers
+      customBranding: false,
+      removePoweredBy: false,
     },
     pro: {
       storageLimit: 1024 * 1024 * 1024 * 1024, // 1 TB
@@ -274,6 +299,8 @@ export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
       apiAccess: true,
       prioritySupport: false,
       canDelete: true,
+      customBranding: true,       // Pro can customize branding
+      removePoweredBy: false,     // But must show "Powered by FlyFile"
     },
     business: {
       storageLimit: -1,
@@ -286,6 +313,8 @@ export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
       apiAccess: true,
       prioritySupport: true,
       canDelete: true,
+      customBranding: true,       // Business can customize branding
+      removePoweredBy: true,      // Business can remove "Powered by FlyFile"
     },
   };
   return limits[plan];
@@ -343,6 +372,7 @@ export const PLANS: Record<string, Plan> = {
       '100 trasferimenti al mese',
       'Conservazione 30 giorni',
       'Scadenza personalizzata',
+      'Branding personalizzato',
       'Accesso API',
       'Dimensione file illimitata',
     ],
@@ -361,10 +391,11 @@ export const PLANS: Record<string, Plan> = {
       'Condividi e ricevi illimitato',
       'Trasferimenti illimitati',
       'Conservazione 1 anno',
+      'Branding completo (logo + sfondo)',
+      'Rimuovi "Powered by FlyFile"',
       'Gestione team avanzata',
       '3 membri inclusi',
       'Support prioritario',
-      'Dimensione file illimitata',
     ],
   },
 };
