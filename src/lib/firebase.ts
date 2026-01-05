@@ -16,6 +16,12 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Configure Google provider
 export const googleProvider = new GoogleAuthProvider();
+// Always show account picker
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 export default app;
