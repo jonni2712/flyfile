@@ -5,7 +5,8 @@ import {
   User,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
@@ -105,6 +106,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    // Handle redirect result from Google sign-in
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          // Check if user profile exists, create if not
+          const docRef = doc(db, 'users', result.user.uid);
+          const docSnap = await getDoc(docRef);
+
+          if (!docSnap.exists()) {
+            await createUserProfile(result.user);
+          }
+
+          // Redirect to dashboard after successful Google sign-in
+          window.location.href = '/dashboard';
+        }
+      } catch (error) {
+        console.error('Redirect result error:', error);
+      }
+    };
+
+    handleRedirectResult();
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
 
@@ -148,21 +172,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signInWithGoogle() {
-    const { user } = await signInWithPopup(auth, googleProvider);
-
-    // Check if user profile exists
-    const docRef = doc(db, 'users', user.uid);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) {
-      await createUserProfile(user);
-    } else {
-      await fetchUserProfile(user.uid);
-    }
-
-    // Set session cookie immediately for middleware
-    const token = await user.getIdToken();
-    document.cookie = `__session=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+    // Use redirect flow instead of popup for better compatibility
+    await signInWithRedirect(auth, googleProvider);
+    // User will be redirected to Google, then back to the app
+    // The redirect result is handled in useEffect
   }
 
   async function signOut() {

@@ -56,8 +56,8 @@ const securityHeaders = [
       "base-uri 'self'",
       // Form action: self, Google
       "form-action 'self' https://accounts.google.com",
-      // Frame ancestors: none (prevent embedding)
-      "frame-ancestors 'none'",
+      // Frame ancestors: allow Google OAuth and Firebase
+      "frame-ancestors 'self' https://accounts.google.com https://*.firebaseapp.com",
       // Upgrade insecure requests
       "upgrade-insecure-requests"
     ].join('; ')
