@@ -95,11 +95,11 @@ export default function RegisterPage() {
 
     try {
       await signInWithGoogle();
-      router.push('/dashboard');
+      // Use window.location for more reliable redirect after OAuth
+      window.location.href = '/dashboard';
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Registrazione con Google fallita';
       setError(errorMessage);
-    } finally {
       setLoading(false);
     }
   };
