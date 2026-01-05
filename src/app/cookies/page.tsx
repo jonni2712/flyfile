@@ -53,7 +53,7 @@ export default function CookiesPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Last Update */}
           <div className="text-center mb-12">
-            <p className="text-gray-600">Ultimo aggiornamento: Dicembre 2025</p>
+            <p className="text-gray-600">Ultimo aggiornamento: Gennaio 2026</p>
           </div>
 
           {/* What are Cookies */}

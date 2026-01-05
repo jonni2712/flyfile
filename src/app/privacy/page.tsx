@@ -37,7 +37,7 @@ export default function PrivacyPage() {
             </h1>
 
             <p className="text-xl text-blue-100/80 max-w-3xl mx-auto">
-              Ultimo aggiornamento: Dicembre 2025
+              Ultimo aggiornamento: Gennaio 2026
             </p>
           </div>
         </div>
@@ -268,7 +268,7 @@ export default function PrivacyPage() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-800">File Caricati</h4>
-                    <p className="text-gray-700">Conservati secondo la durata specificata nel tuo piano di abbonamento (7-60 giorni), poi eliminati automaticamente</p>
+                    <p className="text-gray-700">Conservati secondo la durata specificata nel tuo piano di abbonamento (7 giorni - 1 anno), poi eliminati automaticamente</p>
                   </div>
                 </div>
 

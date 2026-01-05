@@ -36,7 +36,7 @@ export default function TermsPage() {
             </h1>
 
             <p className="text-xl text-blue-100/80 max-w-3xl mx-auto">
-              Ultimo aggiornamento: Dicembre 2025
+              Ultimo aggiornamento: Gennaio 2026
             </p>
           </div>
         </div>
