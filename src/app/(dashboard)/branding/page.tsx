@@ -20,6 +20,9 @@ import {
   Building2,
   Type,
   MessageSquare,
+  Link2,
+  Copy,
+  AlertCircle,
 } from 'lucide-react';
 import { getPlanLimits, BrandSettings } from '@/types';
 
@@ -43,7 +46,14 @@ export default function BrandingPage() {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [canCustomize, setCanCustomize] = useState(false);
   const [canRemovePoweredBy, setCanRemovePoweredBy] = useState(false);
+  const [canUseCustomLinks, setCanUseCustomLinks] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+
+  // Custom slug state
+  const [slugInput, setSlugInput] = useState('');
+  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'owned'>('idle');
+  const [slugError, setSlugError] = useState('');
+  const [savingSlug, setSavingSlug] = useState(false);
 
   // File input refs
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -77,6 +87,9 @@ export default function BrandingPage() {
         const data = await response.json();
         setCanCustomize(data.canCustomize);
         setCanRemovePoweredBy(data.canRemovePoweredBy);
+        // Set custom links permission based on plan
+        const planLimits = data.plan ? getPlanLimits(data.plan) : null;
+        setCanUseCustomLinks(planLimits?.customLinks ?? false);
 
         if (data.brand) {
           setBrand({
@@ -85,6 +98,11 @@ export default function BrandingPage() {
             showPoweredBy: data.brand.showPoweredBy ?? true,
           });
           setOriginalBrand(data.brand);
+          // Set slug input if user has one
+          if (data.brand.customSlug) {
+            setSlugInput(data.brand.customSlug);
+            setSlugStatus('owned');
+          }
         }
       }
     } catch (error) {
@@ -97,6 +115,138 @@ export default function BrandingPage() {
   const showMessage = (text: string, type: 'success' | 'error') => {
     setMessage({ text, type });
     setTimeout(() => setMessage(null), 4000);
+  };
+
+  // Check slug availability with debounce
+  const checkSlugAvailability = async (slug: string) => {
+    if (!slug || slug.length < 3) {
+      setSlugStatus('idle');
+      setSlugError('');
+      return;
+    }
+
+    setSlugStatus('checking');
+    setSlugError('');
+
+    try {
+      const response = await fetch(
+        `/api/brand/slug?slug=${encodeURIComponent(slug)}&userId=${user?.uid}`
+      );
+      const data = await response.json();
+
+      if (data.available) {
+        if (data.ownedByUser) {
+          setSlugStatus('owned');
+        } else {
+          setSlugStatus('available');
+        }
+        setSlugError('');
+      } else {
+        setSlugStatus(data.error?.includes('Formato') ? 'invalid' : 'taken');
+        setSlugError(data.error || 'Slug non disponibile');
+      }
+    } catch (error) {
+      setSlugStatus('idle');
+      setSlugError('Errore nel controllo disponibilità');
+    }
+  };
+
+  // Handle slug input change with debounce
+  const handleSlugChange = (value: string) => {
+    const normalizedValue = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    setSlugInput(normalizedValue);
+
+    // Reset if empty
+    if (!normalizedValue) {
+      setSlugStatus('idle');
+      setSlugError('');
+      return;
+    }
+
+    // Debounce the check
+    const timeoutId = setTimeout(() => {
+      checkSlugAvailability(normalizedValue);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  };
+
+  // Save the custom slug
+  const handleSaveSlug = async () => {
+    if (!user || !slugInput || slugStatus === 'taken' || slugStatus === 'invalid') return;
+
+    setSavingSlug(true);
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch('/api/brand/slug', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          slug: slugInput,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showMessage('Link personalizzato salvato!', 'success');
+        setSlugStatus('owned');
+        setBrand((prev) => ({ ...prev, customSlug: slugInput, customSlugVerified: true }));
+      } else {
+        showMessage(data.error || 'Errore nel salvataggio', 'error');
+        setSlugError(data.error || 'Errore nel salvataggio');
+      }
+    } catch (error) {
+      showMessage('Errore nel salvataggio del link', 'error');
+    } finally {
+      setSavingSlug(false);
+    }
+  };
+
+  // Remove custom slug
+  const handleRemoveSlug = async () => {
+    if (!user || !confirm('Sei sicuro di voler rimuovere il link personalizzato?')) return;
+
+    setSavingSlug(true);
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch(`/api/brand/slug?userId=${user.uid}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        showMessage('Link personalizzato rimosso', 'success');
+        setSlugInput('');
+        setSlugStatus('idle');
+        setBrand((prev) => {
+          const { customSlug, customSlugVerified, ...rest } = prev;
+          return rest;
+        });
+      } else {
+        const data = await response.json();
+        showMessage(data.error || 'Errore nella rimozione', 'error');
+      }
+    } catch (error) {
+      showMessage('Errore nella rimozione del link', 'error');
+    } finally {
+      setSavingSlug(false);
+    }
+  };
+
+  // Copy custom link to clipboard
+  const copyCustomLink = () => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://flyfile.io';
+    const customUrl = `${baseUrl}/t/${slugInput}`;
+    navigator.clipboard.writeText(customUrl).then(() => {
+      showMessage('Link copiato negli appunti!', 'success');
+    });
   };
 
   const handleSave = async () => {
@@ -693,6 +843,134 @@ export default function BrandingPage() {
             </div>
           )}
         </div>
+
+        {/* Custom Link Section */}
+        {canUseCustomLinks && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <Link2 className="w-5 h-5 mr-2 text-indigo-600" />
+              Link Personalizzato
+            </h2>
+
+            <p className="text-sm text-gray-600 mb-4">
+              Crea un link personalizzato per i tuoi trasferimenti. Invece di{' '}
+              <code className="bg-gray-100 px-1 rounded">flyfile.io/download/abc123</code>, avrai{' '}
+              <code className="bg-gray-100 px-1 rounded">flyfile.io/t/tuoslug/abc123</code>
+            </p>
+
+            <div className="space-y-4">
+              {/* Slug Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Il tuo slug personalizzato
+                </label>
+                <div className="flex gap-3">
+                  <div className="flex-1 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500">flyfile.io/t/</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={slugInput}
+                      onChange={(e) => handleSlugChange(e.target.value)}
+                      className={`w-full pl-28 pr-10 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                        slugStatus === 'available' || slugStatus === 'owned'
+                          ? 'border-green-300 focus:ring-green-500'
+                          : slugStatus === 'taken' || slugStatus === 'invalid'
+                          ? 'border-red-300 focus:ring-red-500'
+                          : 'border-gray-200 focus:ring-blue-500'
+                      }`}
+                      placeholder="tuoslug"
+                      maxLength={30}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                      {slugStatus === 'checking' && (
+                        <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                      )}
+                      {slugStatus === 'available' && (
+                        <Check className="w-5 h-5 text-green-500" />
+                      )}
+                      {slugStatus === 'owned' && (
+                        <Check className="w-5 h-5 text-blue-500" />
+                      )}
+                      {(slugStatus === 'taken' || slugStatus === 'invalid') && (
+                        <AlertCircle className="w-5 h-5 text-red-500" />
+                      )}
+                    </div>
+                  </div>
+
+                  {slugStatus === 'owned' ? (
+                    <>
+                      <button
+                        onClick={copyCustomLink}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                        title="Copia link"
+                      >
+                        <Copy className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={handleRemoveSlug}
+                        disabled={savingSlug}
+                        className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                      >
+                        {savingSlug ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-5 h-5" />
+                        )}
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={handleSaveSlug}
+                      disabled={
+                        savingSlug ||
+                        slugStatus !== 'available' ||
+                        !slugInput ||
+                        slugInput.length < 3
+                      }
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {savingSlug ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        'Salva'
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Status Messages */}
+                {slugError && (
+                  <p className="mt-2 text-sm text-red-600">{slugError}</p>
+                )}
+                {slugStatus === 'available' && !slugError && (
+                  <p className="mt-2 text-sm text-green-600">
+                    Questo slug è disponibile!
+                  </p>
+                )}
+                {slugStatus === 'owned' && (
+                  <p className="mt-2 text-sm text-blue-600">
+                    Questo è il tuo slug attuale. I tuoi trasferimenti useranno questo link.
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  3-30 caratteri. Solo lettere minuscole, numeri e trattini.
+                </p>
+              </div>
+
+              {/* Example Preview */}
+              {slugInput && slugInput.length >= 3 && (
+                <div className="p-4 bg-indigo-50 rounded-lg">
+                  <p className="text-sm font-medium text-indigo-900 mb-1">Anteprima link:</p>
+                  <code className="text-indigo-700">
+                    {process.env.NEXT_PUBLIC_BASE_URL || 'https://flyfile.io'}/t/{slugInput}/[transfer-id]
+                  </code>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Additional Settings */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">

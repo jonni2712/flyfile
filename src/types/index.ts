@@ -38,6 +38,9 @@ export interface BrandSettings {
   companyName?: string;       // Company name to display
   customMessage?: string;     // Custom message on download page
   showPoweredBy?: boolean;    // Show "Powered by FlyFile" (always true for non-business)
+  // Custom link settings
+  customSlug?: string;        // Custom URL slug (e.g., "mycompany" -> flyfile.io/t/mycompany/...)
+  customSlugVerified?: boolean; // Whether the slug is verified/reserved
   updatedAt?: Date;
 }
 
@@ -233,6 +236,7 @@ export interface UploadResponse {
   success: boolean;
   transferId?: string;
   downloadUrl?: string;
+  customUrl?: string; // Branded URL if user has custom slug
   message?: string;
   error?: string;
   requiresVerification?: boolean;
@@ -255,6 +259,7 @@ export interface PlanLimits {
   prioritySupport: boolean;
   canDelete: boolean;
   customBranding: boolean;       // Logo and background customization
+  customLinks: boolean;          // Custom URL slugs for transfers
   removePoweredBy: boolean;      // Remove "Powered by FlyFile" badge
 }
 
@@ -272,6 +277,7 @@ export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
       prioritySupport: false,
       canDelete: false,
       customBranding: false,
+      customLinks: false,
       removePoweredBy: false,
     },
     starter: {
@@ -286,6 +292,7 @@ export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
       prioritySupport: false,
       canDelete: true, // Can delete transfers
       customBranding: false,
+      customLinks: false,
       removePoweredBy: false,
     },
     pro: {
@@ -300,6 +307,7 @@ export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
       prioritySupport: false,
       canDelete: true,
       customBranding: true,       // Pro can customize branding
+      customLinks: true,          // Pro can use custom links
       removePoweredBy: false,     // But must show "Powered by FlyFile"
     },
     business: {
@@ -314,6 +322,7 @@ export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
       prioritySupport: true,
       canDelete: true,
       customBranding: true,       // Business can customize branding
+      customLinks: true,          // Business can use custom links
       removePoweredBy: true,      // Business can remove "Powered by FlyFile"
     },
   };
@@ -373,8 +382,8 @@ export const PLANS: Record<string, Plan> = {
       'Conservazione 30 giorni',
       'Scadenza personalizzata',
       'Branding personalizzato',
+      'Link personalizzati',
       'Accesso API',
-      'Dimensione file illimitata',
     ],
   },
   business: {
@@ -392,9 +401,9 @@ export const PLANS: Record<string, Plan> = {
       'Trasferimenti illimitati',
       'Conservazione 1 anno',
       'Branding completo (logo + sfondo)',
+      'Link personalizzati',
       'Rimuovi "Powered by FlyFile"',
       'Gestione team avanzata',
-      '3 membri inclusi',
       'Support prioritario',
     ],
   },

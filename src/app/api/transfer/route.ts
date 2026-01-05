@@ -100,6 +100,9 @@ export async function POST(request: NextRequest) {
     // Get Admin Firestore instance
     const db = getAdminFirestore();
 
+    // Variable for custom slug (will be set if user has custom branding)
+    let userCustomSlug: string | null = null;
+
     if (isAnonymous || !verifiedUserId) {
       // Anonymous user - use free plan limits
       planLimits = ANONYMOUS_LIMITS;
@@ -122,6 +125,11 @@ export async function POST(request: NextRequest) {
       currentStorageUsed = userData.storageUsed || 0;
       currentMonthlyTransfers = userData.monthlyTransfers || 0;
       maxRetentionDays = userData.retentionDays || planLimits.retentionDays;
+
+      // Check for custom slug (Pro and Business plans)
+      if (planLimits.customLinks && userData.brand?.customSlug && userData.brand?.customSlugVerified) {
+        userCustomSlug = userData.brand.customSlug;
+      }
 
       // Check storage limit (skip for business plan with unlimited storage)
       if (planLimits.storageLimit !== -1 && currentStorageUsed + totalSize > (userData.storageLimit || planLimits.storageLimit)) {
@@ -284,6 +292,10 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const downloadUrl = `${baseUrl}/download/${transferId}`;
+    // Generate custom URL if user has a custom slug
+    const customUrl = userCustomSlug ? `${baseUrl}/t/${userCustomSlug}/${transferId}` : null;
+    // Use custom URL for emails if available, otherwise standard URL
+    const primaryDownloadUrl = customUrl || downloadUrl;
 
     // Send email notification to recipient if delivery method is email
     let emailSent = false;
@@ -293,7 +305,7 @@ export async function POST(request: NextRequest) {
           senderName: senderName || 'Qualcuno',
           title,
           message,
-          downloadLink: downloadUrl,
+          downloadLink: primaryDownloadUrl,
           fileCount: files.length,
           totalSize: formatFileSize(totalSize),
           expiresAt: expiresAt.toLocaleDateString('it-IT', {
@@ -325,7 +337,7 @@ export async function POST(request: NextRequest) {
         const { html: confirmHtml, text: confirmText } = getUploadConfirmationEmail({
           senderName: senderName || 'Utente',
           title,
-          downloadLink: downloadUrl,
+          downloadLink: primaryDownloadUrl,
           fileCount: files.length,
           totalSize: formatFileSize(totalSize),
           expiresAt: expiresAt.toLocaleDateString('it-IT', {
@@ -356,6 +368,7 @@ export async function POST(request: NextRequest) {
       transferId,
       internalId: transferRef.id,
       downloadUrl,
+      customUrl, // Branded URL if user has custom slug
       uploadUrls,
       expiresAt: expiresAt.toISOString(),
       emailSent,

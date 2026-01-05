@@ -316,7 +316,7 @@ export function TransferProvider({ children }: { children: ReactNode }) {
         throw new Error(createResult.error || 'Impossibile creare il trasferimento');
       }
 
-      const { transferId, internalId, downloadUrl, uploadUrls, expiresAt, emailSent } = createResult;
+      const { transferId, internalId, downloadUrl, customUrl, uploadUrls, expiresAt, emailSent } = createResult;
 
       // Upload files to R2 using presigned URLs
       for (let i = 0; i < encryptedFilesData.length; i++) {
@@ -358,6 +358,7 @@ export function TransferProvider({ children }: { children: ReactNode }) {
         success: true,
         transferId,
         downloadUrl,
+        customUrl, // Branded URL if user has custom slug
         message: data.deliveryMethod === 'email'
           ? (emailSent ? 'Email inviata con successo' : 'Transfer creato, ma invio email fallito')
           : 'Transfer creato con successo',

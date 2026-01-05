@@ -66,6 +66,7 @@ export default function UploadPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [uploadResult, setUploadResult] = useState<{
     downloadUrl: string;
+    customUrl?: string;
     transferId: string;
     expiresAt: string;
     emailSent?: boolean;
@@ -323,6 +324,7 @@ export default function UploadPage() {
         // Show success modal
         setUploadResult({
           downloadUrl: result.downloadUrl,
+          customUrl: result.customUrl,
           transferId: result.transferId || '',
           expiresAt: result.expiresAt || '',
           emailSent: deliveryMethod === 'email',
@@ -374,8 +376,10 @@ export default function UploadPage() {
   };
 
   const copyToClipboard = async () => {
-    if (uploadResult?.downloadUrl) {
-      await navigator.clipboard.writeText(uploadResult.downloadUrl);
+    // Prefer custom URL if available, otherwise use standard download URL
+    const urlToCopy = uploadResult?.customUrl || uploadResult?.downloadUrl;
+    if (urlToCopy) {
+      await navigator.clipboard.writeText(urlToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -519,8 +523,32 @@ export default function UploadPage() {
 
             {/* Download Link */}
             <div className="mb-6">
+              {/* Custom Branded URL if available */}
+              {uploadResult.customUrl && (
+                <div className="mb-4">
+                  <label className="flex items-center text-sm font-semibold text-white mb-2">
+                    <Crown className="w-4 h-4 text-yellow-400 mr-2" />
+                    Link Personalizzato
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={uploadResult.customUrl}
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl text-white text-sm"
+                    />
+                    <button
+                      onClick={copyToClipboard}
+                      className="px-4 py-3 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 rounded-xl text-yellow-400 transition-colors"
+                    >
+                      {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <label className="block text-sm font-semibold text-white mb-2">
-                Link di Download
+                {uploadResult.customUrl ? 'Link Standard' : 'Link di Download'}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -529,12 +557,14 @@ export default function UploadPage() {
                   value={uploadResult.downloadUrl}
                   className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-sm"
                 />
-                <button
-                  onClick={copyToClipboard}
-                  className="px-4 py-3 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-xl text-cyan-400 transition-colors"
-                >
-                  {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                </button>
+                {!uploadResult.customUrl && (
+                  <button
+                    onClick={copyToClipboard}
+                    className="px-4 py-3 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-xl text-cyan-400 transition-colors"
+                  >
+                    {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                  </button>
+                )}
               </div>
               {copied && (
                 <p className="text-green-400 text-sm mt-2">Link copiato negli appunti!</p>
@@ -560,7 +590,7 @@ export default function UploadPage() {
             {/* Actions */}
             <div className="flex gap-3">
               <button
-                onClick={() => window.open(uploadResult.downloadUrl, '_blank')}
+                onClick={() => window.open(uploadResult.customUrl || uploadResult.downloadUrl, '_blank')}
                 className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <ExternalLink className="w-4 h-4" />
