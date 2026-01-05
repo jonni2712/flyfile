@@ -240,11 +240,11 @@ export interface PlanLimits {
 export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
   const limits: Record<Plan['id'], PlanLimits> = {
     free: {
-      storageLimit: 5 * 1024 * 1024 * 1024,
-      maxTransfers: 10,
-      retentionDays: 5,
-      maxFilesPerTransfer: 10,
-      passwordProtection: false,
+      storageLimit: 15 * 1024 * 1024 * 1024, // 15 GB
+      maxTransfers: 20,
+      retentionDays: 7,
+      maxFilesPerTransfer: 15,
+      passwordProtection: true, // Now available for free!
       customExpiry: false,
       teamAccess: false,
       apiAccess: false,
@@ -252,22 +252,22 @@ export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
       canDelete: false,
     },
     starter: {
-      storageLimit: 300 * 1024 * 1024 * 1024,
-      maxTransfers: 15,
-      retentionDays: 7,
-      maxFilesPerTransfer: 15,
-      passwordProtection: false,
+      storageLimit: 500 * 1024 * 1024 * 1024, // 500 GB (was 300)
+      maxTransfers: 50,
+      retentionDays: 14, // 2 weeks (was 7)
+      maxFilesPerTransfer: 25,
+      passwordProtection: true,
       customExpiry: false,
       teamAccess: false,
       apiAccess: false,
       prioritySupport: false,
-      canDelete: false,
+      canDelete: true, // Can delete transfers
     },
     pro: {
-      storageLimit: 500 * 1024 * 1024 * 1024,
-      maxTransfers: 30,
+      storageLimit: 1024 * 1024 * 1024 * 1024, // 1 TB
+      maxTransfers: 100,
       retentionDays: 30,
-      maxFilesPerTransfer: 30,
+      maxFilesPerTransfer: 50,
       passwordProtection: true,
       customExpiry: true,
       teamAccess: false,
@@ -297,13 +297,14 @@ export const PLANS: Record<string, Plan> = {
     name: 'Free',
     priceMonthly: 0,
     priceAnnual: 0,
-    storageLimit: 5 * 1024 * 1024 * 1024, // 5 GB/mese
-    maxTransfers: 10,
-    retentionDays: 5,
+    storageLimit: 15 * 1024 * 1024 * 1024, // 15 GB/mese
+    maxTransfers: 20,
+    retentionDays: 7,
     features: [
-      'Condividi e ricevi fino a 5GB/mese',
-      '10 trasferimenti al mese',
-      'Conservazione 5 giorni',
+      'Condividi e ricevi fino a 15GB/mese',
+      '20 trasferimenti al mese',
+      'Conservazione 7 giorni',
+      'Protezione password',
       'Crittografia AES-256',
       'Dimensione file illimitata',
     ],
@@ -313,15 +314,16 @@ export const PLANS: Record<string, Plan> = {
     name: 'Starter',
     priceMonthly: 600, // €6
     priceAnnual: 6000, // €60 (risparmio €12)
-    storageLimit: 300 * 1024 * 1024 * 1024, // 300 GB/mese
-    maxTransfers: 15,
-    retentionDays: 7,
+    storageLimit: 500 * 1024 * 1024 * 1024, // 500 GB/mese
+    maxTransfers: 50,
+    retentionDays: 14,
     stripePriceIdMonthly: 'price_1RiiBLRvnkGxlG3gaHbNQnvd',
     stripePriceIdAnnual: 'price_1SFgByRvnkGxlG3got46mSF5',
     features: [
-      'Condividi e ricevi fino a 300GB/mese',
-      '15 trasferimenti al mese',
-      'Conservazione 7 giorni',
+      'Condividi e ricevi fino a 500GB/mese',
+      '50 trasferimenti al mese',
+      'Conservazione 14 giorni',
+      'Elimina trasferimenti',
       'Dashboard avanzata',
       'Dimensione file illimitata',
     ],
@@ -331,17 +333,17 @@ export const PLANS: Record<string, Plan> = {
     name: 'Pro',
     priceMonthly: 1200, // €12
     priceAnnual: 12000, // €120 (risparmio €24)
-    storageLimit: 500 * 1024 * 1024 * 1024, // 500 GB/mese
-    maxTransfers: 30,
+    storageLimit: 1024 * 1024 * 1024 * 1024, // 1 TB/mese
+    maxTransfers: 100,
     retentionDays: 30,
     stripePriceIdMonthly: 'price_1RYtiARvnkGxlG3gZUW7Kb4v',
     stripePriceIdAnnual: 'price_1SFgD4RvnkGxlG3gEnyvOLNr',
     features: [
-      'Condividi e ricevi fino a 500GB/mese',
-      '30 trasferimenti al mese',
+      'Condividi e ricevi fino a 1TB/mese',
+      '100 trasferimenti al mese',
       'Conservazione 30 giorni',
-      'Protezione password',
-      'UI personalizzabile',
+      'Scadenza personalizzata',
+      'Accesso API',
       'Dimensione file illimitata',
     ],
   },

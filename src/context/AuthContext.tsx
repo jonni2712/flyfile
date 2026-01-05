@@ -82,10 +82,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayName: displayName || user.displayName || '',
       plan: 'free',
       storageUsed: 0,
-      storageLimit: 5 * 1024 * 1024 * 1024, // 5 GB for free plan
+      storageLimit: 15 * 1024 * 1024 * 1024, // 15 GB for free plan
       monthlyTransfers: 0,
-      maxMonthlyTransfers: 10,
-      retentionDays: 5,
+      maxMonthlyTransfers: 20,
+      retentionDays: 7,
       filesCount: 0,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),

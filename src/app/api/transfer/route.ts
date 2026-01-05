@@ -13,11 +13,11 @@ import { csrfProtection } from '@/lib/csrf';
 
 // Default limits for anonymous users (same as free plan)
 const ANONYMOUS_LIMITS = {
-  storageLimit: 5 * 1024 * 1024 * 1024, // 5 GB
-  maxTransfers: 10,
-  maxFilesPerTransfer: 10,
-  retentionDays: 5,
-  passwordProtection: false,
+  storageLimit: 15 * 1024 * 1024 * 1024, // 15 GB
+  maxTransfers: 20,
+  maxFilesPerTransfer: 15,
+  retentionDays: 7,
+  passwordProtection: true, // Now available for free!
   customExpiry: false,
 };
 
@@ -162,12 +162,12 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check password protection (only Pro and Business)
+      // Check password protection
       if (password && !planLimits.passwordProtection) {
         return NextResponse.json(
           {
             success: false,
-            error: 'La protezione con password è disponibile solo per i piani Pro e Business.',
+            error: 'La protezione con password non è disponibile per il tuo piano.',
             code: 'FEATURE_NOT_AVAILABLE'
           },
           { status: 403 }
@@ -200,11 +200,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (password) {
+      if (password && !ANONYMOUS_LIMITS.passwordProtection) {
         return NextResponse.json(
           {
             success: false,
-            error: 'La protezione con password è disponibile solo per utenti registrati con piano Pro o Business.',
+            error: 'La protezione con password non è disponibile per utenti anonimi.',
             code: 'FEATURE_NOT_AVAILABLE'
           },
           { status: 403 }
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate expiry date (respect plan limits)
-    const retentionDays = Math.min(expiryDays || 5, maxRetentionDays);
+    const retentionDays = Math.min(expiryDays || 7, maxRetentionDays);
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + retentionDays);
 
