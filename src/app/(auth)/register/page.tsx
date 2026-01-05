@@ -36,8 +36,20 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState('IT');
 
-  const { signUp, signInWithGoogle } = useAuth();
+  const { signUp, signInWithGoogle, isProcessingRedirect } = useAuth();
   const router = useRouter();
+
+  // Show loading screen while processing OAuth redirect
+  if (isProcessingRedirect) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Registrazione in corso...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -28,6 +28,7 @@ interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  isProcessingRedirect: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string, username?: string, billingData?: BillingInfo) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -50,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isProcessingRedirect, setIsProcessingRedirect] = useState(true);
 
   // Fetch user profile from Firestore
   async function fetchUserProfile(uid: string) {
@@ -130,10 +132,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // Redirect to dashboard after successful Google sign-in
           window.location.href = '/dashboard';
+          return; // Don't set isProcessingRedirect to false, we're redirecting
         }
       } catch (error) {
         console.error('Redirect result error:', error);
       }
+      setIsProcessingRedirect(false);
     };
 
     handleRedirectResult();
@@ -304,6 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     userProfile,
     loading,
+    isProcessingRedirect,
     signIn,
     signUp,
     signInWithGoogle,
