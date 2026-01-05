@@ -291,9 +291,11 @@ export async function POST(request: NextRequest) {
     );
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const brandedDomain = process.env.BRANDED_DOMAIN || 'flyfile.it';
     const downloadUrl = `${baseUrl}/download/${transferId}`;
-    // Generate custom URL if user has a custom slug
-    const customUrl = userCustomSlug ? `${baseUrl}/t/${userCustomSlug}/${transferId}` : null;
+    // Generate custom URL with subdomain if user has a custom slug
+    // e.g., https://mafra.flyfile.it/abc123
+    const customUrl = userCustomSlug ? `https://${userCustomSlug}.${brandedDomain}/${transferId}` : null;
     // Use custom URL for emails if available, otherwise standard URL
     const primaryDownloadUrl = customUrl || downloadUrl;
 

@@ -242,8 +242,8 @@ export default function BrandingPage() {
 
   // Copy custom link to clipboard
   const copyCustomLink = () => {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://flyfile.io';
-    const customUrl = `${baseUrl}/t/${slugInput}`;
+    const brandedDomain = 'flyfile.it';
+    const customUrl = `https://${slugInput}.${brandedDomain}`;
     navigator.clipboard.writeText(customUrl).then(() => {
       showMessage('Link copiato negli appunti!', 'success');
     });
@@ -853,9 +853,9 @@ export default function BrandingPage() {
             </h2>
 
             <p className="text-sm text-gray-600 mb-4">
-              Crea un link personalizzato per i tuoi trasferimenti. Invece di{' '}
-              <code className="bg-gray-100 px-1 rounded">flyfile.io/download/abc123</code>, avrai{' '}
-              <code className="bg-gray-100 px-1 rounded">flyfile.io/t/tuoslug/abc123</code>
+              Crea un sottodominio personalizzato per i tuoi trasferimenti. Invece di{' '}
+              <code className="bg-gray-100 px-1 rounded">flyfile.it/download/abc123</code>, avrai{' '}
+              <code className="bg-gray-100 px-1 rounded">tuoslug.flyfile.it/abc123</code>
             </p>
 
             <div className="space-y-4">
@@ -866,14 +866,11 @@ export default function BrandingPage() {
                 </label>
                 <div className="flex gap-3">
                   <div className="flex-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500">flyfile.io/t/</span>
-                    </div>
                     <input
                       type="text"
                       value={slugInput}
                       onChange={(e) => handleSlugChange(e.target.value)}
-                      className={`w-full pl-28 pr-10 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                      className={`w-full pl-3 pr-32 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
                         slugStatus === 'available' || slugStatus === 'owned'
                           ? 'border-green-300 focus:ring-green-500'
                           : slugStatus === 'taken' || slugStatus === 'invalid'
@@ -883,7 +880,8 @@ export default function BrandingPage() {
                       placeholder="tuoslug"
                       maxLength={30}
                     />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-2">
+                      <span className="text-gray-500 text-sm">.flyfile.it</span>
                       {slugStatus === 'checking' && (
                         <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
                       )}
@@ -964,7 +962,7 @@ export default function BrandingPage() {
                 <div className="p-4 bg-indigo-50 rounded-lg">
                   <p className="text-sm font-medium text-indigo-900 mb-1">Anteprima link:</p>
                   <code className="text-indigo-700">
-                    {process.env.NEXT_PUBLIC_BASE_URL || 'https://flyfile.io'}/t/{slugInput}/[transfer-id]
+                    https://{slugInput}.flyfile.it/[transfer-id]
                   </code>
                 </div>
               )}
