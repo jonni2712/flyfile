@@ -3,13 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 // Route che richiedono autenticazione
 const protectedRoutes = [
   '/dashboard',
-  '/upload',
   '/files',
   '/profile',
   '/team',
   '/settings',
   '/api-keys',
 ];
+// Nota: /upload NON è protetta per permettere upload anonimi
 
 // Route solo per admin
 const adminRoutes = ['/admin'];
