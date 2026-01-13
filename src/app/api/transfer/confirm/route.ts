@@ -11,10 +11,6 @@ export async function POST(request: NextRequest) {
     const csrfError = csrfProtection(request);
     if (csrfError) return csrfError;
 
-    // SECURITY: Require authentication
-    const [authResult, authError] = await requireAuth(request);
-    if (authError) return authError;
-
     const { transferId } = await request.json();
 
     if (!transferId) {
@@ -41,12 +37,18 @@ export async function POST(request: NextRequest) {
     const userId = transferData?.userId;
     const totalSize = transferData?.totalSize || 0;
 
-    // SECURITY: Verify ownership - only owner can confirm their transfer
-    if (userId && userId !== authResult.userId) {
-      return NextResponse.json(
-        { error: 'Non autorizzato a confermare questo transfer' },
-        { status: 403 }
-      );
+    // SECURITY: For transfers with userId, require authentication and verify ownership
+    // For anonymous transfers (userId is null), the internalId acts as proof of ownership
+    if (userId) {
+      const [authResult, authError] = await requireAuth(request);
+      if (authError) return authError;
+
+      if (userId !== authResult.userId) {
+        return NextResponse.json(
+          { error: 'Non autorizzato a confermare questo transfer' },
+          { status: 403 }
+        );
+      }
     }
 
     // Update transfer status to active
