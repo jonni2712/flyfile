@@ -290,10 +290,17 @@ export function TransferProvider({ children }: { children: ReactNode }) {
       // Prepare files metadata for API
       const filesMetadata = encryptedFilesData.map(({ metadata }) => metadata);
 
+      // Get auth token for authenticated users
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (user) {
+        const token = await user.getIdToken();
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       // Call API to create transfer (with plan limit validation)
       const createResponse = await fetch('/api/transfer', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           title: data.title,
           message: data.message,
@@ -340,7 +347,7 @@ export function TransferProvider({ children }: { children: ReactNode }) {
       // Confirm upload to activate transfer and update user storage
       const confirmResponse = await fetch('/api/transfer/confirm', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ transferId: internalId }),
       });
 
@@ -430,10 +437,17 @@ export function TransferProvider({ children }: { children: ReactNode }) {
 
       const docId = snapshot.docs[0].id;
 
+      // Get auth token for API calls
+      const token = await user.getIdToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      };
+
       // Delete files from R2
       await fetch('/api/files/delete', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ transferId: docId }),
       });
 
