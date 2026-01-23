@@ -3,6 +3,7 @@ import { getAdminFirestore } from '@/lib/firebase-admin';
 import { checkAdminAccess } from '@/lib/admin';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { deleteFile } from '@/lib/r2';
+import { csrfProtection } from '@/lib/csrf';
 
 // GET - List all transfers with pagination
 export async function GET(request: NextRequest) {
@@ -88,6 +89,10 @@ export async function GET(request: NextRequest) {
 // DELETE - Delete transfer (admin only)
 export async function DELETE(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting
     const rateLimitResponse = await checkRateLimit(request, 'sensitive');
     if (rateLimitResponse) return rateLimitResponse;

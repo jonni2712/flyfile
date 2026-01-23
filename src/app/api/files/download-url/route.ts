@@ -6,6 +6,7 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { recordDownload } from '@/lib/analytics';
 import { verifyAuth } from '@/lib/auth-utils';
 import { verifyPassword } from '@/lib/password';
+import { csrfProtection } from '@/lib/csrf';
 
 // GET method for single file download via query params
 export async function GET(request: NextRequest) {
@@ -100,6 +101,10 @@ export async function GET(request: NextRequest) {
 // POST method for transfer file downloads (used by download page)
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting: 30 requests per minute for download operations
     const rateLimitResponse = await checkRateLimit(request, 'download');
     if (rateLimitResponse) return rateLimitResponse;

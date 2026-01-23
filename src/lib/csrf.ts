@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * CSRF Protection Module
  *
  * Validates Origin header to prevent cross-site request forgery attacks.
+ * Updated: 2026-01-03
  * Uses Origin validation which is more reliable than CSRF tokens in modern browsers.
  */
 

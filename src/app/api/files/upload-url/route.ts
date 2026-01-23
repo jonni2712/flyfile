@@ -7,6 +7,7 @@ import { getPlanLimits } from '@/types';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAuth } from '@/lib/auth-utils';
 import { validateFile, sanitizeFilename } from '@/lib/file-validation';
+import { csrfProtection } from '@/lib/csrf';
 
 // Default limits for anonymous users (same as free plan)
 const ANONYMOUS_LIMITS = {
@@ -17,6 +18,10 @@ const ANONYMOUS_LIMITS = {
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting: 10 requests per minute for upload operations
     const rateLimitResponse = await checkRateLimit(request, 'upload');
     if (rateLimitResponse) return rateLimitResponse;

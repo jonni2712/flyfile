@@ -3,6 +3,7 @@ import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { sendEmail, getVerificationCodeEmail } from '@/lib/email';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { csrfProtection } from '@/lib/csrf';
 import crypto from 'crypto';
 
 // Generate 6-digit verification code
@@ -24,6 +25,10 @@ const ANONYMOUS_LIMITS = {
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting: 5 requests per minute for auth endpoints
     const rateLimitResponse = await checkRateLimit(request, 'auth');
     if (rateLimitResponse) return rateLimitResponse;
