@@ -718,10 +718,11 @@ export default function UploadPage() {
               id="fileInput"
               disabled={isUploading}
             />
-            {/* @ts-expect-error webkitdirectory is a non-standard attribute */}
             <input
               type="file"
-              webkitdirectory=""
+              // @ts-ignore - webkitdirectory is a non-standard but widely supported attribute
+              webkitdirectory="true"
+              directory=""
               onChange={handleFileSelect}
               className="hidden"
               id="folderInput"
