@@ -72,9 +72,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate files for security (blocked extensions, size limits)
-    const plan = isAnonymous ? 'anonymous' : 'free'; // Will be updated after fetching user
-    const fileValidation = validateFiles(files, plan as 'anonymous' | 'free' | 'starter' | 'pro' | 'business', 10);
+    // Get Admin Firestore instance (needed early for plan lookup)
+    const db = getAdminFirestore();
+
+    // Determine actual user plan BEFORE file validation
+    let actualPlan: 'anonymous' | 'free' | 'starter' | 'pro' | 'business' = isAnonymous ? 'anonymous' : 'free';
+    if (!isAnonymous && verifiedUserId) {
+      const userSnap = await db.collection('users').doc(verifiedUserId).get();
+      if (userSnap.exists) {
+        const userData = userSnap.data() || {};
+        actualPlan = (userData.plan || 'free') as typeof actualPlan;
+      }
+    }
+
+    // Validate files for security (blocked extensions, size limits) with correct plan
+    const fileValidation = validateFiles(files, actualPlan, 10);
     if (!fileValidation.valid) {
       return NextResponse.json(
         { success: false, error: fileValidation.error, code: fileValidation.errorCode },
@@ -96,9 +108,6 @@ export async function POST(request: NextRequest) {
     let currentStorageUsed = 0;
     let currentMonthlyTransfers = 0;
     let maxRetentionDays = 5;
-
-    // Get Admin Firestore instance
-    const db = getAdminFirestore();
 
     // Variable for custom slug (will be set if user has custom branding)
     let userCustomSlug: string | null = null;
