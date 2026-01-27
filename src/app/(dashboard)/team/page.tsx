@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/context/AuthContext';
 import { useTeam } from '@/context/TeamContext';
 import {
@@ -201,47 +200,42 @@ export default function TeamPage() {
 
   if (authLoading || teamLoading) {
     return (
-      <MainLayout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        </div>
-      </MainLayout>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
     );
   }
 
   // No business plan
   if (!hasBusinessPlan) {
     return (
-      <MainLayout>
-        <div className="min-h-screen bg-gray-50 py-12">
-          <div className="max-w-2xl mx-auto px-4">
-            <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Users className="w-8 h-8 text-purple-600" />
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Gestione Team</h1>
-              <p className="text-gray-600 mb-8">
-                La gestione del team è disponibile solo con il piano Business.
-                Passa al piano Business per collaborare con il tuo team.
-              </p>
-              <Link
-                href="/pricing"
-                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all"
-              >
-                Scopri il Piano Business
-              </Link>
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Users className="w-8 h-8 text-purple-600" />
             </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Gestione Team</h1>
+            <p className="text-gray-600 mb-8">
+              La gestione del team è disponibile solo con il piano Business.
+              Passa al piano Business per collaborare con il tuo team.
+            </p>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all"
+            >
+              Scopri il Piano Business
+            </Link>
           </div>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   // No team yet
   if (!team) {
     return (
-      <MainLayout>
-        <div className="min-h-screen bg-gray-50 py-12">
+      <div className="min-h-screen bg-gray-50 py-12">
           <div className="max-w-2xl mx-auto px-4">
             {/* Success message */}
             {success && (
@@ -331,13 +325,13 @@ export default function TeamPage() {
             </div>
           )}
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   // Team dashboard
   return (
-    <MainLayout>
+    <>
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
@@ -732,6 +726,6 @@ export default function TeamPage() {
           </div>
         </div>
       )}
-    </MainLayout>
+    </>
   );
 }
