@@ -47,9 +47,16 @@ export async function POST(request: NextRequest) {
       const [authResult, authError] = await requireAuth(request);
       if (authError) return authError;
       userId = authResult.userId!;
+
+      // Fetch user's actual plan BEFORE validation
+      const userSnap = await db.collection('users').doc(userId).get();
+      if (userSnap.exists) {
+        const userData = userSnap.data() || {};
+        userPlan = (userData.plan || 'free') as typeof userPlan;
+      }
     }
 
-    // SECURITY: Validate file before proceeding
+    // SECURITY: Validate file with the correct user plan
     const validation = validateFile(fileName, contentType, fileSize, userPlan);
     if (!validation.valid) {
       return NextResponse.json(
@@ -83,7 +90,7 @@ export async function POST(request: NextRequest) {
         }
       }
     } else {
-      // Registered user - check their plan limits
+      // Registered user - check their plan limits (reuse data if already fetched)
       const userSnap = await db.collection('users').doc(userId).get();
 
       if (!userSnap.exists) {

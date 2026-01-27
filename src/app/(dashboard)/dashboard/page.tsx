@@ -52,6 +52,7 @@ export default function DashboardPage() {
   const [newTitle, setNewTitle] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [deletingTransfer, setDeletingTransfer] = useState<string | null>(null);
+  const [loadingPortal, setLoadingPortal] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -127,6 +128,39 @@ export default function DashboardPage() {
     }).catch(() => {
       showToast('Errore durante la copia', 'error');
     });
+  };
+
+  const openBillingPortal = async () => {
+    if (!user) return;
+
+    setLoadingPortal(true);
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          returnUrl: window.location.href,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        showToast(data.error || 'Errore nell\'apertura del portale', 'error');
+      }
+    } catch (error) {
+      console.error('Error opening billing portal:', error);
+      showToast('Errore nell\'apertura del portale', 'error');
+    } finally {
+      setLoadingPortal(false);
+    }
   };
 
   const deleteTransfer = async (transferId: string) => {
@@ -514,9 +548,20 @@ export default function DashboardPage() {
                   <Button
                     variant="outline"
                     className="w-full border-blue-300 text-blue-700 bg-white hover:bg-blue-50"
+                    onClick={openBillingPortal}
+                    disabled={loadingPortal}
                   >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Apri Portale Abbonamento
+                    {loadingPortal ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-blue-700 border-t-transparent rounded-full animate-spin"></div>
+                        Caricamento...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Apri Portale Abbonamento
+                      </>
+                    )}
                   </Button>
 
                   <div className="mt-3 text-xs text-blue-600">
@@ -554,13 +599,15 @@ export default function DashboardPage() {
                     Collaborazione avanzata con 3 membri inclusi
                   </p>
 
-                  <Button
-                    variant="outline"
-                    className="w-full border-purple-300 text-purple-700 bg-white hover:bg-purple-50"
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    Gestisci Team
-                  </Button>
+                  <Link href="/team">
+                    <Button
+                      variant="outline"
+                      className="w-full border-purple-300 text-purple-700 bg-white hover:bg-purple-50"
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      Gestisci Team
+                    </Button>
+                  </Link>
                 </div>
               )}
             </div>
