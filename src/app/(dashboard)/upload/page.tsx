@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTransfer } from '@/context/TransferContext';
 import {
   Upload, X, File, Check, AlertCircle, Lock, Mail, Link2, Clock, Shield, Plus,
-  Image, Video, FileText, Crown, Copy, CheckCircle, ExternalLink, Loader2, HardDrive
+  Image, Video, FileText, Crown, Copy, CheckCircle, ExternalLink, Loader2, HardDrive, FolderOpen
 } from 'lucide-react';
 import { getPlanLimits } from '@/types';
 import StorageQuota from '@/components/StorageQuota';
@@ -139,9 +139,63 @@ export default function UploadPage() {
     setIsDragOver(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+
+    // Handle both files and folders via DataTransfer API
+    const items = e.dataTransfer.items;
+    const allFiles: File[] = [];
+
+    const processEntry = async (entry: FileSystemEntry): Promise<void> => {
+      if (entry.isFile) {
+        const fileEntry = entry as FileSystemFileEntry;
+        return new Promise((resolve) => {
+          fileEntry.file((file) => {
+            allFiles.push(file);
+            resolve();
+          });
+        });
+      } else if (entry.isDirectory) {
+        const dirEntry = entry as FileSystemDirectoryEntry;
+        const reader = dirEntry.createReader();
+        return new Promise((resolve) => {
+          const readEntries = () => {
+            reader.readEntries(async (entries) => {
+              if (entries.length === 0) {
+                resolve();
+              } else {
+                for (const entry of entries) {
+                  await processEntry(entry);
+                }
+                readEntries(); // Continue reading (directories can have batched results)
+              }
+            });
+          };
+          readEntries();
+        });
+      }
+    };
+
+    if (items && items.length > 0) {
+      const entries: FileSystemEntry[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const entry = items[i].webkitGetAsEntry?.();
+        if (entry) {
+          entries.push(entry);
+        }
+      }
+
+      if (entries.length > 0) {
+        for (const entry of entries) {
+          await processEntry(entry);
+        }
+        addFiles(allFiles);
+        return;
+      }
+    }
+
+    // Fallback to simple file list
     const droppedFiles = Array.from(e.dataTransfer.files);
     addFiles(droppedFiles);
   }, []);
@@ -664,6 +718,15 @@ export default function UploadPage() {
               id="fileInput"
               disabled={isUploading}
             />
+            {/* @ts-expect-error webkitdirectory is a non-standard attribute */}
+            <input
+              type="file"
+              webkitdirectory=""
+              onChange={handleFileSelect}
+              className="hidden"
+              id="folderInput"
+              disabled={isUploading}
+            />
 
             {files.length === 0 ? (
               <div className="text-center">
@@ -672,14 +735,24 @@ export default function UploadPage() {
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-3">Trascina i file qui</h3>
                 <p className="text-blue-100/70 mb-6">oppure clicca per selezionarli</p>
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('fileInput')?.click()}
-                  className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 transform hover:scale-105"
-                >
-                  <Plus className="w-5 h-5 inline-block mr-2" />
-                  Seleziona File
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('fileInput')?.click()}
+                    className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 transform hover:scale-105"
+                  >
+                    <Plus className="w-5 h-5 inline-block mr-2" />
+                    Seleziona File
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('folderInput')?.click()}
+                    className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-purple-400 hover:to-pink-500 transition-all duration-300 transform hover:scale-105"
+                  >
+                    <FolderOpen className="w-5 h-5 inline-block mr-2" />
+                    Seleziona Cartella
+                  </button>
+                </div>
                 <p className="text-xs text-blue-200/60 mt-4">
                   Max {planLimits.maxFilesPerTransfer === -1 ? 'illimitati' : planLimits.maxFilesPerTransfer} file • Tutti i formati supportati
                 </p>
@@ -690,14 +763,24 @@ export default function UploadPage() {
                   <h3 className="text-lg font-semibold text-white">
                     File ({files.length}) - {formatBytes(totalSize)}
                   </h3>
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('fileInput')?.click()}
-                    disabled={isUploading}
-                    className="text-cyan-400 hover:text-cyan-300 text-sm font-medium disabled:opacity-50"
-                  >
-                    + Aggiungi altri
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('fileInput')?.click()}
+                      disabled={isUploading}
+                      className="text-cyan-400 hover:text-cyan-300 text-sm font-medium disabled:opacity-50"
+                    >
+                      + Aggiungi file
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('folderInput')?.click()}
+                      disabled={isUploading}
+                      className="text-purple-400 hover:text-purple-300 text-sm font-medium disabled:opacity-50"
+                    >
+                      + Aggiungi cartella
+                    </button>
+                  </div>
                 </div>
 
                 {files.map((fileItem, index) => {
