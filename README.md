@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Elastic%202.0-blue.svg" alt="License"></a>
   <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-16-black" alt="Next.js"></a>
   <a href="https://typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5-blue" alt="TypeScript"></a>
   <a href="https://github.com/anthropics/claude-code"><img src="https://img.shields.io/badge/Built%20with-Claude%20Code-blueviolet" alt="Claude Code"></a>
@@ -590,8 +590,9 @@ git push origin feature/mia-feature
 <details>
 <summary><strong>È davvero gratis?</strong></summary>
 
-La versione self-hosted è completamente gratuita e open source (Apache 2.0).
+La versione self-hosted è gratuita per uso interno (personale o aziendale) sotto Elastic License 2.0.
 La versione hosted su flyfile.it ha un piano gratuito con limiti e piani a pagamento.
+**Nota:** Non puoi usare questo codice per creare un servizio concorrente.
 </details>
 
 <details>
@@ -634,23 +635,21 @@ Sì! Leggi CONTRIBUTING.md e apri una PR. Accogliamo contributi di ogni tipo.
 
 ## 📄 Licenza
 
-Questo progetto è rilasciato sotto licenza **Apache License 2.0**.
+Questo progetto è rilasciato sotto **Elastic License 2.0 (ELv2)**.
 
-```
-Copyright 2024-2025 FlyFile
+### Cosa puoi fare ✅
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+- Usare FlyFile per progetti personali
+- Usare FlyFile internamente nella tua azienda
+- Modificare il codice sorgente per uso proprio
+- Distribuire copie con questa licenza
+- Contribuire al progetto
 
-    http://www.apache.org/licenses/LICENSE-2.0
+### Cosa NON puoi fare ❌
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
+- Offrire FlyFile come servizio hosted/managed a terzi
+- Creare un prodotto SaaS concorrente usando questo codice
+- Rimuovere o modificare le protezioni della licenza
 
 Vedi [LICENSE](LICENSE) per il testo completo.
 

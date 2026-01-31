@@ -416,7 +416,17 @@ openssl s_client -connect smtp.gmail.com:587 -starttls smtp
 
 ## License
 
-FlyFile is open source software licensed under the [Apache License 2.0](LICENSE).
+FlyFile is source-available software licensed under the [Elastic License 2.0](LICENSE).
+
+**You CAN:**
+- Use FlyFile for personal projects
+- Use FlyFile internally in your company
+- Modify the source code for your own use
+- Contribute to the project
+
+**You CANNOT:**
+- Offer FlyFile as a hosted/managed service to third parties
+- Create a competing SaaS product using this code
 
 ---
 
