@@ -1,0 +1,60 @@
+# ============================================================================
+# FlyFile - Docker Ignore
+#
+# This project is developed with vibe coding using Claude Code by Anthropic
+# ============================================================================
+
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+.next
+out
+dist
+build
+
+# Environment files (sensitive)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Tests
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+coverage
+.nyc_output
+
+# Development
+.eslintcache
+.turbo
+
+# Claude Code
+.claude
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore

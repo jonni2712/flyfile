@@ -52,26 +52,25 @@ export async function GET(request: NextRequest) {
     health.status = 'degraded';
   }
 
-  // Check R2 (basic config check)
+  // Check Storage (R2, MinIO, S3, or custom)
   try {
-    if (
-      process.env.R2_ACCOUNT_ID &&
-      process.env.R2_ACCESS_KEY_ID &&
-      process.env.R2_SECRET_ACCESS_KEY &&
-      process.env.R2_BUCKET_NAME
-    ) {
+    const storageProvider = process.env.STORAGE_PROVIDER || 'r2';
+    const hasR2Config = process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && process.env.R2_BUCKET_NAME;
+    const hasGenericConfig = process.env.STORAGE_ENDPOINT && process.env.STORAGE_ACCESS_KEY && process.env.STORAGE_SECRET_KEY && process.env.STORAGE_BUCKET;
+
+    if (hasR2Config || hasGenericConfig) {
       health.services.r2 = { status: 'up' };
     } else {
       health.services.r2 = {
         status: 'down',
-        error: 'R2 configuration incomplete',
+        error: `Storage (${storageProvider}) configuration incomplete`,
       };
       health.status = 'degraded';
     }
   } catch (error) {
     health.services.r2 = {
       status: 'down',
-      error: error instanceof Error ? error.message : 'R2 check failed',
+      error: error instanceof Error ? error.message : 'Storage check failed',
     };
     health.status = 'degraded';
   }

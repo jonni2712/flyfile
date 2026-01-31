@@ -65,6 +65,10 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better debugging
   reactStrictMode: true,
 
+  // Enable standalone output for Docker deployments
+  // This creates a minimal production build that can be run with node server.js
+  output: 'standalone',
+
   // Security headers
   async headers() {
     return [
