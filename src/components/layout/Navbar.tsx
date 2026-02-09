@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, X, ChevronDown, Check, X as XIcon, Zap, Settings, HelpCircle, FileText, LogOut, Upload, Search, ArrowUpDown, Copy, ExternalLink, Trash2, Calendar, Download, Lock, FolderOpen } from 'lucide-react';
+import { Menu, X, ChevronDown, Check, X as XIcon, Zap, Settings, HelpCircle, FileText, LogOut, Search, ArrowUpDown, Copy, ExternalLink, Trash2, Calendar, Download, Lock, FolderOpen } from 'lucide-react';
 import { getPlanLimits, PLANS } from '@/types';
 import { formatBytes } from '@/lib/format';
 import { collection, query, where, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
@@ -381,13 +381,6 @@ export default function Navbar() {
               {/* Auth area */}
               {user ? (
                 <div className="relative flex items-center gap-2">
-                  <Link
-                    href="/upload"
-                    className="p-2 text-gray-500 hover:text-black rounded-full hover:bg-gray-100 transition-colors"
-                  >
-                    <Upload className="w-5 h-5" />
-                  </Link>
-
                   <div className="flex items-center gap-0">
                     {/* Upgrade button - only for non-business */}
                     {userProfile?.plan !== 'business' && (
@@ -651,14 +644,6 @@ export default function Navbar() {
                   </button>
                 )}
                 <div className="space-y-1">
-                  <Link
-                    href="/upload"
-                    className="flex items-center gap-2 px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Upload className="w-4 h-4" />
-                    Carica
-                  </Link>
                   <Link
                     href="/settings/profile"
                     className="block px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors"
