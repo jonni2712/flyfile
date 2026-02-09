@@ -42,12 +42,12 @@ export default function DocumentationPage() {
               <span className="text-white text-sm font-medium">Documentazione</span>
             </div>
 
-            <h1 className="text-5xl lg:text-7xl font-bold text-white mb-6 tracking-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
               Tutto quello che serve
               <span className="block">per iniziare</span>
             </h1>
 
-            <p className="text-lg lg:text-xl text-white/80 max-w-3xl mx-auto mb-10">
+            <p className="text-lg text-white/80 max-w-3xl mx-auto mb-10">
               Guide complete, tutorial passo-passo e riferimenti API per sfruttare al massimo le
               potenzialità di FlyFile.
             </p>
@@ -75,8 +75,8 @@ export default function DocumentationPage() {
       <section id="quick-start" className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Guida Rapida</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Guida Rapida</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Inizia a condividere file in modo sicuro in meno di 5 minuti.
             </p>
           </div>
@@ -180,7 +180,7 @@ export default function DocumentationPage() {
               <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mr-4">
                 <Lightbulb className="w-6 h-6 text-amber-600" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">Suggerimenti Pro</h3>
+              <h3 className="text-xl font-bold text-gray-900">Suggerimenti Pro</h3>
             </div>
             <div className="grid md:grid-cols-2 gap-8">
               <div>
@@ -208,8 +208,8 @@ export default function DocumentationPage() {
       <section id="features-guide" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Guide alle Funzionalità</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Guide alle Funzionalità</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Approfondimenti dettagliati su come utilizzare al meglio ogni funzionalità di FlyFile.
             </p>
           </div>
@@ -312,8 +312,8 @@ export default function DocumentationPage() {
       <section id="api-reference" className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">API Reference</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">API Reference</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Documentazione completa per integrare FlyFile nei tuoi sistemi e workflow.
             </p>
           </div>
@@ -385,7 +385,7 @@ export default function DocumentationPage() {
 
           {/* Code Examples */}
           <div className="mt-12">
-            <h3 className="text-2xl font-bold text-gray-900 mb-8">Esempi di Codice</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-8">Esempi di Codice</h3>
 
             <div className="grid lg:grid-cols-2 gap-8">
               {/* JavaScript Example */}
@@ -450,8 +450,8 @@ print(response.json()['shareUrl'])`}
       <section id="faq" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Domande Frequenti</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Domande Frequenti</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Risposte alle domande più comuni su FlyFile e le sue funzionalità.
             </p>
           </div>
@@ -533,7 +533,7 @@ print(response.json()['shareUrl'])`}
               <div className="w-16 h-16 bg-white/15 rounded-2xl flex items-center justify-center mx-auto mb-8">
                 <MessageCircle className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
                 Hai bisogno di aiuto?
               </h2>
               <p className="text-lg text-white/80 mb-10 max-w-2xl mx-auto">

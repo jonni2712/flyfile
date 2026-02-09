@@ -37,12 +37,12 @@ export default function FeaturesPage() {
             <span className="text-sm font-medium text-white">Funzionalità Avanzate</span>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
             Tutto quello che serve per
             <span className="block italic font-light">condividere in sicurezza</span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-lg text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
             Scopri le funzionalità enterprise-grade che rendono FlyFile la scelta preferita per
             professionisti e aziende di tutto il mondo.
           </p>
@@ -72,7 +72,7 @@ export default function FeaturesPage() {
             <span className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
               Funzionalità principali
             </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mt-4 mb-6 leading-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4 mb-6 leading-tight">
               Sicurezza, condivisione e analytics
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -170,7 +170,7 @@ export default function FeaturesPage() {
             <span className="text-sm font-semibold text-purple-600 uppercase tracking-wider">
               Funzionalità avanzate
             </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mt-4 mb-6 leading-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4 mb-6 leading-tight">
               Strumenti per team e sviluppatori
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -186,7 +186,7 @@ export default function FeaturesPage() {
                 <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mr-4">
                   <Users className="w-6 h-6 text-amber-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">Gestione Team</h3>
+                <h3 className="text-xl font-bold text-gray-900">Gestione Team</h3>
               </div>
               <p className="text-gray-600 leading-relaxed mb-6">
                 Collabora in sicurezza con il tuo team. Invita membri e monitora l&apos;attività di
@@ -222,7 +222,7 @@ export default function FeaturesPage() {
                 <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mr-4">
                   <Code className="w-6 h-6 text-indigo-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">API REST</h3>
+                <h3 className="text-xl font-bold text-gray-900">API REST</h3>
               </div>
               <p className="text-gray-600 leading-relaxed mb-6">
                 Integra FlyFile nei tuoi workflow esistenti con la nostra API REST completa e
@@ -268,7 +268,7 @@ export default function FeaturesPage() {
                 <span className="text-sm font-semibold text-white/70 uppercase tracking-wider">
                   Prestazioni e scalabilità
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-bold mt-4 mb-4">
+                <h2 className="text-2xl sm:text-3xl font-bold mt-4 mb-4">
                   Infrastruttura pensata per crescere
                 </h2>
                 <p className="text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
@@ -325,7 +325,7 @@ export default function FeaturesPage() {
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
 
               <div className="relative z-10 text-center">
-                <h2 className="text-3xl sm:text-4xl font-bold mb-4">Pronto a iniziare?</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold mb-4">Pronto a iniziare?</h2>
                 <p className="text-lg text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
                   Unisciti a migliaia di professionisti che hanno scelto FlyFile per le loro esigenze
                   di condivisione file sicura.

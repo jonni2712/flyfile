@@ -41,7 +41,7 @@ export default function TermsPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section 1 */}
           <section className="border-b border-gray-200 pb-8 mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               1. Accettazione dei Termini
             </h2>
             <p className="text-gray-600 leading-relaxed">
@@ -55,7 +55,7 @@ export default function TermsPage() {
 
           {/* Section 2 */}
           <section className="border-b border-gray-200 pb-8 mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               2. Descrizione del Servizio
             </h2>
             <p className="text-gray-600 leading-relaxed mb-4">
@@ -74,7 +74,7 @@ export default function TermsPage() {
 
           {/* Section 3 */}
           <section className="border-b border-gray-200 pb-8 mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               3. Obblighi dell&apos;Utente
             </h2>
             <p className="text-gray-600 leading-relaxed mb-4">
@@ -93,7 +93,7 @@ export default function TermsPage() {
 
           {/* Section 4 */}
           <section className="border-b border-gray-200 pb-8 mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               4. Contenuti Vietati
             </h2>
             <p className="text-gray-600 leading-relaxed mb-4">
@@ -118,7 +118,7 @@ export default function TermsPage() {
 
           {/* Section 5 */}
           <section className="border-b border-gray-200 pb-8 mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               5. Abbonamenti e Pagamenti
             </h2>
             <p className="text-gray-600 leading-relaxed mb-4">
@@ -138,7 +138,7 @@ export default function TermsPage() {
 
           {/* Section 6 */}
           <section className="border-b border-gray-200 pb-8 mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               6. Conservazione dei File
             </h2>
             <p className="text-gray-600 leading-relaxed">
@@ -152,7 +152,7 @@ export default function TermsPage() {
 
           {/* Section 7 */}
           <section className="border-b border-gray-200 pb-8 mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               7. Limitazione di Responsabilità
             </h2>
             <p className="text-gray-600 leading-relaxed">
@@ -167,7 +167,7 @@ export default function TermsPage() {
 
           {/* Section 8 */}
           <section className="border-b border-gray-200 pb-8 mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               8. Terminazione
             </h2>
             <p className="text-gray-600 leading-relaxed">
@@ -181,7 +181,7 @@ export default function TermsPage() {
 
           {/* Section 9 */}
           <section className="border-b border-gray-200 pb-8 mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               9. Legge Applicabile
             </h2>
             <p className="text-gray-600 leading-relaxed">
@@ -193,7 +193,7 @@ export default function TermsPage() {
 
           {/* Section 10 */}
           <section>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               10. Contatti
             </h2>
             <p className="text-gray-600 leading-relaxed">

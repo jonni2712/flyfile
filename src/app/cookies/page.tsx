@@ -25,11 +25,11 @@ export default function CookiesPage() {
               <span className="text-white text-sm font-medium">Cookie Policy</span>
             </div>
 
-            <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
               Informativa sui Cookie
             </h1>
 
-            <p className="text-xl text-white/85 max-w-2xl mx-auto mb-6">
+            <p className="text-lg text-white/85 max-w-2xl mx-auto mb-6">
               Trasparenza totale su come utilizziamo i cookie per migliorare la tua esperienza su FlyFile.
             </p>
 
@@ -46,7 +46,7 @@ export default function CookiesPage() {
               <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mr-4">
                 <Cookie className="w-6 h-6 text-blue-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">Cosa sono i Cookie?</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Cosa sono i Cookie?</h2>
             </div>
             <p className="text-gray-700 leading-relaxed mb-4">
               I cookie sono piccoli file di testo che vengono memorizzati sul tuo dispositivo quando visiti un sito web.
@@ -63,7 +63,7 @@ export default function CookiesPage() {
       {/* Section 2: Tipi di Cookie */}
       <div className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Tipi di Cookie Utilizzati</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 text-center">Tipi di Cookie Utilizzati</h2>
 
           <div className="space-y-6">
             {/* Essential Cookies */}
@@ -152,7 +152,7 @@ export default function CookiesPage() {
       {/* Section 3: Cookie Table */}
       <div className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Dettaglio Cookie Utilizzati</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 text-center">Dettaglio Cookie Utilizzati</h2>
 
           <div className="border border-gray-200 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
@@ -219,7 +219,7 @@ export default function CookiesPage() {
               <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mr-4">
                 <Settings className="w-6 h-6 text-orange-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">Gestione dei Cookie</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestione dei Cookie</h2>
             </div>
             <p className="text-gray-700 mb-6">
               Puoi gestire le tue preferenze sui cookie in qualsiasi momento. Hai il diritto di:
@@ -259,7 +259,7 @@ export default function CookiesPage() {
       <div className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-2xl border border-gray-100 p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Impostazioni del Browser</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Impostazioni del Browser</h2>
             <p className="text-gray-700 mb-6">
               Puoi anche controllare i cookie attraverso le impostazioni del tuo browser.
               Ecco i link alle guide dei principali browser:
@@ -306,7 +306,7 @@ export default function CookiesPage() {
       <div className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Domande sui Cookie?</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Domande sui Cookie?</h2>
             <p className="text-gray-700 mb-8 max-w-lg mx-auto">
               Se hai domande sulla nostra politica sui cookie o sul trattamento dei tuoi dati,
               contattaci pure.

@@ -52,7 +52,7 @@ export default function SupportPage() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
               Come possiamo aiutarti?
             </h2>
             <p className="text-gray-500 max-w-xl mx-auto">
@@ -134,7 +134,7 @@ export default function SupportPage() {
                 <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center mr-4">
                   <Gift className="w-6 h-6 text-purple-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">
+                <h3 className="text-xl font-bold text-gray-900">
                   Vantaggi Beta Tester
                 </h3>
               </div>
@@ -195,7 +195,7 @@ export default function SupportPage() {
                 <div className="w-12 h-12 bg-cyan-50 rounded-xl flex items-center justify-center mr-4">
                   <FileText className="w-6 h-6 text-cyan-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">
+                <h3 className="text-xl font-bold text-gray-900">
                   Come Contribuire
                 </h3>
               </div>
@@ -250,7 +250,7 @@ export default function SupportPage() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
               Altri Canali di Supporto
             </h2>
             <p className="text-gray-500 max-w-xl mx-auto">
@@ -302,7 +302,7 @@ export default function SupportPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mb-5">
                 <Heart className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3">
+              <h3 className="text-xl font-bold text-white mb-3">
                 Grazie per il Tuo Supporto!
               </h3>
               <p className="text-white/85 max-w-xl mx-auto leading-relaxed">

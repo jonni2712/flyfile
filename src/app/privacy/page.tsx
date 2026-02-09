@@ -24,7 +24,7 @@ export default function PrivacyPage() {
             <span className="text-sm font-medium text-white">Privacy Policy</span>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
             La tua privacy è la nostra
             <span className="block italic font-light">priorità assoluta</span>
           </h1>
@@ -39,10 +39,10 @@ export default function PrivacyPage() {
       <div className="bg-white py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-6">
           <span className="text-sm font-semibold text-purple-600 uppercase tracking-wider">Introduzione</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-4 mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4 mb-6">
             Il nostro impegno per i tuoi dati
           </h2>
-          <p className="text-lg text-gray-600 leading-relaxed">
+          <p className="text-base text-gray-600 leading-relaxed">
             FlyFile (&quot;noi&quot;, &quot;nostro&quot; o &quot;la società&quot;) è impegnata a proteggere la privacy e la sicurezza dei dati personali degli utenti (&quot;tu&quot; o &quot;utente&quot;). Questa Privacy Policy descrive come raccogliamo, utilizziamo, conserviamo e proteggiamo le tue informazioni quando utilizzi il nostro servizio di condivisione file sicura.
           </p>
         </div>
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
       <div className="bg-gray-50 py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-6">
           <span className="text-sm font-semibold text-blue-600 uppercase tracking-wider">Dati raccolti</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-4 mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4 mb-10">
             Informazioni che Raccogliamo
           </h2>
 
@@ -108,7 +108,7 @@ export default function PrivacyPage() {
       <div className="bg-white py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-6">
           <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">Analytics</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-4 mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4 mb-10">
             Analisi e Statistiche
           </h2>
 
@@ -144,7 +144,7 @@ export default function PrivacyPage() {
       <div className="bg-gray-50 py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-6">
           <span className="text-sm font-semibold text-blue-600 uppercase tracking-wider">Utilizzo dati</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-4 mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4 mb-10">
             Come Utilizziamo i Tuoi Dati
           </h2>
 
@@ -180,7 +180,7 @@ export default function PrivacyPage() {
       <div className="bg-white py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-6">
           <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">Protezione</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-4 mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4 mb-10">
             Sicurezza dei Dati
           </h2>
 
@@ -193,9 +193,9 @@ export default function PrivacyPage() {
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                   <Lock className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold">Crittografia End-to-End</h3>
+                <h3 className="text-xl font-bold">Crittografia End-to-End</h3>
               </div>
-              <p className="text-white/85 text-lg leading-relaxed">
+              <p className="text-white/85 text-base leading-relaxed">
                 Tutti i file caricati sono protetti con crittografia AES-256, lo stesso standard utilizzato dalle istituzioni bancarie e governative. I tuoi dati sono crittografati prima di essere archiviati sui nostri server.
               </p>
             </div>
@@ -253,7 +253,7 @@ export default function PrivacyPage() {
       <div className="bg-gray-50 py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-6">
           <span className="text-sm font-semibold text-purple-600 uppercase tracking-wider">I tuoi diritti</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-4 mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4 mb-10">
             I Tuoi Diritti (GDPR)
           </h2>
 
@@ -295,7 +295,7 @@ export default function PrivacyPage() {
       <div className="bg-white py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-6">
           <span className="text-sm font-semibold text-blue-600 uppercase tracking-wider">Conservazione</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-4 mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4 mb-10">
             Conservazione dei Dati
           </h2>
 
@@ -331,11 +331,11 @@ export default function PrivacyPage() {
       <div className="bg-gray-50 py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-6">
           <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">Contatti</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-4 mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4 mb-6">
             Contattaci
           </h2>
 
-          <p className="text-lg text-gray-600 leading-relaxed mb-10">
+          <p className="text-base text-gray-600 leading-relaxed mb-10">
             Per qualsiasi domanda riguardo questa Privacy Policy o per esercitare i tuoi diritti, puoi contattarci:
           </p>
 

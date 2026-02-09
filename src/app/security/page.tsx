@@ -25,12 +25,12 @@ export default function SecurityPage() {
               <span className="text-white text-sm font-medium">Sicurezza Enterprise</span>
             </div>
 
-            <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
               La tua sicurezza è la nostra<br />
               priorità assoluta
             </h1>
 
-            <p className="text-xl text-white/80 max-w-3xl mx-auto mb-10">
+            <p className="text-lg text-white/80 max-w-3xl mx-auto mb-10">
               Standard di sicurezza enterprise, conformità GDPR e crittografia di livello militare per proteggere i tuoi dati più importanti.
             </p>
 
@@ -56,8 +56,8 @@ export default function SecurityPage() {
       <div className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">Crittografia End-to-End</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Crittografia End-to-End</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Ogni file è protetto con la stessa crittografia utilizzata da banche e governi. I tuoi dati sono al sicuro, sempre.
             </p>
           </div>
@@ -68,8 +68,8 @@ export default function SecurityPage() {
                 <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mb-8">
                   <Lock className="w-8 h-8 text-green-600" />
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-6">Crittografia AES-256</h3>
-                <p className="text-lg text-gray-700 mb-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">Crittografia AES-256</h3>
+                <p className="text-base text-gray-700 mb-6">
                   Utilizziamo lo standard di crittografia AES-256, lo stesso utilizzato dal governo americano per i documenti top-secret.
                   Ogni file riceve una chiave di crittografia unica che viene generata automaticamente.
                 </p>
@@ -136,8 +136,8 @@ export default function SecurityPage() {
       <div className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">Funzionalità di Sicurezza</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Funzionalità di Sicurezza</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Protezione a 360 gradi per ogni aspetto della condivisione dei tuoi file.
             </p>
           </div>
@@ -231,8 +231,8 @@ export default function SecurityPage() {
 
             <div className="relative z-10">
               <div className="text-center mb-12">
-                <h2 className="text-4xl font-bold text-white mb-6">Conformità e Standard</h2>
-                <p className="text-xl text-white/80 max-w-3xl mx-auto">
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6">Conformità e Standard</h2>
+                <p className="text-lg text-white/80 max-w-3xl mx-auto">
                   Rispettiamo le normative europee per la protezione dei dati e implementiamo le migliori pratiche di sicurezza.
                 </p>
               </div>
@@ -280,8 +280,8 @@ export default function SecurityPage() {
       <div className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">Sicurezza dell&apos;Infrastruttura</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Sicurezza dell&apos;Infrastruttura</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               La nostra infrastruttura è progettata con sicurezza multi-livello per proteggere i tuoi dati a ogni strato.
             </p>
           </div>
@@ -293,7 +293,7 @@ export default function SecurityPage() {
                 <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mr-4">
                   <Server className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">Infrastruttura Cloud</h3>
+                <h3 className="text-xl font-bold text-gray-900">Infrastruttura Cloud</h3>
               </div>
               <p className="text-gray-600 mb-6">
                 Utilizziamo Cloudflare R2 per lo storage dei file, garantendo velocità globale e affidabilità enterprise.
@@ -320,7 +320,7 @@ export default function SecurityPage() {
                 <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mr-4">
                   <Shield className="w-6 h-6 text-purple-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">Sicurezza di Rete</h3>
+                <h3 className="text-xl font-bold text-gray-900">Sicurezza di Rete</h3>
               </div>
               <p className="text-gray-600 mb-6">
                 Protezione multi-livello con firewall avanzati, sistemi di rilevamento intrusioni e monitoraggio continuo.
@@ -348,8 +348,8 @@ export default function SecurityPage() {
       <div className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Best Practice di Sicurezza</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Best Practice di Sicurezza</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Consigli per massimizzare la sicurezza dei tuoi trasferimenti di file con FlyFile.
             </p>
           </div>
@@ -394,10 +394,10 @@ export default function SecurityPage() {
       <div className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-2xl p-12 border border-gray-100 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
               Sicurezza Garantita per i Tuoi Dati
             </h2>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
               Affidati alla piattaforma di condivisione file più sicura. Inizia oggi con la massima protezione per i tuoi dati sensibili.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

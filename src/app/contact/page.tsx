@@ -98,14 +98,14 @@ export default function ContactPage() {
               <span className="text-white/90 text-sm font-medium">Contattaci</span>
             </div>
 
-            <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
               Siamo qui per
               <span className="block bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                 aiutarti
               </span>
             </h1>
 
-            <p className="text-xl text-blue-100/80 max-w-3xl mx-auto mb-8">
+            <p className="text-lg text-blue-100/80 max-w-3xl mx-auto mb-8">
               Il nostro team è disponibile per supportarti in ogni fase del tuo percorso con FlyFile. Contattaci per assistenza, domande o per scoprire come possiamo aiutare la tua organizzazione.
             </p>
           </div>
@@ -186,8 +186,8 @@ export default function ContactPage() {
           {/* Contact Form */}
           <div className="max-w-4xl mx-auto mb-20">
             <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">Invia un Messaggio</h2>
-              <p className="text-xl text-gray-600">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Invia un Messaggio</h2>
+              <p className="text-lg text-gray-600">
                 Compila il form qui sotto e ti risponderemo nel più breve tempo possibile.
               </p>
             </div>
@@ -327,7 +327,7 @@ export default function ContactPage() {
           <div className="grid lg:grid-cols-2 gap-12 mb-20">
             {/* Company Info */}
             <div className="bg-white/70 backdrop-blur-sm border border-white/40 rounded-3xl p-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-8">Informazioni Aziendali</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-8">Informazioni Aziendali</h3>
 
               <div className="space-y-6">
                 <div className="flex items-start">
@@ -384,7 +384,7 @@ export default function ContactPage() {
 
             {/* Quick Links */}
             <div className="bg-white/70 backdrop-blur-sm border border-white/40 rounded-3xl p-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-8">Link Utili</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-8">Link Utili</h3>
 
               <div className="space-y-4">
                 <Link href="/documentation" className="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors group">
