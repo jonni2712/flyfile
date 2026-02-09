@@ -151,8 +151,10 @@ const jsonLd = {
 
 export default function RootLayout({
   children,
+  settings,
 }: Readonly<{
   children: React.ReactNode;
+  settings: React.ReactNode;
 }>) {
   return (
     <html lang="it">
@@ -170,6 +172,13 @@ export default function RootLayout({
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
+        {/* Google AdSense */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5065560716215945"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"
@@ -181,6 +190,7 @@ export default function RootLayout({
           <TransferProvider>
             <TeamProvider>
               {children}
+              {settings}
               <CookieBanner />
               <ToastContainer />
             </TeamProvider>

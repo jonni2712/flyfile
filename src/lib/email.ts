@@ -43,6 +43,29 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
 
 // Email Templates
 
+// Shared email styles — full-width, no box, dark/light mode safe
+const emailStyles = {
+  body: 'margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #ffffff; color: #111827;',
+  wrapper: 'max-width: 100%; padding: 32px 24px;',
+  header: 'padding: 0 0 24px 0; border-bottom: 1px solid #e5e7eb;',
+  headerTitle: 'color: #111827; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.3px;',
+  headerSubtitle: 'color: #6b7280; margin: 4px 0 0 0; font-size: 12px;',
+  content: 'padding: 24px 0 0 0;',
+  title: 'color: #111827; margin: 0 0 16px 0; font-size: 20px; font-weight: 700;',
+  text: 'color: #374151; line-height: 1.7; margin: 0 0 16px 0; font-size: 15px;',
+  btnPrimary: 'display: inline-block; background-color: #111827; color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 9999px; font-weight: 600; font-size: 14px;',
+  btnBlue: 'display: inline-block; background-color: #3b82f6; color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 9999px; font-weight: 600; font-size: 14px;',
+  btnSecondary: 'display: inline-block; background-color: #f3f4f6; color: #374151; text-decoration: none; padding: 12px 32px; border-radius: 9999px; font-weight: 600; font-size: 13px; border: 1px solid #e5e7eb;',
+  infoBox: 'background: #f9fafb; border-radius: 10px; padding: 16px; margin: 20px 0;',
+  warningBox: 'background: #fef2f2; border-radius: 10px; padding: 12px 16px; margin: 20px 0;',
+  warningText: 'color: #dc2626; font-size: 13px; margin: 0; font-weight: 500;',
+  muted: 'color: #6b7280; font-size: 13px; line-height: 1.6;',
+  link: 'color: #3b82f6; text-decoration: none;',
+  footer: 'text-align: center; padding: 24px 0 0 0; margin-top: 24px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 11px;',
+  footerLink: 'color: #9ca3af; text-decoration: none;',
+  divider: 'height: 1px; background-color: #e5e7eb; margin: 24px 0; border: none;',
+};
+
 export function getTeamInviteEmail(params: {
   teamName: string;
   inviterName: string;
@@ -56,47 +79,48 @@ export function getTeamInviteEmail(params: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Invito al Team - FlyFile</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 28px;">FlyFile</h1>
-      <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0;">Condivisione file sicura</p>
+<body style="${emailStyles.body}">
+  <div style="${emailStyles.wrapper}">
+    <div style="${emailStyles.header}">
+      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
     </div>
 
-    <div style="background: white; padding: 40px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-      <h2 style="color: #1f2937; margin: 0 0 24px 0; font-size: 24px;">Sei stato invitato!</h2>
+    <div style="${emailStyles.content}">
+      <h2 style="${emailStyles.title}">Sei stato invitato!</h2>
 
-      <p style="color: #4b5563; line-height: 1.6; margin: 0 0 16px 0;">
+      <p style="${emailStyles.text}">
         <strong>${inviterName}</strong> ti ha invitato a unirti al team <strong>"${teamName}"</strong> su FlyFile.
       </p>
 
-      <p style="color: #4b5563; line-height: 1.6; margin: 0 0 32px 0;">
+      <p style="${emailStyles.text}">
         Clicca il pulsante qui sotto per accettare l'invito e iniziare a collaborare con il tuo team.
       </p>
 
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="${inviteLink}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; text-decoration: none; padding: 16px 48px; border-radius: 12px; font-weight: 600; font-size: 16px;">
+      <div style="text-align: center; margin: 28px 0;">
+        <a href="${inviteLink}" style="${emailStyles.btnPrimary}">
           Accetta Invito
         </a>
       </div>
 
-      <p style="color: #9ca3af; font-size: 14px; line-height: 1.6; margin: 32px 0 0 0;">
+      <p style="${emailStyles.muted}; margin-top: 28px;">
         Se non riesci a cliccare il pulsante, copia e incolla questo link nel tuo browser:<br>
-        <a href="${inviteLink}" style="color: #3b82f6;">${inviteLink}</a>
+        <a href="${inviteLink}" style="${emailStyles.link}">${inviteLink}</a>
       </p>
 
-      <p style="color: #9ca3af; font-size: 14px; margin: 24px 0 0 0;">
+      <p style="${emailStyles.muted}; margin-top: 12px;">
         Questo invito scade tra 7 giorni.
       </p>
     </div>
 
-    <div style="text-align: center; padding: 24px; color: #9ca3af; font-size: 12px;">
-      <p style="margin: 0;">© ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+    <div style="${emailStyles.footer}">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
       <p style="margin: 8px 0 0 0;">
-        <a href="${BASE_URL}/privacy" style="color: #9ca3af;">Privacy</a> ·
-        <a href="${BASE_URL}/terms" style="color: #9ca3af;">Termini</a>
+        <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
+        <a href="${BASE_URL}/terms" style="${emailStyles.footerLink}">Termini</a>
       </p>
     </div>
   </div>
@@ -137,52 +161,53 @@ export function getTransferNotificationEmail(params: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Hai ricevuto dei file - FlyFile</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 28px;">FlyFile</h1>
-      <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0;">Condivisione file sicura</p>
+<body style="${emailStyles.body}">
+  <div style="${emailStyles.wrapper}">
+    <div style="${emailStyles.header}">
+      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
     </div>
 
-    <div style="background: white; padding: 40px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-      <h2 style="color: #1f2937; margin: 0 0 24px 0; font-size: 24px;">Hai ricevuto dei file!</h2>
+    <div style="${emailStyles.content}">
+      <h2 style="${emailStyles.title}">Hai ricevuto dei file!</h2>
 
-      <p style="color: #4b5563; line-height: 1.6; margin: 0 0 16px 0;">
+      <p style="${emailStyles.text}">
         <strong>${senderName}</strong> ti ha inviato dei file tramite FlyFile.
       </p>
 
-      <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin: 24px 0;">
-        <h3 style="color: #1f2937; margin: 0 0 12px 0; font-size: 18px;">${title}</h3>
-        ${message ? `<p style="color: #6b7280; margin: 0 0 16px 0; font-style: italic;">"${message}"</p>` : ''}
-        <div style="color: #6b7280; font-size: 14px;">
-          <span style="margin-right: 16px;">📁 ${fileCount} file</span>
-          <span>📦 ${totalSize}</span>
+      <div style="${emailStyles.infoBox}">
+        <h3 style="color: #111827; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">${title}</h3>
+        ${message ? `<p style="color: #6b7280; margin: 0 0 12px 0; font-style: italic; font-size: 14px;">"${message}"</p>` : ''}
+        <div style="color: #6b7280; font-size: 13px;">
+          <span style="margin-right: 16px;">${fileCount} file</span>
+          <span>${totalSize}</span>
         </div>
       </div>
 
       <div style="text-align: center; margin: 32px 0;">
-        <a href="${downloadLink}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%); color: white; text-decoration: none; padding: 16px 48px; border-radius: 12px; font-weight: 600; font-size: 16px;">
+        <a href="${downloadLink}" style="${emailStyles.btnBlue}">
           Scarica i File
         </a>
       </div>
 
-      <p style="color: #9ca3af; font-size: 14px; line-height: 1.6; margin: 32px 0 0 0;">
+      <p style="${emailStyles.muted}; margin-top: 32px;">
         Se non riesci a cliccare il pulsante, copia e incolla questo link nel tuo browser:<br>
-        <a href="${downloadLink}" style="color: #3b82f6;">${downloadLink}</a>
+        <a href="${downloadLink}" style="${emailStyles.link}">${downloadLink}</a>
       </p>
 
-      <p style="color: #ef4444; font-size: 14px; margin: 24px 0 0 0; background: #fef2f2; padding: 12px; border-radius: 8px;">
-        ⚠️ Questo link scade il ${expiresAt}
-      </p>
+      <div style="${emailStyles.warningBox}">
+        <p style="${emailStyles.warningText}">Questo link scade il ${expiresAt}</p>
+      </div>
     </div>
 
-    <div style="text-align: center; padding: 24px; color: #9ca3af; font-size: 12px;">
-      <p style="margin: 0;">© ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+    <div style="${emailStyles.footer}">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
       <p style="margin: 8px 0 0 0;">
-        <a href="${BASE_URL}/privacy" style="color: #9ca3af;">Privacy</a> ·
-        <a href="${BASE_URL}/terms" style="color: #9ca3af;">Termini</a>
+        <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
+        <a href="${BASE_URL}/terms" style="${emailStyles.footerLink}">Termini</a>
       </p>
     </div>
   </div>
@@ -200,7 +225,7 @@ File: ${fileCount} | Dimensione: ${totalSize}
 
 Scarica i file: ${downloadLink}
 
-⚠️ Questo link scade il ${expiresAt}
+Questo link scade il ${expiresAt}
 
 ---
 FlyFile - Condivisione file sicura
@@ -220,35 +245,36 @@ export function getPasswordResetEmail(params: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Reset Password - FlyFile</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 28px;">FlyFile</h1>
-      <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0;">Condivisione file sicura</p>
+<body style="${emailStyles.body}">
+  <div style="${emailStyles.wrapper}">
+    <div style="${emailStyles.header}">
+      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
     </div>
 
-    <div style="background: white; padding: 40px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-      <h2 style="color: #1f2937; margin: 0 0 24px 0; font-size: 24px;">Reset Password</h2>
+    <div style="${emailStyles.content}">
+      <h2 style="${emailStyles.title}">Reset Password</h2>
 
-      <p style="color: #4b5563; line-height: 1.6; margin: 0 0 16px 0;">
+      <p style="${emailStyles.text}">
         Hai richiesto di reimpostare la tua password. Clicca il pulsante qui sotto per procedere.
       </p>
 
       <div style="text-align: center; margin: 32px 0;">
-        <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; text-decoration: none; padding: 16px 48px; border-radius: 12px; font-weight: 600; font-size: 16px;">
+        <a href="${resetLink}" style="${emailStyles.btnPrimary}">
           Reimposta Password
         </a>
       </div>
 
-      <p style="color: #9ca3af; font-size: 14px; line-height: 1.6; margin: 32px 0 0 0;">
+      <p style="${emailStyles.muted}; margin-top: 32px;">
         Se non hai richiesto questo reset, puoi ignorare questa email.
       </p>
     </div>
 
-    <div style="text-align: center; padding: 24px; color: #9ca3af; font-size: 12px;">
-      <p style="margin: 0;">© ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+    <div style="${emailStyles.footer}">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
     </div>
   </div>
 </body>
@@ -271,6 +297,152 @@ FlyFile - Condivisione file sicura
   return { html, text };
 }
 
+// Password setup email
+export function getPasswordSetupEmail(params: {
+  resetLink: string;
+}) {
+  const { resetLink } = params;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Configura la tua password - FlyFile</title>
+</head>
+<body style="${emailStyles.body}">
+  <div style="${emailStyles.wrapper}">
+    <div style="${emailStyles.header}">
+      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+    </div>
+
+    <div style="${emailStyles.content}">
+      <h2 style="${emailStyles.title}">Configura la tua password</h2>
+
+      <p style="${emailStyles.text}">
+        Clicca il pulsante qui sotto per configurare la tua password. Questo ti permetterà di accedere al tuo account FlyFile anche tramite email e password.
+      </p>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${resetLink}" style="${emailStyles.btnPrimary}">
+          Configura Password
+        </a>
+      </div>
+
+      <p style="${emailStyles.muted}; margin-top: 32px;">
+        Se non hai richiesto questa email, puoi ignorarla in sicurezza.
+      </p>
+
+      <p style="${emailStyles.muted}; margin-top: 12px;">
+        Se non riesci a cliccare il pulsante, copia e incolla questo link nel tuo browser:<br>
+        <a href="${resetLink}" style="${emailStyles.link}">${resetLink}</a>
+      </p>
+    </div>
+
+    <div style="${emailStyles.footer}">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+      <p style="margin: 8px 0 0 0;">
+        <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
+        <a href="${BASE_URL}/terms" style="${emailStyles.footerLink}">Termini</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+Configura la tua password - FlyFile
+
+Clicca qui per configurare la tua password: ${resetLink}
+
+Se non hai richiesto questa email, puoi ignorarla in sicurezza.
+
+---
+FlyFile - Condivisione file sicura
+  `.trim();
+
+  return { html, text };
+}
+
+// Auth code email for passwordless login/register
+export function getAuthCodeEmail(params: {
+  code: string;
+  expiresInMinutes: number;
+}) {
+  const { code, expiresInMinutes } = params;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Il tuo codice di accesso - FlyFile</title>
+</head>
+<body style="${emailStyles.body}">
+  <div style="${emailStyles.wrapper}">
+    <div style="${emailStyles.header}">
+      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+    </div>
+
+    <div style="${emailStyles.content}">
+      <h2 style="${emailStyles.title}; text-align: center;">Il tuo codice di accesso</h2>
+
+      <p style="${emailStyles.text}; text-align: center;">
+        Inserisci questo codice per accedere al tuo account FlyFile:
+      </p>
+
+      <div style="background-color: #f3f4f6; border-radius: 10px; padding: 24px; margin: 20px 0; text-align: center;">
+        <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #111827; font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;">
+          ${code}
+        </span>
+      </div>
+
+      <p style="${emailStyles.muted}; text-align: center; margin-top: 20px;">
+        Questo codice scade tra <strong>${expiresInMinutes} minuti</strong>.
+      </p>
+
+      <p style="${emailStyles.muted}; text-align: center; margin-top: 12px;">
+        Se non hai richiesto questo codice, puoi ignorare questa email.
+      </p>
+    </div>
+
+    <div style="${emailStyles.footer}">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+      <p style="margin: 8px 0 0 0;">
+        <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
+        <a href="${BASE_URL}/terms" style="${emailStyles.footerLink}">Termini</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+Il tuo codice di accesso - FlyFile
+
+Inserisci questo codice per accedere al tuo account FlyFile:
+
+${code}
+
+Questo codice scade tra ${expiresInMinutes} minuti.
+
+Se non hai richiesto questo codice, puoi ignorare questa email.
+
+---
+FlyFile - Condivisione file sicura
+  `.trim();
+
+  return { html, text };
+}
+
 // Email verification code for anonymous users
 export function getVerificationCodeEmail(params: {
   code: string;
@@ -284,39 +456,40 @@ export function getVerificationCodeEmail(params: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Codice di Verifica - FlyFile</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 28px;">FlyFile</h1>
-      <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0;">Condivisione file sicura</p>
+<body style="${emailStyles.body}">
+  <div style="${emailStyles.wrapper}">
+    <div style="${emailStyles.header}">
+      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
     </div>
 
-    <div style="background: white; padding: 40px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-      <h2 style="color: #1f2937; margin: 0 0 24px 0; font-size: 24px; text-align: center;">Codice di Verifica</h2>
+    <div style="${emailStyles.content}">
+      <h2 style="${emailStyles.title}; text-align: center;">Codice di Verifica</h2>
 
-      <p style="color: #4b5563; line-height: 1.6; margin: 0 0 24px 0; text-align: center;">
+      <p style="${emailStyles.text}; text-align: center;">
         Inserisci questo codice per verificare la tua email e procedere con l'upload:
       </p>
 
-      <div style="background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%); border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
-        <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: white; font-family: monospace;">
+      <div style="background-color: #f3f4f6; border-radius: 10px; padding: 24px; margin: 20px 0; text-align: center;">
+        <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #111827; font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;">
           ${code}
         </span>
       </div>
 
-      <p style="color: #9ca3af; font-size: 14px; text-align: center; margin: 24px 0 0 0;">
+      <p style="${emailStyles.muted}; text-align: center; margin-top: 20px;">
         Questo codice scade tra <strong>${expiresInMinutes} minuti</strong>.
       </p>
 
-      <p style="color: #9ca3af; font-size: 14px; text-align: center; margin: 16px 0 0 0;">
+      <p style="${emailStyles.muted}; text-align: center; margin-top: 12px;">
         Se non hai richiesto questo codice, puoi ignorare questa email.
       </p>
     </div>
 
-    <div style="text-align: center; padding: 24px; color: #9ca3af; font-size: 12px;">
-      <p style="margin: 0;">© ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+    <div style="${emailStyles.footer}">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
     </div>
   </div>
 </body>
@@ -359,63 +532,64 @@ export function getUploadConfirmationEmail(params: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Upload Completato - FlyFile</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 28px;">FlyFile</h1>
-      <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0;">Condivisione file sicura</p>
+<body style="${emailStyles.body}">
+  <div style="${emailStyles.wrapper}">
+    <div style="${emailStyles.header}">
+      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
     </div>
 
-    <div style="background: white; padding: 40px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div style="${emailStyles.content}">
       <div style="text-align: center; margin-bottom: 24px;">
-        <div style="display: inline-block; width: 60px; height: 60px; background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%); border-radius: 50%; line-height: 60px; font-size: 28px;">
-          ✓
+        <div style="display: inline-block; width: 48px; height: 48px; background-color: #ecfdf5; border: 2px solid #a7f3d0; border-radius: 50%; line-height: 48px; font-size: 20px; color: #059669;">
+          &#10003;
         </div>
       </div>
 
-      <h2 style="color: #1f2937; margin: 0 0 24px 0; font-size: 24px; text-align: center;">Upload Completato!</h2>
+      <h2 style="${emailStyles.title}; text-align: center;">Upload Completato!</h2>
 
-      <p style="color: #4b5563; line-height: 1.6; margin: 0 0 16px 0;">
+      <p style="${emailStyles.text}">
         Ciao <strong>${senderName}</strong>, il tuo trasferimento è stato caricato con successo.
       </p>
 
-      <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin: 24px 0;">
-        <h3 style="color: #1f2937; margin: 0 0 12px 0; font-size: 18px;">${title}</h3>
-        <div style="color: #6b7280; font-size: 14px;">
-          <div style="margin-bottom: 8px;">📁 ${fileCount} file</div>
-          <div style="margin-bottom: 8px;">📦 ${totalSize}</div>
-          ${recipientEmail ? `<div style="margin-bottom: 8px;">📧 Inviato a: ${recipientEmail}</div>` : ''}
+      <div style="${emailStyles.infoBox}">
+        <h3 style="color: #111827; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">${title}</h3>
+        <div style="color: #6b7280; font-size: 13px;">
+          <div style="margin-bottom: 6px;">${fileCount} file</div>
+          <div style="margin-bottom: 6px;">${totalSize}</div>
+          ${recipientEmail ? `<div style="margin-bottom: 6px;">Inviato a: ${recipientEmail}</div>` : ''}
         </div>
       </div>
 
-      <p style="color: #4b5563; line-height: 1.6; margin: 0 0 16px 0;">
+      <p style="${emailStyles.text}">
         Ecco il link di download da condividere:
       </p>
 
       <div style="text-align: center; margin: 32px 0;">
-        <a href="${downloadLink}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%); color: white; text-decoration: none; padding: 16px 48px; border-radius: 12px; font-weight: 600; font-size: 16px;">
+        <a href="${downloadLink}" style="${emailStyles.btnBlue}">
           Vai al Download
         </a>
       </div>
 
-      <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 12px; margin: 24px 0;">
-        <p style="color: #0369a1; font-size: 12px; margin: 0; word-break: break-all;">
+      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin: 24px 0;">
+        <p style="color: #6b7280; font-size: 12px; margin: 0; word-break: break-all;">
           ${downloadLink}
         </p>
       </div>
 
-      <p style="color: #ef4444; font-size: 14px; margin: 24px 0 0 0; background: #fef2f2; padding: 12px; border-radius: 8px;">
-        ⏰ Il link scade il ${expiresAt}
-      </p>
+      <div style="${emailStyles.warningBox}">
+        <p style="${emailStyles.warningText}">Il link scade il ${expiresAt}</p>
+      </div>
     </div>
 
-    <div style="text-align: center; padding: 24px; color: #9ca3af; font-size: 12px;">
-      <p style="margin: 0;">© ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+    <div style="${emailStyles.footer}">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
       <p style="margin: 8px 0 0 0;">
-        <a href="${BASE_URL}/privacy" style="color: #9ca3af;">Privacy</a> ·
-        <a href="${BASE_URL}/terms" style="color: #9ca3af;">Termini</a>
+        <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
+        <a href="${BASE_URL}/terms" style="${emailStyles.footerLink}">Termini</a>
       </p>
     </div>
   </div>
@@ -434,7 +608,7 @@ ${recipientEmail ? `Inviato a: ${recipientEmail}` : ''}
 
 Link di download: ${downloadLink}
 
-⏰ Il link scade il ${expiresAt}
+Il link scade il ${expiresAt}
 
 ---
 FlyFile - Condivisione file sicura
@@ -460,52 +634,47 @@ export function getDownloadNotificationEmail(params: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>I tuoi file sono stati scaricati - FlyFile</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 28px;">FlyFile</h1>
-      <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0;">Condivisione file sicura</p>
+<body style="${emailStyles.body}">
+  <div style="${emailStyles.wrapper}">
+    <div style="${emailStyles.header}">
+      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
     </div>
 
-    <div style="background: white; padding: 40px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <div style="display: inline-block; width: 60px; height: 60px; background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%); border-radius: 50%; line-height: 60px; font-size: 28px;">
-          📥
-        </div>
-      </div>
+    <div style="${emailStyles.content}">
+      <h2 style="${emailStyles.title}; text-align: center;">I tuoi file sono stati scaricati!</h2>
 
-      <h2 style="color: #1f2937; margin: 0 0 24px 0; font-size: 24px; text-align: center;">I tuoi file sono stati scaricati!</h2>
-
-      <p style="color: #4b5563; line-height: 1.6; margin: 0 0 16px 0;">
+      <p style="${emailStyles.text}">
         Ciao <strong>${senderName}</strong>, qualcuno ha scaricato i tuoi file.
       </p>
 
-      <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin: 24px 0;">
-        <h3 style="color: #1f2937; margin: 0 0 12px 0; font-size: 18px;">${title}</h3>
-        <div style="color: #6b7280; font-size: 14px;">
-          <div style="margin-bottom: 8px;">📁 ${fileCount} file</div>
-          <div style="margin-bottom: 8px;">📊 Download totali: <strong>${downloadCount}</strong></div>
-          ${recipientInfo ? `<div style="margin-bottom: 8px;">👤 Scaricato da: ${recipientInfo}</div>` : ''}
+      <div style="${emailStyles.infoBox}">
+        <h3 style="color: #111827; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">${title}</h3>
+        <div style="color: #6b7280; font-size: 13px;">
+          <div style="margin-bottom: 6px;">${fileCount} file</div>
+          <div style="margin-bottom: 6px;">Download totali: <strong>${downloadCount}</strong></div>
+          ${recipientInfo ? `<div style="margin-bottom: 6px;">Scaricato da: ${recipientInfo}</div>` : ''}
         </div>
       </div>
 
       <div style="text-align: center; margin: 32px 0;">
-        <a href="${downloadLink}" style="display: inline-block; background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; text-decoration: none; padding: 12px 32px; border-radius: 12px; font-weight: 600; font-size: 14px;">
+        <a href="${downloadLink}" style="${emailStyles.btnSecondary}">
           Visualizza Trasferimento
         </a>
       </div>
     </div>
 
-    <div style="text-align: center; padding: 24px; color: #9ca3af; font-size: 12px;">
-      <p style="margin: 0;">© ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+    <div style="${emailStyles.footer}">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
       <p style="margin: 8px 0 0 0;">
-        <a href="${BASE_URL}/privacy" style="color: #9ca3af;">Privacy</a> ·
-        <a href="${BASE_URL}/terms" style="color: #9ca3af;">Termini</a>
+        <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
+        <a href="${BASE_URL}/terms" style="${emailStyles.footerLink}">Termini</a>
       </p>
-      <p style="margin: 8px 0 0 0; font-size: 11px;">
-        <a href="${BASE_URL}/settings/notifications" style="color: #9ca3af;">Gestisci notifiche</a>
+      <p style="margin: 8px 0 0 0;">
+        <a href="${BASE_URL}/settings/notifications" style="${emailStyles.footerLink}">Gestisci notifiche</a>
       </p>
     </div>
   </div>
@@ -551,60 +720,63 @@ export function getContactNotificationEmail(params: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Nuovo Messaggio di Contatto - FlyFile</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-    <div style="background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 28px;">📬 Nuovo Messaggio</h1>
-      <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0;">Form di Contatto - FlyFile</p>
+<body style="${emailStyles.body}">
+  <div style="${emailStyles.wrapper}">
+    <div style="${emailStyles.header}">
+      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
     </div>
 
-    <div style="background: white; padding: 40px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-      <h2 style="color: #1f2937; margin: 0 0 24px 0; font-size: 24px;">${subject}</h2>
+    <div style="${emailStyles.content}">
+      <h2 style="${emailStyles.title}">${subject}</h2>
 
-      <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin: 0 0 24px 0;">
-        <h3 style="color: #6b7280; margin: 0 0 16px 0; font-size: 14px; text-transform: uppercase;">Informazioni Mittente</h3>
+      <div style="${emailStyles.infoBox}">
+        <h3 style="color: #6b7280; margin: 0 0 14px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Informazioni Mittente</h3>
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
-            <td style="color: #6b7280; padding: 4px 0; width: 100px;">Nome:</td>
-            <td style="color: #1f2937; padding: 4px 0; font-weight: 600;">${name}</td>
+            <td style="color: #6b7280; padding: 4px 0; width: 80px; font-size: 13px;">Nome:</td>
+            <td style="color: #111827; padding: 4px 0; font-weight: 600; font-size: 13px;">${name}</td>
           </tr>
           <tr>
-            <td style="color: #6b7280; padding: 4px 0;">Email:</td>
-            <td style="color: #1f2937; padding: 4px 0;"><a href="mailto:${email}" style="color: #3b82f6;">${email}</a></td>
+            <td style="color: #6b7280; padding: 4px 0; font-size: 13px;">Email:</td>
+            <td style="color: #111827; padding: 4px 0; font-size: 13px;"><a href="mailto:${email}" style="${emailStyles.link}">${email}</a></td>
           </tr>
           ${company ? `
           <tr>
-            <td style="color: #6b7280; padding: 4px 0;">Azienda:</td>
-            <td style="color: #1f2937; padding: 4px 0;">${company}</td>
+            <td style="color: #6b7280; padding: 4px 0; font-size: 13px;">Azienda:</td>
+            <td style="color: #111827; padding: 4px 0; font-size: 13px;">${company}</td>
           </tr>
           ` : ''}
         </table>
       </div>
 
-      <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 12px; padding: 20px; margin: 0 0 24px 0;">
-        <h3 style="color: #854d0e; margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase;">Messaggio</h3>
-        <p style="color: #1f2937; line-height: 1.6; margin: 0; white-space: pre-wrap;">${message}</p>
+      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin: 0 0 24px 0;">
+        <h3 style="color: #6b7280; margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Messaggio</h3>
+        <p style="color: #111827; line-height: 1.7; margin: 0; white-space: pre-wrap; font-size: 14px;">${message}</p>
       </div>
 
       <div style="text-align: center; margin: 32px 0;">
-        <a href="mailto:${email}?subject=Re: ${encodeURIComponent(subject)}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; text-decoration: none; padding: 16px 48px; border-radius: 12px; font-weight: 600; font-size: 16px;">
+        <a href="mailto:${email}?subject=Re: ${encodeURIComponent(subject)}" style="${emailStyles.btnPrimary}">
           Rispondi
         </a>
       </div>
 
-      <div style="background: #f3f4f6; border-radius: 8px; padding: 12px; margin: 24px 0 0 0;">
-        <p style="color: #6b7280; font-size: 12px; margin: 0;">
-          <strong>ID Messaggio:</strong> ${messageId}<br>
+      <hr style="${emailStyles.divider}">
+
+      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px;">
+        <p style="color: #9ca3af; font-size: 11px; margin: 0; line-height: 1.6;">
+          <strong>ID:</strong> ${messageId}<br>
           <strong>IP:</strong> ${ip}<br>
-          <strong>User Agent:</strong> ${userAgent}
+          <strong>UA:</strong> ${userAgent}
         </p>
       </div>
     </div>
 
-    <div style="text-align: center; padding: 24px; color: #9ca3af; font-size: 12px;">
-      <p style="margin: 0;">© ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+    <div style="${emailStyles.footer}">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
     </div>
   </div>
 </body>
@@ -646,31 +818,32 @@ export function getBetaTesterWelcomeEmail(params: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Benvenuto nel Programma Beta - FlyFile</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-    <div style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Benvenuto Beta Tester!</h1>
-      <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0;">FlyFile - Programma Beta Esclusivo</p>
+<body style="${emailStyles.body}">
+  <div style="${emailStyles.wrapper}">
+    <div style="${emailStyles.header}">
+      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
     </div>
 
-    <div style="background: white; padding: 40px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-      <h2 style="color: #1f2937; margin: 0 0 24px 0; font-size: 24px;">Ciao ${userName}!</h2>
+    <div style="${emailStyles.content}">
+      <h2 style="${emailStyles.title}">Ciao ${userName}!</h2>
 
-      <p style="color: #4b5563; line-height: 1.6; margin: 0 0 16px 0;">
+      <p style="${emailStyles.text}">
         Grazie per esserti unito al nostro esclusivo programma beta! Sei tra i primi a provare FlyFile e il tuo feedback sarà fondamentale per migliorare il servizio.
       </p>
 
-      <div style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
-        <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin: 0 0 8px 0;">Il tuo codice beta:</p>
-        <span style="font-size: 28px; font-weight: bold; letter-spacing: 4px; color: white; font-family: monospace;">
+      <div style="background-color: #f3f4f6; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;">
+        <p style="color: #6b7280; font-size: 12px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.5px;">Il tuo codice beta</p>
+        <span style="font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #111827; font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;">
           ${couponCode}
         </span>
       </div>
 
-      <h3 style="color: #1f2937; margin: 24px 0 12px 0; font-size: 18px;">Vantaggi del Programma Beta:</h3>
-      <ul style="color: #4b5563; line-height: 1.8; padding-left: 20px; margin: 0;">
+      <h3 style="color: #111827; margin: 24px 0 12px 0; font-size: 16px; font-weight: 600;">Vantaggi del Programma Beta:</h3>
+      <ul style="color: #4b5563; line-height: 2; padding-left: 20px; margin: 0; font-size: 14px;">
         <li>Sconto esclusivo del 50% per sempre</li>
         <li>Accesso anticipato alle nuove funzionalità</li>
         <li>Supporto prioritario</li>
@@ -679,18 +852,18 @@ export function getBetaTesterWelcomeEmail(params: {
       </ul>
 
       <div style="text-align: center; margin: 32px 0;">
-        <a href="${BASE_URL}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); color: white; text-decoration: none; padding: 16px 48px; border-radius: 12px; font-weight: 600; font-size: 16px;">
-          Vai alla Dashboard
+        <a href="${BASE_URL}/upload" style="${emailStyles.btnPrimary}">
+          Vai a FlyFile
         </a>
       </div>
 
-      <p style="color: #9ca3af; font-size: 14px; margin: 24px 0 0 0;">
+      <p style="${emailStyles.muted}; margin-top: 24px;">
         Hai domande o feedback? Rispondi direttamente a questa email!
       </p>
     </div>
 
-    <div style="text-align: center; padding: 24px; color: #9ca3af; font-size: 12px;">
-      <p style="margin: 0;">© ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+    <div style="${emailStyles.footer}">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
     </div>
   </div>
 </body>
@@ -713,7 +886,7 @@ Vantaggi del Programma Beta:
 - Badge "Beta Tester" sul tuo profilo
 - Canale Discord esclusivo per feedback
 
-Vai alla Dashboard: ${BASE_URL}/dashboard
+Vai a FlyFile: ${BASE_URL}/upload
 
 Hai domande o feedback? Rispondi direttamente a questa email!
 

@@ -1,166 +1,151 @@
 'use client';
 
 import Link from 'next/link';
-import { Mail, HelpCircle, Lock, Shield, Globe, Zap } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-black/20"></div>
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                            radial-gradient(circle at 40% 80%, rgba(120, 200, 255, 0.3) 0%, transparent 50%)`
-        }}
-      ></div>
-
-      <div className="relative z-10 max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          {/* Logo e Descrizione */}
-          <div className="col-span-1 md:col-span-2">
-            {/* Logo */}
-            <div className="flex items-center mb-6">
-              <span className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                FlyFile
-              </span>
-            </div>
-
-            <p className="text-blue-100/80 mb-6 max-w-md leading-relaxed">
-              La piattaforma più sicura per la condivisione di file con crittografia AES-256 end-to-end.
-              Perfetta per team e professionisti che necessitano di trasferimenti sicuri e affidabili.
+    <footer className="bg-gray-950 text-white">
+      <div className="max-w-6xl mx-auto px-6 pt-16 pb-8">
+        {/* Top section — logo + link columns */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-14">
+          {/* Brand */}
+          <div className="col-span-2">
+            <Link href="/" className="text-2xl font-bold text-white">
+              FlyFile
+            </Link>
+            <p className="mt-3 text-sm text-gray-400 leading-relaxed max-w-sm">
+              La piattaforma sicura per la condivisione file con crittografia AES-256 end-to-end. Pensata per professionisti e team.
             </p>
           </div>
 
-          {/* Links Prodotto */}
+          {/* Prodotto */}
           <div>
-            <h3 className="text-sm font-semibold text-cyan-300 tracking-wider uppercase mb-6">Prodotto</h3>
-            <ul className="space-y-4">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Prodotto</h4>
+            <ul className="space-y-3">
               <li>
-                <Link href="/" className="text-blue-100/80 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">
+                <Link href="/" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Home
                 </Link>
               </li>
               <li>
-                <Link href="/upload" className="text-blue-100/80 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">
-                  Upload
+                <Link href="/chi-siamo" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Chi siamo
                 </Link>
               </li>
               <li>
-                <Link href="/pricing" className="text-blue-100/80 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">
+                <button
+                  onClick={() => window.dispatchEvent(new Event('openPricing'))}
+                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                >
                   Prezzi
-                </Link>
+                </button>
               </li>
-            </ul>
-          </div>
-
-          {/* Links Supporto */}
-          <div>
-            <h3 className="text-sm font-semibold text-purple-300 tracking-wider uppercase mb-6">Supporto</h3>
-            <ul className="space-y-4">
               <li>
-                <Link href="/features" className="text-blue-100/80 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">
+                <Link href="/features" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Funzionalità
                 </Link>
               </li>
               <li>
-                <Link href="/security" className="text-blue-100/80 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">
+                <Link href="/security" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Sicurezza
                 </Link>
               </li>
+            </ul>
+          </div>
+
+          {/* Supporto */}
+          <div>
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Supporto</h4>
+            <ul className="space-y-3">
               <li>
-                <Link href="/documentation" className="text-blue-100/80 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">
+                <Link href="/support" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Centro assistenza
+                </Link>
+              </li>
+              <li>
+                <Link href="/documentation" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Documentazione
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-blue-100/80 hover:text-white transition-colors duration-300 hover:translate-x-1 inline-block">
-                  Contatti
+                <a href="mailto:support@flyfile.it" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  support@flyfile.it
+                </a>
+              </li>
+              <li>
+                <a href="mailto:info@flyfile.it" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  info@flyfile.it
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Legale */}
+          <div>
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Legale</h4>
+            <ul className="space-y-3">
+              <li>
+                <Link href="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Termini di Servizio
+                </Link>
+              </li>
+              <li>
+                <Link href="/cookies" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Cookie Policy
                 </Link>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Glass Morphism Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8"></div>
+        {/* Divider */}
+        <div className="h-px bg-gray-800 mb-8" />
 
-        {/* Sezione inferiore con contatti, links e copyright */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-sm">
-          {/* Contatti Email */}
-          <div className="flex flex-col sm:flex-row md:flex-col gap-3 items-center md:items-start">
-            <a href="mailto:info@flyfile.it" className="text-blue-100/70 hover:text-white transition-colors flex items-center gap-2">
-              <Mail className="w-4 h-4" />
-              info@flyfile.it
-            </a>
-            <a href="mailto:support@flyfile.it" className="text-blue-100/70 hover:text-white transition-colors flex items-center gap-2">
-              <HelpCircle className="w-4 h-4" />
-              support@flyfile.it
-            </a>
-          </div>
-
-          {/* Links Legali */}
-          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-            <Link href="/privacy" className="text-blue-100/60 hover:text-white transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="text-blue-100/60 hover:text-white transition-colors">
-              Termini di Servizio
-            </Link>
-            <Link href="/cookies" className="text-blue-100/60 hover:text-white transition-colors">
-              Cookie Policy
-            </Link>
-          </div>
-
-          {/* Copyright */}
-          <div className="text-blue-100/60 text-center md:text-right">
-            <div>&copy; {new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</div>
-            <div className="mt-1">
+        {/* Bottom bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+          {/* Left — copyright */}
+          <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
+            <span>&copy; {new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</span>
+            <span className="hidden sm:inline">&middot;</span>
+            <span>
               Un servizio di{' '}
-              <a href="https://i-creativi.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+              <a
+                href="https://i-creativi.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors"
+              >
                 I-Creativi
-              </a>{' '}
-              - Milano
-            </div>
+              </a>
+              {' '}&mdash; Milano
+            </span>
           </div>
-        </div>
 
-        {/* Badge di Sicurezza con Glass Effect */}
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-          <div className="flex flex-wrap justify-center items-center gap-8 text-xs">
-            <div className="flex items-center group">
-              <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
-                <Lock className="w-4 h-4 text-green-400" />
-              </div>
-              <span className="text-white/80 font-medium">Crittografia AES-256</span>
-            </div>
-            <div className="flex items-center group">
-              <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
-                <Shield className="w-4 h-4 text-blue-400" />
-              </div>
-              <span className="text-white/80 font-medium">GDPR Compliant</span>
-            </div>
-            <div className="flex items-center group">
-              <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
-                <Globe className="w-4 h-4 text-purple-400" />
-              </div>
-              <span className="text-white/80 font-medium">Server in Europa</span>
-            </div>
-            <div className="flex items-center group">
-              <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
-                <Zap className="w-4 h-4 text-yellow-400" />
-              </div>
-              <span className="text-white/80 font-medium">99.9% Uptime</span>
-            </div>
+          {/* Right — payment methods */}
+          <div className="flex items-center gap-2">
+            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-bold text-gray-300 tracking-wide border border-gray-700">VISA</span>
+            <span className="bg-gray-800 rounded px-2.5 py-1 border border-gray-700 flex items-center gap-0.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 -mr-1" />
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 opacity-90" />
+            </span>
+            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-bold text-gray-300 tracking-wide border border-gray-700">AMEX</span>
+            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-medium text-gray-300 border border-gray-700 flex items-center gap-1">
+              <svg className="w-3 h-3" viewBox="0 0 14 17" fill="currentColor"><path d="M10.3 4.3c.5-.6.8-1.4.7-2.3-.7 0-1.6.5-2.1 1.1-.4.5-.8 1.4-.7 2.2.8.1 1.6-.4 2.1-1zM11 5.4c-1.2-.1-2.2.7-2.7.7-.6 0-1.4-.6-2.3-.6-1.2 0-2.3.7-2.9 1.8-1.3 2.2-.3 5.4.9 7.2.6.9 1.3 1.8 2.3 1.8.9 0 1.3-.6 2.4-.6 1.1 0 1.4.6 2.4.6.9 0 1.6-.9 2.2-1.8.7-1 1-2 1-2 0 0-1.9-.8-2-2.7 0-1.6 1.3-2.3 1.4-2.4-.8-1.1-2-1.3-2.4-1.3l-.3.3z"/></svg>
+              Pay
+            </span>
+            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-medium text-gray-300 border border-gray-700 flex items-center gap-1">
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none"><path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z" fill="currentColor"/></svg>
+              Pay
+            </span>
+            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-bold text-gray-300 italic border border-gray-700">stripe</span>
           </div>
         </div>
       </div>
-
-      {/* Floating Elements */}
-      <div className="absolute top-20 right-20 w-32 h-32 bg-gradient-to-br from-cyan-400/10 to-blue-500/10 rounded-full blur-xl"></div>
-      <div className="absolute bottom-20 left-20 w-24 h-24 bg-gradient-to-br from-purple-400/10 to-pink-500/10 rounded-full blur-xl"></div>
     </footer>
   );
 }

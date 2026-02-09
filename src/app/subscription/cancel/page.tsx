@@ -80,10 +80,10 @@ export default function SubscriptionCancelPage() {
                   Visualizza Piani
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="/upload"
                   className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center justify-center"
                 >
-                  Torna alla Dashboard
+                  Torna al Caricamento
                 </Link>
               </div>
 
@@ -92,7 +92,7 @@ export default function SubscriptionCancelPage() {
                 <p className="text-sm text-gray-600 mb-4">
                   Vuoi provare FlyFile prima di abbonarti?
                 </p>
-                <Link href="/upload" className="text-blue-600 hover:text-blue-500 font-medium inline-flex items-center">
+                <Link href="/" className="text-blue-600 hover:text-blue-500 font-medium inline-flex items-center">
                   <Upload className="w-5 h-5 mr-2" />
                   Inizia con il Piano Gratuito
                 </Link>

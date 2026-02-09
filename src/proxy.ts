@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Route che richiedono autenticazione
 const protectedRoutes = [
-  '/dashboard',
   '/files',
   '/profile',
   '/team',
@@ -15,7 +14,7 @@ const protectedRoutes = [
 const adminRoutes = ['/admin'];
 
 // Route auth (redirect se già loggato)
-const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
+const authRoutes = ['/login', '/register'];
 
 // Main domains that should not be treated as branded subdomains
 const MAIN_DOMAINS = [
@@ -127,10 +126,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Route auth: redirect a dashboard se già loggato
+  // Route auth: redirect a upload se già loggato
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
   if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/upload', request.url));
   }
 
   return addSecurityHeaders(NextResponse.next());

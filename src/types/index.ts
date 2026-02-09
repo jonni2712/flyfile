@@ -41,6 +41,16 @@ export interface BrandSettings {
   // Custom link settings
   customSlug?: string;        // Custom URL slug (e.g., "mycompany" -> flyfile.io/t/mycompany/...)
   customSlugVerified?: boolean; // Whether the slug is verified/reserved
+  // Social links
+  destinationUrl?: string;    // Link when clicking background
+  socialLinkedin?: string;
+  socialTwitter?: string;
+  socialInstagram?: string;
+  socialTiktok?: string;
+  socialFacebook?: string;
+  // Email customization
+  emailBannerUrl?: string;    // R2 URL for email banner image
+  emailBannerPath?: string;   // R2 key for email banner
   updatedAt?: Date;
 }
 
@@ -49,6 +59,8 @@ export interface UserProfile {
   email: string;
   username?: string;
   displayName: string;
+  firstName?: string;
+  lastName?: string;
   photoURL?: string;
   avatarPath?: string;
   plan: 'free' | 'starter' | 'pro' | 'business';
@@ -60,9 +72,20 @@ export interface UserProfile {
   filesCount: number;
   stripeCustomerId?: string;
   subscriptionId?: string;
-  subscriptionStatus?: 'active' | 'canceled' | 'past_due' | 'trialing';
+  subscriptionStatus?: 'active' | 'canceled' | 'past_due' | 'trialing' | 'canceling';
   billingCycle?: 'monthly' | 'annual';
+  cancelAt?: string;
+  pendingPlan?: string;
+  pendingBillingCycle?: string;
+  planChangeAt?: string;
   billing?: BillingInfo;
+  // Notification preferences
+  notificationPreferences?: {
+    transferSent?: boolean;       // default true
+    transferExpiring?: boolean;   // default true
+    transferDownloaded?: boolean; // default true
+    transferViewed?: boolean;     // default true
+  };
   // Beta tester fields
   isBetaTester?: boolean;
   betaTesterCode?: string;
@@ -135,6 +158,9 @@ export interface Transfer {
   createdAt: Date;
   updatedAt: Date;
   files?: TransferFile[];
+  // Access control & view options (Business plan)
+  accessControl?: 'public' | 'tracked' | 'limited';
+  viewOption?: 'preview_download' | 'download_only' | 'preview_only';
   // End-to-end encryption
   isEncrypted?: boolean;       // Transfer-level encryption flag
   isE2EEncrypted?: boolean;
@@ -180,6 +206,9 @@ export interface TransferUploadData {
   deliveryMethod: 'email' | 'link';
   expiryDays?: number;
   email?: string;         // Per utenti anonimi
+  // Business plan features
+  accessControl?: 'public' | 'tracked' | 'limited';
+  viewOption?: 'preview_download' | 'download_only' | 'preview_only';
 }
 
 // Team types

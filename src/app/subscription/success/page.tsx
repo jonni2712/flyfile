@@ -122,18 +122,18 @@ export default function SubscriptionSuccessPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <Link
-                    href="/upload"
+                    href="/"
                     className="group bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center"
                   >
                     <Upload className="w-5 h-5 mr-2" />
                     Carica i Tuoi File
                   </Link>
                   <Link
-                    href="/dashboard"
+                    href="/upload"
                     className="group bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 hover:border-blue-500 px-6 py-4 rounded-xl font-semibold transition-all duration-200 shadow hover:shadow-lg flex items-center justify-center"
                   >
                     <BarChart3 className="w-5 h-5 mr-2" />
-                    Vai alla Dashboard
+                    Vai al Caricamento
                   </Link>
                 </div>
               </div>

@@ -13,7 +13,22 @@
       "Bash(firebase deploy:*)",
       "Bash(firebase projects:list:*)",
       "Bash(cat:*)",
-      "Bash(openssl rand:*)"
+      "Bash(openssl rand:*)",
+      "Bash(git rm:*)",
+      "Bash(git config:*)",
+      "Bash(npx tsc:*)",
+      "Bash(tree:*)",
+      "Bash(git push:*)",
+      "Bash(next dev:*)",
+      "Bash(npx next dev -p 3005)",
+      "Bash(chmod:*)",
+      "Bash(npm install:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(npx next build:*)",
+      "WebFetch(domain:wetransfer.com)",
+      "WebFetch(domain:auth.wetransfer.com)",
+      "Bash(test:*)"
     ]
   }
 }

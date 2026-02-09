@@ -322,7 +322,7 @@ export default function FilesPage() {
               <p className="text-gray-600">Gestisci tutti i tuoi file caricati</p>
             </div>
             <Link
-              href="/upload"
+              href="/"
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Upload className="w-4 h-4 mr-2" />
@@ -568,7 +568,7 @@ export default function FilesPage() {
                   : 'Non hai ancora caricato file'}
               </p>
               <Link
-                href="/upload"
+                href="/"
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Upload className="w-4 h-4 mr-2" />
