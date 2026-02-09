@@ -752,34 +752,43 @@ export default function Navbar() {
 
           {/* Plan Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
-            {PRICING_PLANS.map((plan) => (
+            {PRICING_PLANS.map((plan) => {
+              const isCurrentPlan = user && (userProfile?.plan || 'free') === plan.id;
+              return (
               <div
                 key={plan.id}
                 className={`relative rounded-2xl border-2 p-6 flex flex-col transition-shadow hover:shadow-lg ${
-                  plan.popular
-                    ? 'border-blue-500 shadow-md'
-                    : plan.borderColor
-                      ? `${plan.borderColor} border-opacity-30`
-                      : 'border-gray-200'
+                  isCurrentPlan
+                    ? 'border-green-500 shadow-md'
+                    : plan.popular
+                      ? 'border-blue-500 shadow-md'
+                      : plan.borderColor
+                        ? `${plan.borderColor} border-opacity-30`
+                        : 'border-gray-200'
                 }`}
               >
                 {/* Badge */}
-                {plan.popular && (
+                {isCurrentPlan ? (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                      Piano attuale
+                    </span>
+                  </div>
+                ) : plan.popular ? (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
                       Più popolare
                     </span>
                   </div>
-                )}
-                {plan.badge && (
+                ) : plan.badge ? (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span className="bg-orange-100 text-orange-600 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
                       {plan.badge}
                     </span>
                   </div>
-                )}
+                ) : null}
 
-                <div className={plan.popular || plan.badge ? 'mt-2' : ''}>
+                <div className={isCurrentPlan || plan.popular || plan.badge ? 'mt-2' : ''}>
                   <h3 className="text-xl font-bold text-gray-900 mb-1">{plan.name}</h3>
                   <p className="text-sm text-gray-500 mb-5">{plan.description}</p>
                 </div>
@@ -816,19 +825,23 @@ export default function Navbar() {
 
                 {/* CTA */}
                 <button
-                  onClick={() => handleSubscribe(plan)}
+                  onClick={() => !isCurrentPlan && handleSubscribe(plan)}
+                  disabled={!!isCurrentPlan}
                   className={`w-full py-2.5 rounded-full text-sm font-semibold transition-colors ${
-                    plan.popular
-                      ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                      : plan.id === 'free'
-                        ? 'border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'
-                        : 'border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
+                    isCurrentPlan
+                      ? 'bg-green-500 text-white cursor-default'
+                      : plan.popular
+                        ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                        : plan.id === 'free'
+                          ? 'border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'
+                          : 'border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
                   }`}
                 >
-                  {plan.cta}
+                  {isCurrentPlan ? 'Piano attivo' : plan.cta}
                 </button>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Feature Comparison Table */}
