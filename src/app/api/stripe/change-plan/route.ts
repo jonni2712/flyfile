@@ -114,8 +114,18 @@ export async function POST(request: NextRequest) {
     if (!userData.subscriptionId || userData.subscriptionStatus === 'canceled') {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-      // Ensure user has a Stripe customer ID
+      // Ensure user has a valid Stripe customer ID
       let stripeCustomerId = userData.stripeCustomerId;
+
+      // Verify customer exists in Stripe
+      if (stripeCustomerId) {
+        try {
+          await stripe.customers.retrieve(stripeCustomerId);
+        } catch {
+          stripeCustomerId = null;
+        }
+      }
+
       if (!stripeCustomerId) {
         const customer = await stripe.customers.create({
           email: userData.email,
@@ -126,7 +136,6 @@ export async function POST(request: NextRequest) {
         });
         stripeCustomerId = customer.id;
 
-        // Save customer ID
         await db.collection('users').doc(userId).update({
           stripeCustomerId: customer.id,
         });
