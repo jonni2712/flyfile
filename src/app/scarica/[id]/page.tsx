@@ -36,19 +36,19 @@ const FileIcon = ({ mimeType, className }: { mimeType: string; className?: strin
 
   switch (iconType) {
     case 'image':
-      return <FileImage className={`${iconClass} text-pink-400`} />;
+      return <FileImage className={`${iconClass} text-pink-500`} />;
     case 'video':
-      return <FileVideo className={`${iconClass} text-purple-400`} />;
+      return <FileVideo className={`${iconClass} text-purple-500`} />;
     case 'audio':
-      return <FileAudio className={`${iconClass} text-green-400`} />;
+      return <FileAudio className={`${iconClass} text-green-500`} />;
     case 'pdf':
-      return <FileText className={`${iconClass} text-red-400`} />;
+      return <FileText className={`${iconClass} text-red-500`} />;
     case 'doc':
-      return <FileText className={`${iconClass} text-blue-400`} />;
+      return <FileText className={`${iconClass} text-blue-500`} />;
     case 'spreadsheet':
-      return <FileText className={`${iconClass} text-emerald-400`} />;
+      return <FileText className={`${iconClass} text-emerald-500`} />;
     case 'archive':
-      return <FileArchive className={`${iconClass} text-yellow-400`} />;
+      return <FileArchive className={`${iconClass} text-yellow-500`} />;
     default:
       return <File className={`${iconClass} text-gray-400`} />;
   }
@@ -80,7 +80,6 @@ export default function DownloadPage() {
   // Brand customization state
   const [brand, setBrand] = useState<BrandSettings | null>(null);
 
-  // Fetch brand settings for transfer owner
   const fetchBrandSettings = async (userId: string) => {
     try {
       const response = await fetch(`/api/brand?userId=${userId}&public=true`);
@@ -95,7 +94,6 @@ export default function DownloadPage() {
     }
   };
 
-  // Fetch transfer data
   useEffect(() => {
     const fetchTransfer = async () => {
       if (!transferId) return;
@@ -116,12 +114,10 @@ export default function DownloadPage() {
 
         setTransfer(data);
 
-        // Fetch brand settings if transfer has a userId
         if (data.userId) {
           fetchBrandSettings(data.userId);
         }
 
-        // Check if password protected
         if (data.password && !passwordVerified) {
           setShowPasswordModal(true);
         }
@@ -136,7 +132,6 @@ export default function DownloadPage() {
     fetchTransfer();
   }, [transferId, getPublicTransfer, passwordVerified]);
 
-  // Handle password verification
   const handleVerifyPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError('');
@@ -158,19 +153,16 @@ export default function DownloadPage() {
     }
   };
 
-  // Handle download all files as ZIP
   const handleDownloadAll = async () => {
     if (!transfer || !transfer.files) return;
 
     setDownloading(true);
     try {
-      // If only one file, download directly
       if (transfer.files.length === 1) {
         await handleDownloadFile(transfer.files[0]);
         return;
       }
 
-      // Download all files as ZIP
       const zipUrl = `/api/transfer/${transfer.id}/download-zip`;
       const response = await fetch(zipUrl);
 
@@ -178,10 +170,7 @@ export default function DownloadPage() {
         throw new Error('Download non disponibile');
       }
 
-      // Get the blob from response
       const blob = await response.blob();
-
-      // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -190,7 +179,6 @@ export default function DownloadPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
     } catch (err) {
       console.error('Download error:', err);
       alert('Errore durante il download. Riprova.');
@@ -199,7 +187,6 @@ export default function DownloadPage() {
     }
   };
 
-  // Check if file type is previewable
   const isPreviewable = (mimeType: string): boolean => {
     return (
       mimeType.startsWith('image/') ||
@@ -213,19 +200,15 @@ export default function DownloadPage() {
     );
   };
 
-  // Handle single file download
   const handleDownloadFile = async (file: TransferFile) => {
     if (!transfer) return;
 
     setDownloadingFileId(file.id);
     try {
-      // Check if file is encrypted
       const isFileEncrypted = file.isEncrypted || transfer.isEncrypted;
       const encryptionKey = file.encryptionKey;
       const encryptionIv = file.encryptionIv;
 
-      // Get presigned URL for download
-      // SECURITY FIX: Include password in request for server-side verification
       const response = await fetch('/api/files/download-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -249,17 +232,13 @@ export default function DownloadPage() {
 
       const { downloadUrl } = await response.json();
 
-      // If file is encrypted and we have decryption capability
       if (isFileEncrypted && encryptionKey && encryptionIv && isEncryptionSupported()) {
-        // Fetch the encrypted file
         const encryptedResponse = await fetch(downloadUrl);
         if (!encryptedResponse.ok) {
           throw new Error('Impossibile scaricare il file cifrato');
         }
 
         const encryptedBlob = await encryptedResponse.blob();
-
-        // Decrypt the file client-side
         const decryptedBlob = await decryptFile(
           encryptedBlob,
           encryptionKey,
@@ -267,7 +246,6 @@ export default function DownloadPage() {
           file.mimeType || 'application/octet-stream'
         );
 
-        // Create download link for decrypted file
         const url = window.URL.createObjectURL(decryptedBlob);
         const link = document.createElement('a');
         link.href = url;
@@ -277,7 +255,6 @@ export default function DownloadPage() {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
       } else {
-        // Non-encrypted file - direct download
         const link = document.createElement('a');
         link.href = downloadUrl;
         link.download = file.originalName;
@@ -298,9 +275,11 @@ export default function DownloadPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mx-auto mb-4" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-20 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" />
+        <div className="text-center relative z-10">
+          <Loader2 className="w-12 h-12 text-white animate-spin mx-auto mb-4" />
           <p className="text-white/70">Caricamento trasferimento...</p>
         </div>
       </div>
@@ -310,21 +289,25 @@ export default function DownloadPage() {
   // Not found state
   if (error === 'not_found') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertTriangle className="w-10 h-10 text-red-400" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center px-4">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-20 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" />
+        <div className="relative z-10 max-w-md w-full">
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-red-500" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Transfer Non Trovato</h1>
+            <p className="text-gray-500 text-sm mb-6">
+              Il trasferimento che stai cercando non esiste o potrebbe essere stato eliminato.
+            </p>
+            <Link
+              href="/"
+              className="inline-flex items-center px-6 py-2.5 bg-[#409cff] hover:bg-[#2d8ae8] text-white font-medium rounded-full text-sm transition-colors"
+            >
+              Torna alla Home
+            </Link>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-4">Transfer Non Trovato</h1>
-          <p className="text-blue-200/70 mb-8">
-            Il trasferimento che stai cercando non esiste o potrebbe essere stato eliminato.
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all"
-          >
-            Torna alla Home
-          </Link>
         </div>
       </div>
     );
@@ -333,21 +316,25 @@ export default function DownloadPage() {
   // Expired state
   if (error === 'expired') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Clock className="w-10 h-10 text-orange-400" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center px-4">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-20 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" />
+        <div className="relative z-10 max-w-md w-full">
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-8 h-8 text-orange-500" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Transfer Scaduto</h1>
+            <p className="text-gray-500 text-sm mb-6">
+              Questo trasferimento è scaduto e i file non sono più disponibili per il download.
+            </p>
+            <Link
+              href="/"
+              className="inline-flex items-center px-6 py-2.5 bg-[#409cff] hover:bg-[#2d8ae8] text-white font-medium rounded-full text-sm transition-colors"
+            >
+              Torna alla Home
+            </Link>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-4">Transfer Scaduto</h1>
-          <p className="text-blue-200/70 mb-8">
-            Questo trasferimento è scaduto e i file non sono più disponibili per il download.
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all"
-          >
-            Torna alla Home
-          </Link>
         </div>
       </div>
     );
@@ -355,21 +342,23 @@ export default function DownloadPage() {
 
   if (!transfer) return null;
 
-  // Determine background style based on brand settings
+  // Check if brand is active with custom background
+  const hasBrandBg = brand?.backgroundType === 'image' || brand?.backgroundType === 'video' || (brand?.backgroundType === 'gradient' && brand.primaryColor);
+
   const getBackgroundStyle = () => {
     if (brand?.backgroundType === 'gradient' && brand.primaryColor && brand.secondaryColor) {
       return {
         background: `linear-gradient(135deg, ${brand.primaryColor}, ${brand.secondaryColor})`,
       };
     }
-    // Default gradient
-    return {
-      background: 'linear-gradient(135deg, #0f172a, #1e3a8a, #312e81)',
-    };
+    return {};
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={getBackgroundStyle()}>
+    <div
+      className={`min-h-screen relative overflow-hidden ${!hasBrandBg ? 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500' : ''}`}
+      style={hasBrandBg ? getBackgroundStyle() : undefined}
+    >
       {/* Custom Background Image */}
       {brand?.backgroundType === 'image' && brand.backgroundUrl && (
         <div
@@ -390,45 +379,38 @@ export default function DownloadPage() {
         />
       )}
 
-      {/* Overlay for better readability */}
-      <div className="absolute inset-0 bg-black/40"></div>
+      {/* Overlay for branded backgrounds */}
+      {hasBrandBg && <div className="absolute inset-0 bg-black/40" />}
 
-      {/* Animated Background Pattern (only when no custom background) */}
-      {!brand?.backgroundUrl && !brand?.backgroundVideoUrl && (
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                             radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                             radial-gradient(circle at 40% 80%, rgba(120, 200, 255, 0.3) 0%, transparent 50%)`
-          }}
-        />
+      {/* Decorative circles (default only) */}
+      {!hasBrandBg && (
+        <>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-10 right-20 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" />
+        </>
       )}
 
       {/* Password Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-white/20">
+          <div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-6">
             <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-500/20 rounded-full mb-4">
-                <Lock className="w-8 h-8 text-yellow-400" />
+              <div className="w-14 h-14 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Lock className="w-7 h-7 text-orange-500" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Transfer Protetto</h3>
-              <p className="text-blue-200/80">Inserisci la password per accedere ai file</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Transfer Protetto</h3>
+              <p className="text-gray-500 text-sm">Inserisci la password per accedere ai file</p>
             </div>
 
             <form onSubmit={handleVerifyPassword}>
-              <div className="mb-6">
-                <label htmlFor="transfer-password" className="block text-sm font-semibold text-white mb-2">
-                  Password
-                </label>
+              <div className="mb-4">
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     id="transfer-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 pr-12 bg-transparent border-b border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#409cff] transition-all text-sm"
                     placeholder="Inserisci la password"
                     required
                   />
@@ -438,25 +420,25 @@ export default function DownloadPage() {
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-white/50 hover:text-white/80" />
+                      <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                     ) : (
-                      <Eye className="h-5 w-5 text-white/50 hover:text-white/80" />
+                      <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                     )}
                   </button>
                 </div>
                 {passwordError && (
-                  <p className="text-sm text-red-400 mt-2">{passwordError}</p>
+                  <p className="text-sm text-red-600 mt-2">{passwordError}</p>
                 )}
               </div>
 
               <button
                 type="submit"
                 disabled={verifyingPassword}
-                className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full py-3 bg-[#409cff] hover:bg-[#2d8ae8] text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {verifyingPassword ? (
                   <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Verifica...
                   </>
                 ) : (
@@ -468,205 +450,183 @@ export default function DownloadPage() {
         </div>
       )}
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          {/* Custom Logo or Default Icon */}
-          {brand?.logoUrl ? (
+      <div className="relative z-10 flex flex-col lg:flex-row min-h-screen">
+        {/* Left Panel — Download Card */}
+        <div className="w-full lg:w-[480px] lg:min-w-[480px] flex flex-col items-center justify-center px-6 py-8 flex-shrink-0">
+          {/* Custom Logo */}
+          {brand?.logoUrl && (
             <div className="mb-6">
               <img
                 src={brand.logoUrl}
                 alt={brand.companyName || 'Logo'}
-                className="h-16 md:h-20 mx-auto object-contain"
+                className="h-12 md:h-16 mx-auto object-contain"
               />
             </div>
-          ) : (
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-tr from-cyan-400 to-blue-500 rounded-full mb-6 animate-pulse shadow-2xl shadow-cyan-500/50">
-              <Cloud className="w-10 h-10 text-white" />
-            </div>
           )}
 
-          {/* Company Name (if branded) */}
-          {brand?.companyName && (
-            <p className="text-lg text-white/70 mb-2">{brand.companyName}</p>
-          )}
-
-          <h1 className="text-4xl lg:text-5xl font-bold text-white mb-3">
-            {transfer.title}
-          </h1>
-          <div className="flex items-center justify-center gap-2 text-blue-200/80">
-            <User className="w-5 h-5" />
-            <span>
-              Inviato da <span className="font-semibold text-cyan-400">{transfer.senderName || 'Utente'}</span>
-            </span>
-          </div>
-
-          {/* Custom Message */}
-          {brand?.customMessage && (
-            <p className="mt-4 text-white/80 max-w-xl mx-auto">
-              {brand.customMessage}
-            </p>
-          )}
-        </div>
-
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 text-center transform hover:scale-105 transition-all duration-300">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-cyan-500/20 rounded-full mb-3">
-              <File className="w-6 h-6 text-cyan-400" />
-            </div>
-            <div className="text-3xl font-bold text-white mb-1">{transfer.fileCount}</div>
-            <div className="text-sm text-blue-200/80">File</div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 text-center transform hover:scale-105 transition-all duration-300">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500/20 rounded-full mb-3">
-              <HardDrive className="w-6 h-6 text-green-400" />
-            </div>
-            <div className="text-3xl font-bold text-white mb-1">
-              {formatBytes(transfer.totalSize)}
-            </div>
-            <div className="text-sm text-blue-200/80">Dimensione Totale</div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 text-center transform hover:scale-105 transition-all duration-300">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-500/20 rounded-full mb-3">
-              <Clock className="w-6 h-6 text-orange-400" />
-            </div>
-            <div className="text-3xl font-bold text-white mb-1">
-              {getTimeRemaining(transfer.expiresAt)}
-            </div>
-            <div className="text-sm text-blue-200/80">Tempo Rimanente</div>
-          </div>
-        </div>
-
-        {/* Main Content Card */}
-        <div
-          className={`bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl overflow-hidden mb-8 ${
-            transfer.password && !passwordVerified ? 'filter blur-sm pointer-events-none' : ''
-          }`}
-        >
-          {/* Message Section */}
-          {transfer.message && (
-            <div className="p-6 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-b border-white/10">
-              <p className="text-white/90 italic">"{transfer.message}"</p>
-            </div>
-          )}
-
-          {/* Files List */}
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-              <File className="w-5 h-5 mr-2 text-cyan-400" />
-              File nel Transfer
-            </h2>
-
-            <div className="space-y-3">
-              {transfer.files?.map((file) => (
-                <div
-                  key={file.id}
-                  className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all"
-                >
-                  <div className="flex items-center min-w-0 flex-1">
-                    <FileIcon mimeType={file.mimeType} className="w-8 h-8 flex-shrink-0" />
-                    <div className="ml-4 min-w-0">
-                      <p className="text-white font-medium truncate">{file.originalName}</p>
-                      <p className="text-sm text-blue-200/60">{formatBytes(file.size)}</p>
+          {/* White Download Card */}
+          <div className="relative w-full max-w-[420px]">
+            <div
+              className={`bg-white rounded-2xl shadow-lg w-full ${
+                transfer.password && !passwordVerified ? 'filter blur-sm pointer-events-none' : ''
+              }`}
+            >
+              {/* Card Header — sender + title */}
+              <div className="p-6 pb-0">
+                <div className="flex items-center gap-3 mb-3">
+                  {!brand?.logoUrl && (
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Cloud className="w-5 h-5 text-white" />
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    {isPreviewable(file.mimeType) && (
-                      <button
-                        onClick={() => setPreviewFile(file)}
-                        className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all flex items-center"
-                        title="Anteprima"
-                      >
-                        <Search className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDownloadFile(file)}
-                      disabled={downloadingFileId === file.id}
-                      className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all flex items-center disabled:opacity-50"
-                      title="Scarica"
-                    >
-                      {downloadingFileId === file.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Download className="w-4 h-4" />
-                      )}
-                    </button>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-500 truncate">
+                      {brand?.companyName || transfer.senderName || 'Utente'}
+                    </p>
+                    <h1 className="text-lg font-bold text-gray-900 truncate">{transfer.title}</h1>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Download All Button */}
-          <div className="p-6 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-t border-white/10">
-            <button
-              onClick={handleDownloadAll}
-              disabled={downloading || (!!transfer.password && !passwordVerified)}
-              className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {downloading ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Download in corso...
-                </>
-              ) : (
-                <>
-                  <Download className="w-5 h-5 mr-2" />
-                  Scarica Tutti i File ({formatBytes(transfer.totalSize)})
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+                {/* Message */}
+                {transfer.message && (
+                  <p className="text-sm text-gray-600 italic border-l-2 border-gray-200 pl-3 mb-1">
+                    {transfer.message}
+                  </p>
+                )}
 
-        {/* Security Info */}
-        <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              {transfer.isEncrypted ? (
-                <Shield className="w-6 h-6 text-green-400" />
-              ) : (
-                <CheckCircle className="w-6 h-6 text-green-400" />
-              )}
-            </div>
-            <div className="ml-4">
-              <h4 className="text-white font-semibold mb-1">
-                {transfer.isEncrypted ? 'Crittografia End-to-End Attiva' : 'Transfer Sicuro'}
-              </h4>
-              <p className="text-blue-200/70 text-sm">
+                {/* Custom brand message */}
+                {brand?.customMessage && (
+                  <p className="text-sm text-gray-500 mb-1">
+                    {brand.customMessage}
+                  </p>
+                )}
+              </div>
+
+              {/* Stats row */}
+              <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
+                <div className="flex items-center gap-1.5 text-gray-500">
+                  <File className="w-4 h-4" />
+                  <span className="text-sm">{transfer.fileCount} file</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-500">
+                  <HardDrive className="w-4 h-4" />
+                  <span className="text-sm">{formatBytes(transfer.totalSize)}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-500">
+                  <Clock className="w-4 h-4" />
+                  <span className="text-sm">{getTimeRemaining(transfer.expiresAt)}</span>
+                </div>
+              </div>
+
+              {/* Files list */}
+              <div className="p-4">
+                <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                  {transfer.files?.map((file) => (
+                    <div
+                      key={file.id}
+                      className="flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-gray-50 group transition-colors"
+                    >
+                      <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FileIcon mimeType={file.mimeType} className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-gray-800 truncate">{file.originalName}</p>
+                        <p className="text-xs text-gray-400">{formatBytes(file.size)}</p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {isPreviewable(file.mimeType) && (
+                          <button
+                            onClick={() => setPreviewFile(file)}
+                            className="p-1.5 text-gray-300 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+                            title="Anteprima"
+                          >
+                            <Search className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDownloadFile(file)}
+                          disabled={downloadingFileId === file.id}
+                          className="p-1.5 text-gray-300 hover:text-[#409cff] hover:bg-blue-50 rounded-full transition-all disabled:opacity-50"
+                          title="Scarica"
+                        >
+                          {downloadingFileId === file.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-[#409cff]" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Security badge */}
+              <div className="mx-4 mb-3 flex items-center gap-2 text-xs text-gray-400">
                 {transfer.isEncrypted ? (
                   <>
-                    I file sono protetti con crittografia AES-256-GCM end-to-end.
-                    La decrittazione avviene direttamente nel tuo browser per la massima sicurezza.
+                    <Shield className="w-3.5 h-3.5 text-green-500" />
+                    <span>Crittografia AES-256 end-to-end</span>
                   </>
                 ) : (
                   <>
-                    Questo trasferimento utilizza una connessione sicura HTTPS.
-                    I file vengono automaticamente eliminati dopo la scadenza.
+                    <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                    <span>Connessione sicura HTTPS</span>
                   </>
                 )}
-              </p>
+              </div>
+
+              {/* Download All Button */}
+              <div className="px-4 pb-4">
+                <button
+                  onClick={handleDownloadAll}
+                  disabled={downloading || (!!transfer.password && !passwordVerified)}
+                  className="w-full bg-[#409cff] hover:bg-[#2d8ae8] text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {downloading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Download in corso...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-5 h-5" />
+                      Scarica {transfer.fileCount > 1 ? `tutti i file (${formatBytes(transfer.totalSize)})` : `(${formatBytes(transfer.totalSize)})`}
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
+          </div>
+
+          {/* Tagline below card */}
+          <div className="mt-6 text-center">
+            {(brand?.showPoweredBy !== false) && (
+              <p className="text-sm text-white/70">
+                {brand ? 'Powered by ' : 'Vuoi inviare file in modo sicuro? '}
+                <Link href="/" className="text-white font-medium hover:underline">
+                  FlyFile
+                </Link>
+                {!brand && ' — Prova gratis'}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Footer - Powered by FlyFile (show unless branded user disabled it) */}
-        {(brand?.showPoweredBy !== false) && (
-          <div className="mt-8 text-center">
-            <p className="text-blue-200/50 text-sm">
-              {brand ? 'Powered by ' : 'Vuoi inviare file in modo sicuro? '}
-              <Link href="/" className="text-cyan-400 hover:text-cyan-300 font-medium">
-                FlyFile
-              </Link>
-              {!brand && ' - Prova gratis'}
-            </p>
+        {/* Right Panel — Ad space (only when NOT branded) */}
+        {!hasBrandBg && (
+          <div id="download-ad-container-desktop" className="hidden lg:flex flex-1 flex-col items-center justify-center px-12">
+            {/* Inserire qui il contenuto pubblicitario */}
           </div>
         )}
       </div>
+
+      {/* Bottom Ad space — mobile only, only when NOT branded */}
+      {!hasBrandBg && (
+        <div id="download-ad-container-mobile" className="lg:hidden relative z-10 flex-1 min-h-[250px] flex flex-col items-center justify-center px-6 pb-8">
+          {/* Inserire qui il contenuto pubblicitario mobile */}
+        </div>
+      )}
 
       {/* File Preview Modal */}
       {previewFile && transfer && (
