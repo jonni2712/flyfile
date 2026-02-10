@@ -85,7 +85,7 @@ export async function GET(
         recipientEmail: data.recipientEmail || null,
         expiresAt: expiresAt?.toISOString() || null,
         createdAt: data.createdAt?.toDate?.()?.toISOString() || null,
-        downloadUrl: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/download/${data.transferId}`,
+        downloadUrl: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/scarica/${data.transferId}`,
         files,
       },
     });

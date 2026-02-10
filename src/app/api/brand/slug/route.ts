@@ -7,11 +7,17 @@ import { getPlanLimits } from '@/types';
 
 // Reserved slugs that cannot be used
 const RESERVED_SLUGS = [
+  // English (legacy + API routes)
   'admin', 'api', 'app', 'dashboard', 'download', 'help', 'login', 'logout',
   'pricing', 'profile', 'register', 'settings', 'support', 'team', 'upload',
   'files', 'transfer', 'transfers', 'user', 'users', 'account', 'billing',
   'branding', 'analytics', 'webhooks', 'docs', 'documentation', 'privacy',
   'terms', 'security', 'contact', 'about', 'blog', 'status', 'health',
+  // Italian (current public routes)
+  'funzionalita', 'documentazione', 'supporto', 'contatti', 'termini',
+  'cookie', 'sicurezza', 'accedi', 'registrati', 'scarica', 'abbonamento',
+  'prezzi', 'chi-siamo',
+  // Brand/system
   'flyfile', 'fly', 'file', 's', 't', 'd', 'p', 'www', 'mail', 'email',
 ];
 

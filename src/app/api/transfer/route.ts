@@ -300,7 +300,7 @@ export async function POST(request: NextRequest) {
     );
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const downloadUrl = `${baseUrl}/download/${transferId}`;
+    const downloadUrl = `${baseUrl}/scarica/${transferId}`;
     // Generate custom URL with path if user has a custom slug
     // e.g., https://flyfile.it/t/mafra/abc123
     const customUrl = userCustomSlug ? `${baseUrl}/t/${userCustomSlug}/${transferId}` : null;

@@ -187,7 +187,7 @@ export async function GET(
               const { html, text } = getDownloadNotificationEmail({
                 senderName,
                 title: transferData.title || 'Trasferimento',
-                downloadLink: `${baseUrl}/download/${transferData.transferId}`,
+                downloadLink: `${baseUrl}/scarica/${transferData.transferId}`,
                 fileCount: transferData.fileCount || filesSnapshot.size,
                 downloadCount: newDownloadCount,
               });
@@ -210,7 +210,7 @@ export async function GET(
         const { html, text } = getDownloadNotificationEmail({
           senderName,
           title: transferData.title || 'Trasferimento',
-          downloadLink: `${baseUrl}/download/${transferData.transferId}`,
+          downloadLink: `${baseUrl}/scarica/${transferData.transferId}`,
           fileCount: transferData.fileCount || filesSnapshot.size,
           downloadCount: newDownloadCount,
         });
