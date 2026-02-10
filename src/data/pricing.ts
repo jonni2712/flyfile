@@ -89,7 +89,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       'Support prioritario',
       'Dimensione file illimitata',
     ],
-    cta: 'Contattaci',
+    cta: 'Continua',
     borderColor: 'border-orange-400',
   },
 ];

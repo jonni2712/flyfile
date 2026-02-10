@@ -115,8 +115,8 @@ export async function POST(request: NextRequest) {
       // Use customer ID instead of email for better management
       customer: stripeCustomerId,
       client_reference_id: userId,
-      success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/pricing?canceled=true`,
+      success_url: `${baseUrl}/abbonamento/successo?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/prezzi?canceled=true`,
       metadata: {
         userId,
         planId,
