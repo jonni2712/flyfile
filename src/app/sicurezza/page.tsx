@@ -2,15 +2,27 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { Shield, Lock, Key, Eye, Server, Globe, Check, Clock, BarChart3, AlertTriangle } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
+import BreadcrumbJsonLd from '@/components/seo/BreadcrumbJsonLd';
 
 export const metadata: Metadata = {
-  title: 'Sicurezza - FlyFile',
+  title: 'Sicurezza — Crittografia AES-256',
   description: 'Standard di sicurezza enterprise, conformità GDPR e crittografia di livello militare per proteggere i tuoi dati più importanti.',
+  alternates: { canonical: 'https://flyfile.it/sicurezza' },
+  openGraph: {
+    title: 'Sicurezza — Crittografia AES-256 | FlyFile',
+    description: 'Standard di sicurezza enterprise, conformità GDPR e crittografia AES-256.',
+    url: 'https://flyfile.it/sicurezza',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'FlyFile - Sicurezza' }],
+  },
 };
 
 export default function SecurityPage() {
   return (
     <MainLayout>
+      <BreadcrumbJsonLd items={[
+        { name: 'Home', url: 'https://flyfile.it' },
+        { name: 'Sicurezza', url: 'https://flyfile.it/sicurezza' },
+      ]} />
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden -mt-16 pt-16">
         {/* Decorative Circles */}

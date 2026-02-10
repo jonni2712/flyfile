@@ -49,7 +49,7 @@ const STATS = [
   { value: '0', label: 'Dati venduti a terzi' },
 ];
 
-export default function ChiSiamoPage() {
+export default function ChiSiamoClient() {
   return (
     <>
       {/* Hero — gradient background matching home page */}

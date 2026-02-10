@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import MainLayout from '@/components/layout/MainLayout';
+import BreadcrumbJsonLd from '@/components/seo/BreadcrumbJsonLd';
 import Link from 'next/link';
 import {
   Zap,
@@ -16,14 +17,26 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Funzionalità - FlyFile',
+  title: 'Funzionalità — Condivisione File Avanzata',
   description:
     'Scopri le funzionalità enterprise-grade di FlyFile: crittografia AES-256, condivisione intelligente, analytics avanzate e molto altro.',
+  alternates: { canonical: 'https://flyfile.it/funzionalita' },
+  openGraph: {
+    title: 'Funzionalità — Condivisione File Avanzata | FlyFile',
+    description:
+      'Crittografia AES-256, condivisione intelligente, analytics avanzate e molto altro.',
+    url: 'https://flyfile.it/funzionalita',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'FlyFile - Funzionalità' }],
+  },
 };
 
 export default function FeaturesPage() {
   return (
     <MainLayout>
+      <BreadcrumbJsonLd items={[
+        { name: 'Home', url: 'https://flyfile.it' },
+        { name: 'Funzionalità', url: 'https://flyfile.it/funzionalita' },
+      ]} />
       {/* Hero Section */}
       <div className="relative min-h-[85vh] flex items-center -mt-16 pt-16 overflow-hidden bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
         {/* Decorative circles */}

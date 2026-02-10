@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import BreadcrumbJsonLd from '@/components/seo/BreadcrumbJsonLd';
 import Link from 'next/link';
 import {
   Lightbulb,
@@ -15,14 +16,25 @@ import {
 import MainLayout from '@/components/layout/MainLayout';
 
 export const metadata: Metadata = {
-  title: 'Supporto Beta Tester - FlyFile',
+  title: 'Supporto',
   description:
     'Pagina di supporto dedicata ai beta tester di FlyFile. Segnala bug, richiedi features e ottieni aiuto.',
+  alternates: { canonical: 'https://flyfile.it/supporto' },
+  openGraph: {
+    title: 'Supporto | FlyFile',
+    description: 'Supporto dedicato per FlyFile. Segnala bug, richiedi features e ottieni aiuto.',
+    url: 'https://flyfile.it/supporto',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'FlyFile - Supporto' }],
+  },
 };
 
 export default function SupportPage() {
   return (
     <MainLayout>
+      <BreadcrumbJsonLd items={[
+        { name: 'Home', url: 'https://flyfile.it' },
+        { name: 'Supporto', url: 'https://flyfile.it/supporto' },
+      ]} />
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 -mt-16 pt-16 overflow-hidden">
         {/* Decorative Circles */}

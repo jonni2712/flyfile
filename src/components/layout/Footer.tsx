@@ -33,12 +33,9 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <button
-                  onClick={() => window.dispatchEvent(new Event('openPricing'))}
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
-                >
+                <Link href="/prezzi" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Prezzi
-                </button>
+                </Link>
               </li>
               <li>
                 <Link href="/funzionalita" className="text-sm text-gray-400 hover:text-white transition-colors">
@@ -65,6 +62,11 @@ export default function Footer() {
               <li>
                 <Link href="/documentazione" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Documentazione
+                </Link>
+              </li>
+              <li>
+                <Link href="/contatti" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Contatti
                 </Link>
               </li>
               <li>

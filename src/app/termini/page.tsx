@@ -2,9 +2,16 @@ import { Metadata } from 'next';
 import MainLayout from '@/components/layout/MainLayout';
 
 export const metadata: Metadata = {
-  title: 'Termini di Servizio - FlyFile',
+  title: 'Termini di Servizio',
   description:
     'Termini e condizioni di utilizzo del servizio FlyFile. Leggi attentamente prima di utilizzare il nostro servizio di condivisione file.',
+  alternates: { canonical: 'https://flyfile.it/termini' },
+  openGraph: {
+    title: 'Termini di Servizio | FlyFile',
+    description: 'Termini e condizioni di utilizzo del servizio FlyFile.',
+    url: 'https://flyfile.it/termini',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'FlyFile - Termini di Servizio' }],
+  },
 };
 
 export default function TermsPage() {

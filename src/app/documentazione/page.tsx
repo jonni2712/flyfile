@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import MainLayout from '@/components/layout/MainLayout';
+import BreadcrumbJsonLd from '@/components/seo/BreadcrumbJsonLd';
 import Link from 'next/link';
 import {
   FileText,
@@ -20,14 +21,25 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Documentazione - FlyFile',
+  title: 'Documentazione',
   description:
     'Guide complete, tutorial passo-passo e riferimenti API per sfruttare al massimo le potenzialità di FlyFile.',
+  alternates: { canonical: 'https://flyfile.it/documentazione' },
+  openGraph: {
+    title: 'Documentazione | FlyFile',
+    description: 'Guide complete, tutorial passo-passo e riferimenti API per FlyFile.',
+    url: 'https://flyfile.it/documentazione',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'FlyFile - Documentazione' }],
+  },
 };
 
 export default function DocumentationPage() {
   return (
     <MainLayout>
+      <BreadcrumbJsonLd items={[
+        { name: 'Home', url: 'https://flyfile.it' },
+        { name: 'Documentazione', url: 'https://flyfile.it/documentazione' },
+      ]} />
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden -mt-16 pt-16">
         {/* Decorative circles */}

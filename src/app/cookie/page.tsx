@@ -4,8 +4,15 @@ import { Cookie, Shield, BarChart3, Settings, Check, AlertCircle } from 'lucide-
 import MainLayout from '@/components/layout/MainLayout';
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy - FlyFile',
+  title: 'Cookie Policy',
   description: 'Informativa sui cookie e le tecnologie di tracciamento utilizzate da FlyFile.',
+  alternates: { canonical: 'https://flyfile.it/cookie' },
+  openGraph: {
+    title: 'Cookie Policy | FlyFile',
+    description: 'Informativa sui cookie e le tecnologie di tracciamento utilizzate da FlyFile.',
+    url: 'https://flyfile.it/cookie',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'FlyFile - Cookie Policy' }],
+  },
 };
 
 export default function CookiesPage() {

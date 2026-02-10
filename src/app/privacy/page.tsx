@@ -4,8 +4,15 @@ import MainLayout from '@/components/layout/MainLayout';
 import { Shield, Check, Lock, Mail } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy - FlyFile',
+  title: 'Privacy Policy',
   description: 'Informativa sulla privacy e trattamento dei dati di FlyFile. Scopri come proteggiamo i tuoi dati personali.',
+  alternates: { canonical: 'https://flyfile.it/privacy' },
+  openGraph: {
+    title: 'Privacy Policy | FlyFile',
+    description: 'Informativa sulla privacy e trattamento dei dati di FlyFile.',
+    url: 'https://flyfile.it/privacy',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'FlyFile - Privacy Policy' }],
+  },
 };
 
 export default function PrivacyPage() {
