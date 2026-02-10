@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   X,
   Download,
@@ -16,10 +16,12 @@ import {
   RotateCw
 } from 'lucide-react';
 import { TransferFile } from '@/types';
+import { decryptFile, isEncryptionSupported } from '@/lib/client-encryption';
 
 interface FilePreviewModalProps {
   file: TransferFile;
   transferId: string;
+  isEncrypted?: boolean;
   onClose: () => void;
   onDownload: (file: TransferFile) => void;
   isDownloading: boolean;
@@ -28,6 +30,7 @@ interface FilePreviewModalProps {
 export default function FilePreviewModal({
   file,
   transferId,
+  isEncrypted,
   onClose,
   onDownload,
   isDownloading
@@ -38,7 +41,6 @@ export default function FilePreviewModal({
   const [imageZoom, setImageZoom] = useState(1);
   const [imageRotation, setImageRotation] = useState(0);
 
-  // Determine file type for preview
   const getFileType = (mimeType: string): 'image' | 'pdf' | 'video' | 'audio' | 'text' | 'unsupported' => {
     if (mimeType.startsWith('image/')) return 'image';
     if (mimeType === 'application/pdf') return 'pdf';
@@ -57,10 +59,13 @@ export default function FilePreviewModal({
 
   const fileType = getFileType(file.mimeType);
 
-  // Fetch preview URL
+  // Check if file is encrypted
+  const fileIsEncrypted = file.isEncrypted || isEncrypted;
+  const canDecrypt = fileIsEncrypted && file.encryptionKey && file.encryptionIv && isEncryptionSupported();
+
+  // Fetch preview URL (handles both encrypted and plain files)
   useEffect(() => {
-    const fetchPreviewUrl = async () => {
-      // Skip fetching for unsupported types
+    const fetchPreview = async () => {
       if (fileType === 'unsupported') {
         setLoading(false);
         return;
@@ -76,7 +81,8 @@ export default function FilePreviewModal({
           body: JSON.stringify({
             transferId,
             fileId: file.id,
-            path: file.path
+            path: file.path,
+            preview: true,
           }),
         });
 
@@ -85,7 +91,26 @@ export default function FilePreviewModal({
         }
 
         const { downloadUrl } = await response.json();
-        setPreviewUrl(downloadUrl);
+
+        // If file is encrypted, decrypt client-side and create blob URL
+        if (fileIsEncrypted && canDecrypt) {
+          const encryptedResponse = await fetch(downloadUrl);
+          if (!encryptedResponse.ok) throw new Error('Errore nel download del file criptato');
+
+          const encryptedBlob = await encryptedResponse.blob();
+          const decryptedBlob = await decryptFile(
+            encryptedBlob,
+            file.encryptionKey!,
+            file.encryptionIv!,
+            file.mimeType
+          );
+          const blobUrl = URL.createObjectURL(decryptedBlob);
+          setPreviewUrl(blobUrl);
+        } else if (fileIsEncrypted && !canDecrypt) {
+          setError('Anteprima non disponibile per file criptati');
+        } else {
+          setPreviewUrl(downloadUrl);
+        }
       } catch (err) {
         console.error('Preview error:', err);
         setError('Impossibile caricare l\'anteprima del file');
@@ -94,28 +119,40 @@ export default function FilePreviewModal({
       }
     };
 
-    fetchPreviewUrl();
-  }, [file, transferId, fileType]);
+    fetchPreview();
+
+    // Cleanup blob URLs on unmount
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file, transferId, fileType, fileIsEncrypted, canDecrypt]);
 
   // Handle keyboard events
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
     };
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  // Render preview content based on file type
+  const formatBytes = useCallback((bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }, []);
+
   const renderPreview = () => {
     if (loading) {
       return (
         <div className="flex flex-col items-center justify-center h-full">
-          <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
-          <p className="text-white/70">Caricamento anteprima...</p>
+          <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+          <p className="text-gray-500">Caricamento anteprima...</p>
         </div>
       );
     }
@@ -123,11 +160,11 @@ export default function FilePreviewModal({
     if (error || !previewUrl) {
       return (
         <div className="flex flex-col items-center justify-center h-full">
-          <File className="w-16 h-16 text-gray-400 mb-4" />
-          <p className="text-white/70 mb-2">{error || 'Anteprima non disponibile'}</p>
+          <File className="w-16 h-16 text-gray-300 mb-4" />
+          <p className="text-gray-500 mb-4">{error || 'Anteprima non disponibile'}</p>
           <button
             onClick={() => onDownload(file)}
-            className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white rounded-lg transition-colors flex items-center"
+            className="px-5 py-2.5 bg-[#409cff] hover:bg-[#3085e0] text-white rounded-full transition-colors flex items-center text-sm font-medium"
           >
             <Download className="w-4 h-4 mr-2" />
             Scarica per visualizzare
@@ -155,7 +192,7 @@ export default function FilePreviewModal({
         return (
           <iframe
             src={`${previewUrl}#toolbar=0`}
-            className="w-full h-full border-0"
+            className="w-full h-full border-0 rounded-xl"
             title={file.originalName}
           />
         );
@@ -166,7 +203,7 @@ export default function FilePreviewModal({
             <video
               src={previewUrl}
               controls
-              className="max-w-full max-h-full"
+              className="max-w-full max-h-full rounded-xl"
               autoPlay={false}
             >
               Il tuo browser non supporta la riproduzione video.
@@ -177,7 +214,7 @@ export default function FilePreviewModal({
       case 'audio':
         return (
           <div className="w-full h-full flex flex-col items-center justify-center">
-            <FileAudio className="w-24 h-24 text-green-400 mb-8" />
+            <FileAudio className="w-24 h-24 text-purple-400 mb-8" />
             <audio src={previewUrl} controls className="w-full max-w-md">
               Il tuo browser non supporta la riproduzione audio.
             </audio>
@@ -192,11 +229,11 @@ export default function FilePreviewModal({
       default:
         return (
           <div className="flex flex-col items-center justify-center h-full">
-            <File className="w-16 h-16 text-gray-400 mb-4" />
-            <p className="text-white/70 mb-2">Anteprima non disponibile per questo tipo di file</p>
+            <File className="w-16 h-16 text-gray-300 mb-4" />
+            <p className="text-gray-500 mb-4">Anteprima non disponibile per questo tipo di file</p>
             <button
               onClick={() => onDownload(file)}
-              className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white rounded-lg transition-colors flex items-center"
+              className="px-5 py-2.5 bg-[#409cff] hover:bg-[#3085e0] text-white rounded-full transition-colors flex items-center text-sm font-medium"
             >
               <Download className="w-4 h-4 mr-2" />
               Scarica per visualizzare
@@ -206,71 +243,68 @@ export default function FilePreviewModal({
     }
   };
 
-  // Format file size
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  const fileTypeIcon = () => {
+    switch (fileType) {
+      case 'image': return <FileImage className="w-5 h-5 text-pink-500 mr-3 flex-shrink-0" />;
+      case 'pdf': return <FileText className="w-5 h-5 text-red-500 mr-3 flex-shrink-0" />;
+      case 'video': return <FileVideo className="w-5 h-5 text-purple-500 mr-3 flex-shrink-0" />;
+      case 'audio': return <FileAudio className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />;
+      case 'text': return <FileText className="w-5 h-5 text-blue-500 mr-3 flex-shrink-0" />;
+      default: return <File className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />;
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-900/90 border-b border-white/10">
+      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
         <div className="flex items-center min-w-0 flex-1">
-          {fileType === 'image' && <FileImage className="w-5 h-5 text-pink-400 mr-3 flex-shrink-0" />}
-          {fileType === 'pdf' && <FileText className="w-5 h-5 text-red-400 mr-3 flex-shrink-0" />}
-          {fileType === 'video' && <FileVideo className="w-5 h-5 text-purple-400 mr-3 flex-shrink-0" />}
-          {fileType === 'audio' && <FileAudio className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />}
-          {fileType === 'text' && <FileText className="w-5 h-5 text-blue-400 mr-3 flex-shrink-0" />}
-          {fileType === 'unsupported' && <File className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />}
+          {fileTypeIcon()}
           <div className="min-w-0">
-            <h3 className="text-white font-medium truncate">{file.originalName}</h3>
-            <p className="text-sm text-white/50">{formatBytes(file.size)}</p>
+            <h3 className="text-gray-900 font-medium truncate">{file.originalName}</h3>
+            <p className="text-sm text-gray-400">{formatBytes(file.size)}</p>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 ml-4">
+        <div className="flex items-center gap-1.5 ml-4">
           {/* Image zoom controls */}
           {fileType === 'image' && previewUrl && (
             <>
               <button
                 onClick={() => setImageZoom(z => Math.max(0.5, z - 0.25))}
-                className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
                 title="Zoom out"
               >
                 <ZoomOut className="w-5 h-5" />
               </button>
-              <span className="text-white/70 text-sm min-w-[3rem] text-center">
+              <span className="text-gray-500 text-sm min-w-[3rem] text-center">
                 {Math.round(imageZoom * 100)}%
               </span>
               <button
                 onClick={() => setImageZoom(z => Math.min(3, z + 0.25))}
-                className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
                 title="Zoom in"
               >
                 <ZoomIn className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setImageRotation(r => (r + 90) % 360)}
-                className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
                 title="Ruota"
               >
                 <RotateCw className="w-5 h-5" />
               </button>
-              <div className="w-px h-6 bg-white/20 mx-2" />
+              <div className="w-px h-6 bg-gray-200 mx-1" />
             </>
           )}
 
-          {previewUrl && (
+          {previewUrl && !previewUrl.startsWith('blob:') && (
             <a
               href={previewUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
               title="Apri in nuova scheda"
             >
               <ExternalLink className="w-5 h-5" />
@@ -280,7 +314,7 @@ export default function FilePreviewModal({
           <button
             onClick={() => onDownload(file)}
             disabled={isDownloading}
-            className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white rounded-lg transition-colors flex items-center disabled:opacity-50"
+            className="px-4 py-2 bg-[#409cff] hover:bg-[#3085e0] text-white rounded-full transition-colors flex items-center text-sm font-medium disabled:opacity-50"
           >
             {isDownloading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -294,7 +328,7 @@ export default function FilePreviewModal({
 
           <button
             onClick={onClose}
-            className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -320,7 +354,6 @@ function TextPreview({ url, fileName }: { url: string; fileName: string }) {
       try {
         const response = await fetch(url);
         const text = await response.text();
-        // Limit content to prevent performance issues
         setContent(text.substring(0, 100000));
       } catch {
         setError(true);
@@ -335,7 +368,7 @@ function TextPreview({ url, fileName }: { url: string; fileName: string }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
       </div>
     );
   }
@@ -343,17 +376,16 @@ function TextPreview({ url, fileName }: { url: string; fileName: string }) {
   if (error || !content) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-white/70">Impossibile caricare il contenuto del file</p>
+        <p className="text-gray-500">Impossibile caricare il contenuto del file</p>
       </div>
     );
   }
 
-  // Determine if it's code based on extension
   const isCode = /\.(js|ts|jsx|tsx|py|java|cpp|c|h|cs|go|rb|php|swift|kt|rs|json|xml|html|css|scss|sass|less|yaml|yml|md|sql|sh|bash|zsh|ps1)$/i.test(fileName);
 
   return (
     <div className="w-full h-full overflow-auto">
-      <pre className={`p-4 rounded-lg ${isCode ? 'bg-slate-900' : 'bg-slate-800'} text-sm`}>
+      <pre className={`p-4 rounded-2xl ${isCode ? 'bg-gray-900' : 'bg-gray-800'} text-sm`}>
         <code className={`text-white/90 whitespace-pre-wrap break-words ${isCode ? 'font-mono' : ''}`}>
           {content}
         </code>

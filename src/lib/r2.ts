@@ -43,6 +43,18 @@ export async function getDownloadUrl(key: string, expiresIn = 3600, fileName?: s
   return getSignedUrl(r2Client, command, { expiresIn });
 }
 
+// Generate presigned URL for inline preview (no forced download)
+export async function getPreviewUrl(key: string, expiresIn = 3600, contentType?: string) {
+  const command = new GetObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+    ResponseContentDisposition: 'inline',
+    ...(contentType && { ResponseContentType: contentType }),
+  });
+
+  return getSignedUrl(r2Client, command, { expiresIn });
+}
+
 // Delete file from R2
 export async function deleteFile(key: string) {
   const command = new DeleteObjectCommand({

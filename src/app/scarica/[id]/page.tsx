@@ -633,6 +633,7 @@ export default function DownloadPage() {
         <FilePreviewModal
           file={previewFile}
           transferId={transfer.id}
+          isEncrypted={transfer.isEncrypted}
           onClose={() => setPreviewFile(null)}
           onDownload={handleDownloadFile}
           isDownloading={downloadingFileId === previewFile.id}

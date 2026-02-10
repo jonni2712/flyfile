@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDownloadUrl } from '@/lib/r2';
+import { getDownloadUrl, getPreviewUrl } from '@/lib/r2';
 import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     // SECURITY FIX: Removed passwordVerified - now verify password server-side
-    const { transferId, fileId, path, all, password } = body;
+    const { transferId, fileId, path, all, password, preview } = body;
 
     if (!transferId) {
       return NextResponse.json(
@@ -204,9 +204,13 @@ export async function POST(request: NextRequest) {
     if (fileId && path) {
       // Get file info first to have the filename
       const fileDocRef = await db.collection('transfers').doc(transferId).collection('files').doc(fileId).get();
-      const fileName = fileDocRef.exists ? (fileDocRef.data()?.originalName || 'download') : 'download';
+      const fileData = fileDocRef.exists ? fileDocRef.data() : null;
+      const fileName = fileData?.originalName || 'download';
 
-      const downloadUrl = await getDownloadUrl(path, 3600, fileName);
+      // Use inline URL for previews, attachment URL for downloads
+      const downloadUrl = preview
+        ? await getPreviewUrl(path, 3600, fileData?.mimeType)
+        : await getDownloadUrl(path, 3600, fileName);
 
       // Record download analytics
       const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
