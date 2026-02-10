@@ -367,7 +367,7 @@ export default function BillingPage() {
 
           <div className="border-t border-gray-100 pt-4 flex flex-wrap items-center gap-3">
             <button
-              onClick={() => router.push('/pricing')}
+              onClick={() => router.push('/prezzi')}
               className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
             >
               Cambia piano

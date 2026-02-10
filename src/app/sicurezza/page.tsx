@@ -402,13 +402,13 @@ export default function SecurityPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/register"
+                href="/registrati"
                 className="px-8 py-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg"
               >
                 Inizia con Sicurezza Massima
               </Link>
               <Link
-                href="/contact"
+                href="/contatti"
                 className="px-8 py-4 bg-gray-50 hover:bg-gray-100 text-gray-800 border border-gray-200 rounded-xl font-semibold transition-all duration-300"
               >
                 Contatta il Security Team

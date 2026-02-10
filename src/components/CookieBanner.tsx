@@ -131,7 +131,7 @@ export default function CookieBanner() {
                       <h3 className="text-lg font-semibold text-white mb-2">Utilizziamo i Cookie</h3>
                       <p className="text-blue-100/90 text-sm leading-relaxed">
                         Utilizziamo cookie essenziali per il funzionamento del sito e cookie opzionali per migliorare la tua esperienza.{' '}
-                        <Link href="/cookies" className="text-cyan-400 hover:text-cyan-300 underline">
+                        <Link href="/cookie" className="text-cyan-400 hover:text-cyan-300 underline">
                           Scopri di più nella nostra Cookie Policy
                         </Link>
                       </p>

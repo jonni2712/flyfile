@@ -129,7 +129,7 @@ export default function PrivacyPage() {
               </div>
               <div className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-600"><strong className="text-gray-900">Revoca facile:</strong> Puoi revocare il consenso in qualsiasi momento dalle <Link href="/cookies" className="text-purple-600 hover:underline">impostazioni cookie</Link></span>
+                <span className="text-gray-600"><strong className="text-gray-900">Revoca facile:</strong> Puoi revocare il consenso in qualsiasi momento dalle <Link href="/cookie" className="text-purple-600 hover:underline">impostazioni cookie</Link></span>
               </div>
             </div>
           </div>

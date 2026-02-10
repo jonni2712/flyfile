@@ -55,7 +55,7 @@ export default function ApiKeysPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      router.push('/accedi');
     }
   }, [user, loading, router]);
 
@@ -204,7 +204,7 @@ export default function ApiKeysPage() {
               Per accedere alle API pubbliche di FlyFile, passa al piano Pro o Business.
             </p>
             <a
-              href="/pricing"
+              href="/prezzi"
               className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Vedi i piani

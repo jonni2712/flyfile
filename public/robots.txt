@@ -3,14 +3,16 @@
 
 User-agent: *
 Allow: /
-Allow: /pricing
-Allow: /features
-Allow: /security
+Allow: /prezzi
+Allow: /funzionalita
+Allow: /sicurezza
 Allow: /privacy
-Allow: /terms
-Allow: /contact
-Allow: /cookies
-Allow: /documentation
+Allow: /termini
+Allow: /contatti
+Allow: /cookie
+Allow: /documentazione
+Allow: /supporto
+Allow: /chi-siamo
 
 # Disallow protected/private routes
 Disallow: /admin
@@ -24,20 +26,20 @@ Disallow: /api-keys
 Disallow: /analytics
 Disallow: /webhooks
 Disallow: /account-security
-Disallow: /subscription
+Disallow: /abbonamento
 
 # Disallow API routes
 Disallow: /api/
 
 # Disallow auth routes (no value in indexing)
-Disallow: /login
-Disallow: /register
+Disallow: /accedi
+Disallow: /registrati
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /verify-email
 
 # Disallow dynamic download pages (user-specific content)
-Disallow: /download/
+Disallow: /scarica/
 Disallow: /s/
 
 # Sitemap location

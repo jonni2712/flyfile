@@ -141,7 +141,7 @@ export default function StorageQuota({
             <p className="text-sm text-red-200">
               I file selezionati ({formatBytes(pendingSize)}) supererebbero il tuo limite di storage.
             </p>
-            <Link href="/pricing" className="text-sm text-red-400 hover:text-red-300 font-medium mt-1 inline-block">
+            <Link href="/prezzi" className="text-sm text-red-400 hover:text-red-300 font-medium mt-1 inline-block">
               Passa a un piano superiore
             </Link>
           </div>
@@ -155,7 +155,7 @@ export default function StorageQuota({
             <p className="text-sm text-yellow-200">
               Stai esaurendo lo spazio disponibile.
             </p>
-            <Link href="/pricing" className="text-sm text-yellow-400 hover:text-yellow-300 font-medium mt-1 inline-block">
+            <Link href="/prezzi" className="text-sm text-yellow-400 hover:text-yellow-300 font-medium mt-1 inline-block">
               Aumenta il tuo spazio
             </Link>
           </div>

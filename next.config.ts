@@ -80,6 +80,26 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  // Redirects from old English slugs to new Italian slugs
+  async redirects() {
+    return [
+      { source: '/features', destination: '/funzionalita', permanent: true },
+      { source: '/documentation', destination: '/documentazione', permanent: true },
+      { source: '/documentation/api', destination: '/documentazione/api', permanent: true },
+      { source: '/support', destination: '/supporto', permanent: true },
+      { source: '/contact', destination: '/contatti', permanent: true },
+      { source: '/terms', destination: '/termini', permanent: true },
+      { source: '/cookies', destination: '/cookie', permanent: true },
+      { source: '/security', destination: '/sicurezza', permanent: true },
+      { source: '/login', destination: '/accedi', permanent: true },
+      { source: '/register', destination: '/registrati', permanent: true },
+      { source: '/download/:id', destination: '/scarica/:id', permanent: true },
+      { source: '/subscription/success', destination: '/abbonamento/successo', permanent: true },
+      { source: '/subscription/cancel', destination: '/abbonamento/annullato', permanent: true },
+      { source: '/pricing', destination: '/prezzi', permanent: true },
+    ];
+  },
+
   // Rewrites for Firebase Auth custom domain
   async rewrites() {
     return [

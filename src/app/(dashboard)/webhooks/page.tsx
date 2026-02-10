@@ -65,7 +65,7 @@ export default function WebhooksPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      router.push('/accedi');
     }
   }, [user, loading, router]);
 
@@ -226,7 +226,7 @@ export default function WebhooksPage() {
               Per usare i webhooks e ricevere notifiche in tempo reale, passa al piano Business.
             </p>
             <a
-              href="/pricing"
+              href="/prezzi"
               className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Vedi i piani

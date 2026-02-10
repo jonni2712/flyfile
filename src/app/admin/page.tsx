@@ -82,7 +82,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/login');
+      router.push('/accedi');
       return;
     }
 

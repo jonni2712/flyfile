@@ -120,7 +120,7 @@ export function getTeamInviteEmail(params: {
       <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
       <p style="margin: 8px 0 0 0;">
         <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
-        <a href="${BASE_URL}/terms" style="${emailStyles.footerLink}">Termini</a>
+        <a href="${BASE_URL}/termini" style="${emailStyles.footerLink}">Termini</a>
       </p>
     </div>
   </div>
@@ -207,7 +207,7 @@ export function getTransferNotificationEmail(params: {
       <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
       <p style="margin: 8px 0 0 0;">
         <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
-        <a href="${BASE_URL}/terms" style="${emailStyles.footerLink}">Termini</a>
+        <a href="${BASE_URL}/termini" style="${emailStyles.footerLink}">Termini</a>
       </p>
     </div>
   </div>
@@ -346,7 +346,7 @@ export function getPasswordSetupEmail(params: {
       <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
       <p style="margin: 8px 0 0 0;">
         <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
-        <a href="${BASE_URL}/terms" style="${emailStyles.footerLink}">Termini</a>
+        <a href="${BASE_URL}/termini" style="${emailStyles.footerLink}">Termini</a>
       </p>
     </div>
   </div>
@@ -417,7 +417,7 @@ export function getAuthCodeEmail(params: {
       <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
       <p style="margin: 8px 0 0 0;">
         <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
-        <a href="${BASE_URL}/terms" style="${emailStyles.footerLink}">Termini</a>
+        <a href="${BASE_URL}/termini" style="${emailStyles.footerLink}">Termini</a>
       </p>
     </div>
   </div>
@@ -589,7 +589,7 @@ export function getUploadConfirmationEmail(params: {
       <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
       <p style="margin: 8px 0 0 0;">
         <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
-        <a href="${BASE_URL}/terms" style="${emailStyles.footerLink}">Termini</a>
+        <a href="${BASE_URL}/termini" style="${emailStyles.footerLink}">Termini</a>
       </p>
     </div>
   </div>
@@ -671,7 +671,7 @@ export function getDownloadNotificationEmail(params: {
       <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
       <p style="margin: 8px 0 0 0;">
         <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
-        <a href="${BASE_URL}/terms" style="${emailStyles.footerLink}">Termini</a>
+        <a href="${BASE_URL}/termini" style="${emailStyles.footerLink}">Termini</a>
       </p>
       <p style="margin: 8px 0 0 0;">
         <a href="${BASE_URL}/settings/notifications" style="${emailStyles.footerLink}">Gestisci notifiche</a>

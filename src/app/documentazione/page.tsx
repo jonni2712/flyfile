@@ -542,7 +542,7 @@ print(response.json()['shareUrl'])`}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  href="/contact"
+                  href="/contatti"
                   className="inline-flex items-center justify-center px-8 py-4 bg-white text-purple-600 rounded-full font-semibold hover:bg-white/90 transition-all duration-300 shadow-lg shadow-black/10"
                 >
                   <Zap className="w-5 h-5 mr-2" />

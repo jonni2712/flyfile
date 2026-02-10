@@ -235,7 +235,7 @@ export default function ChiSiamoPage() {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Link
-                      href="/register"
+                      href="/registrati"
                       className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-colors"
                     >
                       Crea account gratuito

@@ -50,7 +50,7 @@ export default function MembersPage() {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    if (!authLoading && !user) router.push('/login');
+    if (!authLoading && !user) router.push('/accedi');
   }, [user, authLoading, router]);
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export default function MembersPage() {
             <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500 flex-shrink-0" /> Pagina pubblica personalizzata</li>
           </ul>
           <button
-            onClick={() => router.push('/pricing')}
+            onClick={() => router.push('/prezzi')}
             className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
           >
             Crea un team

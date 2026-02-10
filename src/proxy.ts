@@ -14,7 +14,7 @@ const protectedRoutes = [
 const adminRoutes = ['/admin'];
 
 // Route auth (redirect se già loggato)
-const authRoutes = ['/login', '/register'];
+const authRoutes = ['/accedi', '/registrati'];
 
 // Main domains that should not be treated as branded subdomains
 const MAIN_DOMAINS = [
@@ -115,7 +115,7 @@ export async function proxy(request: NextRequest) {
   // Route protette: redirect a login se non autenticato
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   if (isProtectedRoute && !isAuthenticated) {
-    const loginUrl = new URL('/login', request.url);
+    const loginUrl = new URL('/accedi', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
@@ -123,7 +123,7 @@ export async function proxy(request: NextRequest) {
   // Route admin: redirect se non autenticato
   const isAdminRoute = adminRoutes.some(route => pathname.startsWith(route));
   if (isAdminRoute && !isAuthenticated) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    return NextResponse.redirect(new URL('/accedi', request.url));
   }
 
   // Route auth: redirect a upload se già loggato

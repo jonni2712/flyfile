@@ -40,7 +40,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      router.push('/accedi');
     }
   }, [user, loading, router]);
 

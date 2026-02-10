@@ -202,13 +202,13 @@ export default function TeamInvitePage() {
 
           <div className="space-y-3">
             <Link
-              href={`/login?redirect=/team/invite/${token}&email=${encodeURIComponent(invitation.invitation.email)}`}
+              href={`/accedi?redirect=/team/invite/${token}&email=${encodeURIComponent(invitation.invitation.email)}`}
               className="block w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium text-center transition-colors"
             >
               Accedi
             </Link>
             <Link
-              href={`/register?redirect=/team/invite/${token}&email=${encodeURIComponent(invitation.invitation.email)}`}
+              href={`/registrati?redirect=/team/invite/${token}&email=${encodeURIComponent(invitation.invitation.email)}`}
               className="block w-full px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium text-center transition-colors"
             >
               Registrati

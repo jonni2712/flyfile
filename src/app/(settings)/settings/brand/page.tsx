@@ -53,7 +53,7 @@ export default function BrandPage() {
   const emailBannerInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
+    if (!loading && !user) router.push('/accedi');
   }, [user, loading, router]);
 
   useEffect(() => {
@@ -207,7 +207,7 @@ export default function BrandPage() {
             Disponibile per i piani Pro e Business.
           </p>
           <button
-            onClick={() => router.push('/pricing')}
+            onClick={() => router.push('/prezzi')}
             className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
           >
             Effettua l&apos;upgrade

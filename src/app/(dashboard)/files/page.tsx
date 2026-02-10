@@ -55,7 +55,7 @@ export default function FilesPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      router.push('/accedi');
     }
   }, [user, loading, router]);
 

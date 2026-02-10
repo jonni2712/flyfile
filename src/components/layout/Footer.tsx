@@ -41,12 +41,12 @@ export default function Footer() {
                 </button>
               </li>
               <li>
-                <Link href="/features" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/funzionalita" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Funzionalità
                 </Link>
               </li>
               <li>
-                <Link href="/security" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/sicurezza" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Sicurezza
                 </Link>
               </li>
@@ -58,12 +58,12 @@ export default function Footer() {
             <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Supporto</h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/support" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/supporto" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Centro assistenza
                 </Link>
               </li>
               <li>
-                <Link href="/documentation" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/documentazione" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Documentazione
                 </Link>
               </li>
@@ -90,12 +90,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/termini" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Termini di Servizio
                 </Link>
               </li>
               <li>
-                <Link href="/cookies" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/cookie" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Cookie Policy
                 </Link>
               </li>

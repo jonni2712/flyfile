@@ -275,7 +275,7 @@ export default function SupportPage() {
 
             {/* Documentation */}
             <Link
-              href="/documentation"
+              href="/documentazione"
               className="group bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300 flex items-center"
             >
               <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center mr-4 flex-shrink-0">

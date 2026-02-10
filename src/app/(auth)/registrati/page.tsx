@@ -154,7 +154,7 @@ export default function RegisterPage() {
 
                 <p className="text-xs text-gray-400 text-center">
                   Creando un account, si accettano i{' '}
-                  <Link href="/terms" className="text-gray-500 underline hover:text-gray-700">
+                  <Link href="/termini" className="text-gray-500 underline hover:text-gray-700">
                     Termini di servizio
                   </Link>{' '}
                   e la{' '}
@@ -195,7 +195,7 @@ export default function RegisterPage() {
               <div className="mt-6 text-center">
                 <p className="text-gray-500 text-sm">
                   Hai già un account?{' '}
-                  <Link href="/login" className="text-gray-900 font-medium hover:underline">
+                  <Link href="/accedi" className="text-gray-900 font-medium hover:underline">
                     Accedi
                   </Link>
                 </p>

@@ -56,7 +56,7 @@ export default function FeaturesPage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              href="/pricing"
+              href="/prezzi"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/15 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-full hover:bg-white/25 transition-all"
             >
               Vedi i Piani
@@ -332,14 +332,14 @@ export default function FeaturesPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link
-                    href="/register"
+                    href="/registrati"
                     className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-all shadow-lg"
                   >
                     Inizia Gratis Ora
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
-                    href="/contact"
+                    href="/contatti"
                     className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/15 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-full hover:bg-white/25 transition-all"
                   >
                     Contatta il Sales

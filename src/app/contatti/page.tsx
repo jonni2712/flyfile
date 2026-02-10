@@ -387,7 +387,7 @@ export default function ContactPage() {
               <h3 className="text-xl font-bold text-gray-900 mb-8">Link Utili</h3>
 
               <div className="space-y-4">
-                <Link href="/documentation" className="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors group">
+                <Link href="/documentazione" className="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors group">
                   <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
                     <FileText className="w-5 h-5 text-blue-600" />
                   </div>
@@ -397,7 +397,7 @@ export default function ContactPage() {
                   </div>
                 </Link>
 
-                <Link href="/security" className="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors group">
+                <Link href="/sicurezza" className="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors group">
                   <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
                     <Shield className="w-5 h-5 text-green-600" />
                   </div>
@@ -407,7 +407,7 @@ export default function ContactPage() {
                   </div>
                 </Link>
 
-                <Link href="/pricing" className="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors group">
+                <Link href="/prezzi" className="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors group">
                   <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
                     <DollarSign className="w-5 h-5 text-purple-600" />
                   </div>
@@ -417,7 +417,7 @@ export default function ContactPage() {
                   </div>
                 </Link>
 
-                <Link href="/features" className="flex items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors group">
+                <Link href="/funzionalita" className="flex items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors group">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
                     <Zap className="w-5 h-5 text-orange-600" />
                   </div>

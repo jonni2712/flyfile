@@ -50,7 +50,7 @@ export default function SettingsShell({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
-    router.push('/login');
+    router.push('/accedi');
     return null;
   }
 

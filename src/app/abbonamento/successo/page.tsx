@@ -155,12 +155,12 @@ export default function SubscriptionSuccessPage() {
               <div className="mt-8 pt-6 border-t border-gray-200 text-center">
                 <p className="text-gray-600 mb-4">Hai bisogno di aiuto o hai domande?</p>
                 <div className="flex flex-wrap justify-center gap-4">
-                  <Link href="/contact" className="text-blue-600 hover:text-blue-500 font-medium inline-flex items-center">
+                  <Link href="/contatti" className="text-blue-600 hover:text-blue-500 font-medium inline-flex items-center">
                     <Mail className="w-5 h-5 mr-1" />
                     Contattaci
                   </Link>
                   <span className="text-gray-400">•</span>
-                  <Link href="/support" className="text-blue-600 hover:text-blue-500 font-medium inline-flex items-center">
+                  <Link href="/supporto" className="text-blue-600 hover:text-blue-500 font-medium inline-flex items-center">
                     <HelpCircle className="w-5 h-5 mr-1" />
                     Centro Assistenza
                   </Link>

@@ -82,7 +82,7 @@ export default function Error({
               Problema persistente?
             </p>
             <Link
-              href="/contact"
+              href="/contatti"
               className="inline-flex items-center text-cyan-400 hover:text-cyan-300 text-sm font-medium"
             >
               <Mail className="w-4 h-4 mr-2" />
