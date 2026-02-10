@@ -120,7 +120,10 @@ export async function POST(request: NextRequest) {
       // Verify customer exists in Stripe
       if (stripeCustomerId) {
         try {
-          await stripe.customers.retrieve(stripeCustomerId);
+          const existing = await stripe.customers.retrieve(stripeCustomerId);
+          if (existing.deleted) {
+            stripeCustomerId = null;
+          }
         } catch {
           stripeCustomerId = null;
         }
