@@ -57,13 +57,11 @@ export default function CookieBanner() {
     }
 
     if (prefs.analytics) {
-      // Enable analytics
       const win = window as unknown as { loadGoogleAnalytics?: () => void };
       if (typeof window !== 'undefined' && win.loadGoogleAnalytics) {
         win.loadGoogleAnalytics();
       }
     } else {
-      // Disable and remove analytics cookies
       if (typeof window !== 'undefined') {
         (window as unknown as { [key: string]: boolean })['ga-disable-G-W4J7Q31Y7B'] = true;
       }
@@ -117,21 +115,21 @@ export default function CookieBanner() {
             isVisible ? 'translate-y-0' : 'translate-y-full'
           }`}
         >
-          <div className="bg-gradient-to-r from-slate-900/95 via-blue-900/95 to-indigo-900/95 backdrop-blur-lg border-t border-white/20 shadow-2xl">
+          <div className="bg-white border-t border-gray-200 shadow-2xl">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                 {/* Content */}
                 <div className="flex-1">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
-                      <Cookie className="w-5 h-5 text-cyan-400" />
+                    <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <Cookie className="w-5 h-5 text-purple-600" />
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">Utilizziamo i Cookie</h3>
-                      <p className="text-blue-100/90 text-sm leading-relaxed">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">Utilizziamo i Cookie</h3>
+                      <p className="text-gray-600 text-sm leading-relaxed">
                         Utilizziamo cookie essenziali per il funzionamento del sito e cookie opzionali per migliorare la tua esperienza.{' '}
-                        <Link href="/cookie" className="text-cyan-400 hover:text-cyan-300 underline">
+                        <Link href="/cookie" className="text-blue-600 hover:text-blue-700 underline">
                           Scopri di più nella nostra Cookie Policy
                         </Link>
                       </p>
@@ -143,7 +141,7 @@ export default function CookieBanner() {
                 <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
                   <button
                     onClick={openSettings}
-                    className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-medium transition-all duration-300 text-sm"
+                    className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium transition-all text-sm"
                   >
                     <Settings className="w-4 h-4 inline mr-2" />
                     Gestisci Preferenze
@@ -151,14 +149,14 @@ export default function CookieBanner() {
 
                   <button
                     onClick={acceptEssential}
-                    className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white border border-white/40 rounded-xl font-medium transition-all duration-300 text-sm"
+                    className="px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-full font-medium transition-all text-sm"
                   >
                     Solo Essenziali
                   </button>
 
                   <button
                     onClick={acceptAll}
-                    className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-300 shadow-lg text-sm"
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 text-white rounded-full font-medium transition-all shadow-lg text-sm"
                   >
                     <Check className="w-4 h-4 inline mr-2" />
                     Accetta Tutti
@@ -176,19 +174,19 @@ export default function CookieBanner() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={closeSettings}></div>
 
           <div className="fixed inset-0 flex items-center justify-center p-4">
-            <div className="bg-white/95 backdrop-blur-lg border border-white/40 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
               {/* Header */}
-              <div className="bg-gradient-to-r from-slate-900 to-blue-900 text-white p-6">
+              <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                       <Cog className="w-5 h-5" />
                     </div>
                     <h2 className="text-xl font-bold">Preferenze Cookie</h2>
                   </div>
                   <button
                     onClick={closeSettings}
-                    className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
+                    className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -197,21 +195,21 @@ export default function CookieBanner() {
 
               {/* Content */}
               <div className="p-6 max-h-96 overflow-y-auto">
-                <p className="text-gray-700 mb-6 leading-relaxed">
+                <p className="text-gray-600 mb-6 leading-relaxed">
                   Personalizza le tue preferenze sui cookie. Puoi modificare queste impostazioni in qualsiasi momento.
                 </p>
 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {/* Essential Cookies */}
-                  <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50">
+                  <div className="border border-gray-200 rounded-2xl p-5 bg-gray-50">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                           <Check className="w-4 h-4 text-green-600" />
                         </div>
-                        <h3 className="font-semibold text-gray-800">Cookie Essenziali</h3>
+                        <h3 className="font-semibold text-gray-900">Cookie Essenziali</h3>
                       </div>
-                      <span className="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                      <span className="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
                         Sempre Attivi
                       </span>
                     </div>
@@ -221,13 +219,13 @@ export default function CookieBanner() {
                   </div>
 
                   {/* Functional Cookies */}
-                  <div className="border border-gray-200 rounded-xl p-4">
+                  <div className="border border-gray-200 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                           <Cog className="w-4 h-4 text-blue-600" />
                         </div>
-                        <h3 className="font-semibold text-gray-800">Cookie Funzionali</h3>
+                        <h3 className="font-semibold text-gray-900">Cookie Funzionali</h3>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -245,13 +243,13 @@ export default function CookieBanner() {
                   </div>
 
                   {/* Analytics Cookies */}
-                  <div className="border border-gray-200 rounded-xl p-4">
+                  <div className="border border-gray-200 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                           <BarChart3 className="w-4 h-4 text-purple-600" />
                         </div>
-                        <h3 className="font-semibold text-gray-800">Cookie Analitici</h3>
+                        <h3 className="font-semibold text-gray-900">Cookie Analitici</h3>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -271,17 +269,17 @@ export default function CookieBanner() {
               </div>
 
               {/* Footer */}
-              <div className="border-t border-gray-200 p-6 bg-gray-50/50">
+              <div className="border-t border-gray-200 p-6 bg-gray-50">
                 <div className="flex flex-col sm:flex-row gap-3 justify-end">
                   <button
                     onClick={closeSettings}
-                    className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-medium transition-colors"
+                    className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full font-medium transition-colors"
                   >
                     Annulla
                   </button>
                   <button
                     onClick={saveSettings}
-                    className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl font-medium transition-all shadow-lg"
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 text-white rounded-full font-medium transition-all shadow-lg"
                   >
                     Salva Preferenze
                   </button>
@@ -297,8 +295,6 @@ export default function CookieBanner() {
 
 // Export function to open preferences from other pages
 export function openCookiePreferences() {
-  // This will need to be triggered via a state management solution
-  // For now, clear consent and reload
   localStorage.removeItem('cookie-consent');
   window.location.reload();
 }
