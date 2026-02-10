@@ -247,8 +247,8 @@ export default function Navbar() {
               {user ? (
                 <div className="relative flex items-center gap-2">
                   <div className="flex items-center gap-0">
-                    {/* Upgrade button - only for non-business */}
-                    {userProfile?.plan !== 'business' && (
+                    {/* Upgrade button - only for free users */}
+                    {(!userProfile?.plan || userProfile.plan === 'free') && (
                       <button
                         onClick={() => setIsPricingOpen(true)}
                         className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-l-full text-sm font-medium text-purple-600 hover:bg-purple-50 transition-colors"
@@ -262,7 +262,7 @@ export default function Navbar() {
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                       className={`flex items-center gap-3 px-4 py-1.5 border border-gray-200 ${
-                        userProfile?.plan !== 'business' ? 'rounded-r-full border-l-0' : 'rounded-full'
+                        !userProfile?.plan || userProfile.plan === 'free' ? 'rounded-r-full border-l-0' : 'rounded-full'
                       } hover:bg-gray-50 transition-colors`}
                     >
                       <div className="text-right">
@@ -352,8 +352,8 @@ export default function Navbar() {
                           </div>
                         </div>
 
-                        {/* Upgrade link for non-business */}
-                        {userProfile?.plan !== 'business' && (
+                        {/* Upgrade link - only for free users */}
+                        {(!userProfile?.plan || userProfile.plan === 'free') && (
                           <button
                             onClick={() => {
                               setIsDropdownOpen(false);
@@ -496,7 +496,7 @@ export default function Navbar() {
                     <div className="text-xs text-gray-500">Piano {PLANS[userProfile?.plan || 'free']?.name || 'Free'}</div>
                   </div>
                 </div>
-                {userProfile?.plan !== 'business' && (
+                {(!userProfile?.plan || userProfile.plan === 'free') && (
                   <button
                     onClick={() => {
                       setIsOpen(false);
