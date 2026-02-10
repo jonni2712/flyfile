@@ -934,13 +934,9 @@ export default function HomePage() {
 
       {/* Full-page gradient background with card overlay */}
       <div className="min-h-screen -mt-16 pt-16 relative overflow-x-hidden overflow-y-visible bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
-        {/* Animated decorative circles */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[10%] left-[60%] w-72 h-72 bg-white/10 rounded-full blur-3xl mix-blend-multiply animate-pulse" />
-          <div className="absolute top-[50%] right-[10%] w-96 h-96 bg-pink-300/20 rounded-full blur-3xl mix-blend-multiply animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute bottom-[10%] left-[40%] w-80 h-80 bg-blue-300/20 rounded-full blur-3xl mix-blend-multiply animate-pulse" style={{ animationDelay: '2s' }} />
-          <div className="absolute top-[30%] right-[30%] w-64 h-64 bg-purple-300/15 rounded-full blur-2xl mix-blend-multiply animate-pulse" style={{ animationDelay: '0.5s' }} />
-        </div>
+        {/* Decorative circles */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-20 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" />
 
         <div className="relative z-10 flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
           {/* Left Panel — Upload Card */}
