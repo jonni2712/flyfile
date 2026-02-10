@@ -70,9 +70,12 @@ export async function DELETE(request: NextRequest) {
       const currentStorage = userData.storageUsed || 0;
       const currentFilesCount = userData.filesCount || 0;
 
+      const currentMonthlyTransfers = userData.monthlyTransfers || 0;
+
       await userRef.update({
         storageUsed: Math.max(0, currentStorage - fileData.size),
         filesCount: Math.max(0, currentFilesCount - 1),
+        monthlyTransfers: Math.max(0, currentMonthlyTransfers - 1),
         updatedAt: FieldValue.serverTimestamp(),
       });
     }

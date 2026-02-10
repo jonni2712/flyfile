@@ -108,9 +108,12 @@ export async function POST(request: NextRequest) {
       const currentStorage = userData.storageUsed || 0;
       const currentFilesCount = userData.filesCount || 0;
 
+      const currentMonthlyTransfers = userData.monthlyTransfers || 0;
+
       await userRef.update({
         storageUsed: Math.max(0, currentStorage - totalSizeDeleted),
         filesCount: Math.max(0, currentFilesCount - totalFilesDeleted),
+        monthlyTransfers: Math.max(0, currentMonthlyTransfers - totalFilesDeleted),
         updatedAt: FieldValue.serverTimestamp(),
       });
     }

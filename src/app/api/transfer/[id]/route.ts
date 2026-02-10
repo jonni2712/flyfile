@@ -206,16 +206,17 @@ export async function DELETE(
     // Delete transfer document
     await db.collection('transfers').doc(transferDocId).delete();
 
-    // Decrement user's storage usage (if logged in user)
-    if (transferUserId && totalSize > 0) {
+    // Decrement user's storage usage and monthly transfers (if logged in user)
+    if (transferUserId) {
       const userRef = db.collection('users').doc(transferUserId);
       const userDoc = await userRef.get();
-      const currentStorage = userDoc.data()?.storageUsed || 0;
+      const userData = userDoc.data() || {};
+      const currentStorage = userData.storageUsed || 0;
+      const currentMonthlyTransfers = userData.monthlyTransfers || 0;
 
-      // Only decrement if we won't go negative
-      const newStorage = Math.max(0, currentStorage - totalSize);
       await userRef.update({
-        storageUsed: newStorage,
+        storageUsed: Math.max(0, currentStorage - totalSize),
+        monthlyTransfers: Math.max(0, currentMonthlyTransfers - 1),
         updatedAt: FieldValue.serverTimestamp(),
       });
     }

@@ -93,15 +93,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update user's storage usage (don't go negative)
-    if (totalSizeDeleted > 0 && authResult.userId) {
+    // Update user's storage usage and monthly transfers (don't go negative)
+    if (authResult.userId && results.deleted.length > 0) {
       const userRef = db.collection('users').doc(authResult.userId);
       const userDoc = await userRef.get();
-      const currentStorage = userDoc.data()?.storageUsed || 0;
+      const userData = userDoc.data() || {};
+      const currentStorage = userData.storageUsed || 0;
+      const currentMonthlyTransfers = userData.monthlyTransfers || 0;
 
-      const newStorage = Math.max(0, currentStorage - totalSizeDeleted);
       await userRef.update({
-        storageUsed: newStorage,
+        storageUsed: Math.max(0, currentStorage - totalSizeDeleted),
+        monthlyTransfers: Math.max(0, currentMonthlyTransfers - results.deleted.length),
         updatedAt: FieldValue.serverTimestamp(),
       });
     }

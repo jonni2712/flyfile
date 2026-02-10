@@ -81,18 +81,20 @@ export async function GET(request: NextRequest) {
         // Delete transfer document
         await transferDoc.ref.delete();
 
-        // Decrement user's storage usage
-        if (userId && transferSize > 0) {
+        // Decrement user's storage usage and monthly transfers count
+        if (userId) {
           try {
             const userRef = db.collection('users').doc(userId);
             const userDoc = await userRef.get();
 
             if (userDoc.exists) {
-              const currentStorage = userDoc.data()?.storageUsed || 0;
-              const newStorage = Math.max(0, currentStorage - transferSize);
+              const userData = userDoc.data()!;
+              const currentStorage = userData.storageUsed || 0;
+              const currentMonthlyTransfers = userData.monthlyTransfers || 0;
 
               await userRef.update({
-                storageUsed: newStorage,
+                storageUsed: Math.max(0, currentStorage - transferSize),
+                monthlyTransfers: Math.max(0, currentMonthlyTransfers - 1),
                 updatedAt: FieldValue.serverTimestamp(),
               });
             }
