@@ -37,13 +37,13 @@ export default function SecurityPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/"
-                className="px-8 py-4 bg-white text-purple-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300 shadow-lg"
+                className="px-8 py-4 bg-white text-gray-900 hover:bg-gray-100 rounded-full font-semibold transition-all shadow-lg"
               >
                 Prova la Sicurezza
               </Link>
               <Link
                 href="/privacy"
-                className="px-8 py-4 bg-transparent hover:bg-white/10 text-white border-2 border-white/40 rounded-xl font-semibold transition-all duration-300"
+                className="px-8 py-4 bg-white/15 backdrop-blur-sm hover:bg-white/25 text-white border border-white/20 rounded-full font-semibold transition-all"
               >
                 Privacy Policy
               </Link>
@@ -403,13 +403,13 @@ export default function SecurityPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/registrati"
-                className="px-8 py-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg"
+                className="px-8 py-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 text-white rounded-full font-semibold transition-all shadow-lg"
               >
                 Inizia con Sicurezza Massima
               </Link>
               <Link
                 href="/contatti"
-                className="px-8 py-4 bg-gray-50 hover:bg-gray-100 text-gray-800 border border-gray-200 rounded-xl font-semibold transition-all duration-300"
+                className="px-8 py-4 bg-gray-50 hover:bg-gray-100 text-gray-800 border border-gray-200 rounded-full font-semibold transition-all"
               >
                 Contatta il Security Team
               </Link>

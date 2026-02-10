@@ -211,7 +211,10 @@ export default function PricingContent() {
       <div className="bg-gray-50 py-20">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+            <span className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
+              Confronto dettagliato
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-4 mb-3">
               Scegli il piano che fa per te
             </h2>
             <p className="text-gray-500 text-base">
@@ -293,10 +296,13 @@ export default function PricingContent() {
       </div>
 
       {/* FAQ Section */}
-      <div className="py-20">
+      <div className="bg-white py-20">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+            <span className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
+              FAQ
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-4 mb-3">
               Domande frequenti
             </h2>
             <p className="text-gray-500 text-base">
@@ -345,20 +351,27 @@ export default function PricingContent() {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-gray-900 py-16">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Pronto per iniziare?
-          </h2>
-          <p className="text-gray-400 mb-8">
-            Crea il tuo account gratuito e inizia a condividere file in modo sicuro.
-          </p>
-          <Link
-            href="/registrati"
-            className="inline-block px-8 py-3 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-colors"
-          >
-            Crea un account gratis
-          </Link>
+      <div className="bg-gray-50 py-20">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl p-12 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+
+            <div className="relative z-10">
+              <h2 className="text-3xl font-bold text-white mb-4">
+                Pronto per iniziare?
+              </h2>
+              <p className="text-white/80 mb-8 max-w-xl mx-auto">
+                Crea il tuo account gratuito e inizia a condividere file in modo sicuro.
+              </p>
+              <Link
+                href="/registrati"
+                className="inline-block px-8 py-4 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-colors shadow-lg"
+              >
+                Crea un account gratis
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </>

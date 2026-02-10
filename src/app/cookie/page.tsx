@@ -313,7 +313,7 @@ export default function CookiesPage() {
             </p>
             <Link
               href="/contatti"
-              className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity duration-300 shadow-lg shadow-purple-500/25"
+              className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white rounded-full font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-purple-500/25"
             >
               Contattaci
             </Link>
