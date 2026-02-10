@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { PLANS } from '@/types';
+import { sendEmail, getSubscriptionConfirmationEmail } from '@/lib/email';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -74,6 +75,38 @@ export async function POST(request: NextRequest) {
             }
 
             await db.collection('users').doc(userId).update(updateData);
+
+            // Send subscription confirmation email
+            try {
+              const userDoc = await db.collection('users').doc(userId).get();
+              const userData = userDoc.data();
+              const userEmail = session.customer_details?.email || userData?.email;
+              const userName = session.customer_details?.name || userData?.displayName || 'Utente';
+
+              if (userEmail) {
+                const planNames: Record<string, string> = {
+                  starter: 'Starter',
+                  pro: 'Pro',
+                  business: 'Business',
+                };
+                const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://flyfile.it';
+                const { html, text } = getSubscriptionConfirmationEmail({
+                  userName,
+                  planName: planNames[planId] || planId,
+                  billingCycle: (billingCycle || 'monthly') as 'monthly' | 'annual',
+                  billingUrl: `${baseUrl}/settings/billing`,
+                });
+
+                await sendEmail({
+                  to: userEmail,
+                  subject: `Abbonamento ${planNames[planId] || planId} attivato - FlyFile`,
+                  html,
+                  text,
+                });
+              }
+            } catch (emailError) {
+              console.error('Failed to send subscription confirmation email:', emailError);
+            }
           }
         }
         break;

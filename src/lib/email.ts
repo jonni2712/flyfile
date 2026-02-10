@@ -897,6 +897,118 @@ FlyFile - Condivisione file sicura
   return { html, text };
 }
 
+// Subscription confirmation email
+export function getSubscriptionConfirmationEmail(params: {
+  userName: string;
+  planName: string;
+  billingCycle: 'monthly' | 'annual';
+  billingUrl: string;
+}) {
+  const { userName, planName, billingCycle, billingUrl } = params;
+  const cycleLabel = billingCycle === 'annual' ? 'annuale' : 'mensile';
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Abbonamento Attivato - FlyFile</title>
+</head>
+<body style="${emailStyles.body}">
+  <div style="${emailStyles.wrapper}">
+    <div style="${emailStyles.header}">
+      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+    </div>
+
+    <div style="${emailStyles.content}">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="display: inline-block; width: 48px; height: 48px; background-color: #eff6ff; border: 2px solid #93c5fd; border-radius: 50%; line-height: 48px; font-size: 20px; color: #2563eb;">
+          &#10003;
+        </div>
+      </div>
+
+      <h2 style="${emailStyles.title}; text-align: center;">Abbonamento Attivato!</h2>
+
+      <p style="${emailStyles.text}">
+        Ciao <strong>${userName}</strong>, il tuo abbonamento FlyFile è stato attivato con successo.
+      </p>
+
+      <div style="${emailStyles.infoBox}">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="color: #6b7280; padding: 6px 0; font-size: 13px;">Piano:</td>
+            <td style="color: #111827; padding: 6px 0; font-weight: 600; font-size: 13px; text-align: right;">${planName}</td>
+          </tr>
+          <tr>
+            <td style="color: #6b7280; padding: 6px 0; font-size: 13px;">Fatturazione:</td>
+            <td style="color: #111827; padding: 6px 0; font-weight: 600; font-size: 13px; text-align: right;">${cycleLabel.charAt(0).toUpperCase() + cycleLabel.slice(1)}</td>
+          </tr>
+          <tr>
+            <td style="color: #6b7280; padding: 6px 0; font-size: 13px;">Stato:</td>
+            <td style="color: #059669; padding: 6px 0; font-weight: 600; font-size: 13px; text-align: right;">Attivo</td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="${emailStyles.text}">
+        Puoi iniziare subito a utilizzare tutte le funzionalità incluse nel tuo piano. La ricevuta di pagamento ti verrà inviata separatamente da Stripe.
+      </p>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${BASE_URL}/upload" style="${emailStyles.btnBlue}">
+          Inizia a Caricare
+        </a>
+      </div>
+
+      <div style="text-align: center; margin: 16px 0;">
+        <a href="${billingUrl}" style="${emailStyles.btnSecondary}">
+          Gestisci Abbonamento
+        </a>
+      </div>
+
+      <p style="${emailStyles.muted}; margin-top: 28px; text-align: center;">
+        Hai bisogno di aiuto? <a href="${BASE_URL}/contatti" style="${emailStyles.link}">Contattaci</a>
+      </p>
+    </div>
+
+    <div style="${emailStyles.footer}">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</p>
+      <p style="margin: 8px 0 0 0;">
+        <a href="${BASE_URL}/privacy" style="${emailStyles.footerLink}">Privacy</a> &middot;
+        <a href="${BASE_URL}/termini" style="${emailStyles.footerLink}">Termini</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+Abbonamento Attivato - FlyFile
+
+Ciao ${userName}, il tuo abbonamento FlyFile è stato attivato con successo!
+
+Piano: ${planName}
+Fatturazione: ${cycleLabel}
+Stato: Attivo
+
+Puoi iniziare subito a utilizzare tutte le funzionalità incluse nel tuo piano.
+
+Inizia a caricare: ${BASE_URL}/upload
+Gestisci abbonamento: ${billingUrl}
+
+Hai bisogno di aiuto? Contattaci: ${BASE_URL}/contatti
+
+---
+FlyFile - Condivisione file sicura
+  `.trim();
+
+  return { html, text };
+}
+
 // Helper function to format file size
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';

@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import MainLayout from '@/components/layout/MainLayout';
 import Link from 'next/link';
-import { AlertTriangle, Check, Upload, BarChart3 } from 'lucide-react';
+import { X, ArrowRight, Upload, Check, Shield, Zap, Users } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Pagamento Annullato - FlyFile',
@@ -11,93 +11,108 @@ export const metadata: Metadata = {
 export default function SubscriptionCancelPage() {
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 py-12">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8 text-center">
-            {/* Cancel Icon */}
-            <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <AlertTriangle className="w-10 h-10 text-white" />
-            </div>
+      {/* Hero */}
+      <div className="relative -mt-16 pt-16 overflow-hidden bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-20 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" />
 
-            {/* Cancel Message */}
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Pagamento Annullato</h1>
+        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center py-24">
+          <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-8 border border-white/30">
+            <X className="w-10 h-10 text-white" strokeWidth={2.5} />
+          </div>
 
-            <p className="text-lg text-gray-600 mb-8">
-              Il processo di pagamento è stato annullato. Nessun addebito è stato effettuato.
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
+            Pagamento annullato
+          </h1>
+          <p className="text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
+            Nessun addebito è stato effettuato. Puoi riprovare quando vuoi o continuare a usare FlyFile gratuitamente.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
+            <Link
+              href="/prezzi"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-all shadow-lg"
+            >
+              Vedi i piani
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/15 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-full hover:bg-white/25 transition-all"
+            >
+              <Upload className="w-4 h-4" />
+              Torna al caricamento
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Why FlyFile */}
+      <div className="bg-white py-20">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <span className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
+              Perché scegliere FlyFile
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-4 mb-4">
+              Condividi file senza limiti
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Passa a un piano a pagamento per sbloccare funzionalità avanzate e maggiore capacità.
             </p>
+          </div>
 
-            {/* Encouragement */}
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Perché Scegliere FlyFile?</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <Check className="w-5 h-5 text-green-500 mt-1" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">File Illimitati</p>
-                    <p className="text-sm text-gray-600">Nessun limite di dimensione</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <Check className="w-5 h-5 text-green-500 mt-1" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Sicurezza AES-256</p>
-                    <p className="text-sm text-gray-600">Crittografia enterprise-grade</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <Check className="w-5 h-5 text-green-500 mt-1" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Team Collaboration</p>
-                    <p className="text-sm text-gray-600">Piano Business</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <Check className="w-5 h-5 text-green-500 mt-1" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Analytics Avanzati</p>
-                    <p className="text-sm text-gray-600">Monitoraggio completo</p>
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-16">
+            <div className="rounded-2xl border border-gray-200 p-6 flex items-start gap-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Zap className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-1">Dimensione illimitata</h3>
+                <p className="text-sm text-gray-500">Nessun limite alla dimensione dei singoli file caricati.</p>
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Link
-                  href="/prezzi"
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center"
-                >
-                  <BarChart3 className="w-5 h-5 mr-2" />
-                  Visualizza Piani
-                </Link>
-                <Link
-                  href="/upload"
-                  className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center justify-center"
-                >
-                  Torna al Caricamento
-                </Link>
+            <div className="rounded-2xl border border-gray-200 p-6 flex items-start gap-4">
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Shield className="w-5 h-5 text-purple-600" />
               </div>
-
-              {/* Free Trial Option */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-sm text-gray-600 mb-4">
-                  Vuoi provare FlyFile prima di abbonarti?
-                </p>
-                <Link href="/" className="text-blue-600 hover:text-blue-500 font-medium inline-flex items-center">
-                  <Upload className="w-5 h-5 mr-2" />
-                  Inizia con il Piano Gratuito
-                </Link>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-1">Crittografia AES-256</h3>
+                <p className="text-sm text-gray-500">Sicurezza enterprise per ogni file condiviso.</p>
               </div>
             </div>
+            <div className="rounded-2xl border border-gray-200 p-6 flex items-start gap-4">
+              <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Users className="w-5 h-5 text-pink-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-1">Collaborazione team</h3>
+                <p className="text-sm text-gray-500">Gestisci il tuo team con il piano Business.</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-gray-200 p-6 flex items-start gap-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Check className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-1">Branding personalizzato</h3>
+                <p className="text-sm text-gray-500">Personalizza la pagina di download con il tuo brand.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Free option */}
+          <div className="bg-gray-50 rounded-2xl p-6 text-center">
+            <p className="text-gray-600 mb-4">
+              Non sei ancora pronto? Puoi continuare con il piano gratuito.
+            </p>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              <Upload className="w-4 h-4" />
+              Inizia con il piano Free
+            </Link>
           </div>
         </div>
       </div>
