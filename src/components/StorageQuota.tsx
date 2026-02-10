@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { HardDrive, AlertTriangle, Crown } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 
 interface StorageQuotaProps {
   storageUsed: number;

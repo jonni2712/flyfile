@@ -1,0 +1,1099 @@
+{
+  "common": {
+    "nav": {
+      "home": "Home",
+      "features": "Funzionalità",
+      "pricing": "Prezzi",
+      "security": "Sicurezza",
+      "aboutUs": "Chi siamo",
+      "documentation": "Documentazione",
+      "support": "Supporto",
+      "contact": "Contatti",
+      "transfers": "Trasferimenti"
+    },
+    "footer": {
+      "product": "Prodotto",
+      "support": "Supporto",
+      "legal": "Legale",
+      "description": "La piattaforma sicura per la condivisione file con crittografia AES-256 end-to-end. Pensata per professionisti e team.",
+      "allRightsReserved": "Tutti i diritti riservati.",
+      "aServiceOf": "Un servizio di",
+      "helpCenter": "Centro assistenza",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Termini di Servizio",
+      "cookiePolicy": "Cookie Policy"
+    },
+    "cta": {
+      "getStarted": "Inizia gratis",
+      "tryFree": "Prova Subito Gratis",
+      "login": "Login",
+      "register": "Iscrizione",
+      "continue": "Continua",
+      "close": "Chiudi",
+      "back": "Indietro",
+      "save": "Salva",
+      "cancel": "Annulla",
+      "viewPlans": "Vedi i Piani",
+      "startFreeNow": "Inizia Gratis Ora",
+      "contactSales": "Contatta il Sales",
+      "startWithSecurity": "Inizia con Sicurezza Massima",
+      "contactSecurityTeam": "Contatta il Security Team",
+      "trySecurity": "Prova la Sicurezza",
+      "readMore": "Scopri di più"
+    },
+    "errors": {
+      "somethingWrong": "Qualcosa è andato storto",
+      "unexpectedError": "Si è verificato un errore imprevisto. Il nostro team è stato notificato e stiamo lavorando per risolvere il problema.",
+      "tryAgain": "Riprova",
+      "goHome": "Torna alla Home",
+      "persistentProblem": "Problema persistente?",
+      "contactSupport": "Contatta il supporto",
+      "secureSharing": "FlyFile - Condivisione file sicura"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Invia file in modo sicuro, veloce e semplice",
+      "subtitle": "Condividi file fino a 5GB con crittografia AES-256 end-to-end. Gratis, senza registrazione."
+    },
+    "upload": {
+      "dropzone": "Trascina i file qui o clicca per selezionare",
+      "expiryOptions": {
+        "1day": "1 Giorno",
+        "3days": "3 Giorni",
+        "5days": "5 Giorni",
+        "1week": "1 Settimana",
+        "2weeks": "2 Settimane",
+        "1month": "1 Mese",
+        "3months": "3 Mesi",
+        "1year": "1 Anno"
+      },
+      "accessControl": {
+        "public": "Pubblico",
+        "publicDesc": "Chiunque abbia il link può accedere. Ricevi una notifica la prima volta che i tuoi file vengono scaricati.",
+        "tracked": "Tracciato",
+        "trackedDesc": "Chiunque abbia il link può accedere dopo autenticazione. Ricevi notifiche dettagliate per ogni download.",
+        "limited": "Limitato",
+        "limitedDesc": "Solo i destinatari specificati possono accedere a questo trasferimento. Ricevi notifiche dettagliate per ogni download."
+      },
+      "viewOptions": {
+        "previewDownload": "Anteprima e download",
+        "previewDownloadDesc": "I destinatari possono visualizzare i file e scaricarli.",
+        "downloadOnly": "Solo download",
+        "downloadOnlyDesc": "I destinatari possono solo scaricare i file. L'anteprima non sarà disponibile.",
+        "previewOnly": "Solo anteprima",
+        "previewOnlyDesc": "I destinatari possono accedere solo a un'anteprima dei file."
+      },
+      "backToOptions": "Torna alle opzioni",
+      "accessControlTitle": "Controllo accessi",
+      "senderName": "Nome mittente",
+      "password": "Password",
+      "deliveryEmail": "Email",
+      "deliveryLink": "Link",
+      "sendEmail": "Invia e-mail",
+      "createLink": "Crea link",
+      "viewOptionsLabel": "Opzioni di visualizzazione",
+      "setPassword": "Imposta password",
+      "proPlanRequired": "Piano Pro richiesto",
+      "addFiles": "Aggiungi file",
+      "addFolder": "Aggiungi cartella",
+      "addMore": "+ Aggiungi",
+      "fileCount": "File ({count}) — {size}",
+      "maxFiles": "Max {max} file — Trascina qui o usa i pulsanti sopra",
+      "maxFilesUnlimited": "Max illimitati file — Trascina qui o usa i pulsanti sopra",
+      "recipientEmail": "Email destinatario",
+      "yourEmail": "La tua email",
+      "titlePlaceholder": "Titolo",
+      "messagePlaceholder": "Messaggio (opzionale)",
+      "advancedOptions": "Opzioni avanzate",
+      "transfer": "Trasferisci",
+      "transferWithSize": "Trasferisci ({size})",
+      "uploading": "Caricamento in corso...",
+      "sendingCode": "Invio codice...",
+      "tagline": "Condividi file fino a {max} file con crittografia end-to-end",
+      "taglineUnlimited": "Condividi file illimitati con crittografia end-to-end",
+      "emailAutoNote": "Per i trasferimenti via email, i destinatari del trasferimento sono autorizzati automaticamente.",
+      "maxFilesError": "Puoi caricare massimo {max} file per trasferimento.",
+      "insufficientSpace": "Spazio insufficiente. Hai {available} disponibili, ma stai cercando di caricare {total}. Passa a un piano superiore per più spazio.",
+      "enterEmailToProceed": "Inserisci la tua email per procedere.",
+      "selectFileError": "Seleziona almeno un file da caricare.",
+      "enterTitleError": "Inserisci un titolo per il trasferimento.",
+      "enterRecipientEmail": "Inserisci l'email del destinatario.",
+      "uploadError": "Errore durante il caricamento",
+      "connectionError": "Errore di connessione. Riprova.",
+      "codeSendError": "Errore nell'invio del codice"
+    },
+    "verification": {
+      "title": "Verifica la tua Email",
+      "codeSent": "Abbiamo inviato un codice di 6 cifre a:",
+      "codeLabel": "Codice di Verifica",
+      "codePlaceholder": "000000",
+      "cancel": "Annulla",
+      "verifying": "Verifica...",
+      "verify": "Verifica",
+      "resendPrompt": "Non hai ricevuto il codice? Reinvia",
+      "resending": "Invio in corso...",
+      "enterSixDigits": "Inserisci un codice di 6 cifre",
+      "invalidCode": "Codice non valido"
+    },
+    "success": {
+      "title": "Upload Completato!",
+      "emailSent": "Il link è stato inviato al destinatario via email.",
+      "shareLinkPrompt": "Condividi il link qui sotto con il destinatario.",
+      "customLink": "Link Personalizzato",
+      "standardLink": "Link Standard",
+      "downloadLink": "Link di Download",
+      "linkCopied": "Link copiato negli appunti!",
+      "filesUploaded": "File caricati:",
+      "totalSize": "Dimensione totale:",
+      "expiry": "Scadenza:",
+      "expiryDays": "{days} giorni",
+      "openLink": "Apri Link",
+      "newUpload": "Nuovo Upload",
+      "close": "Chiudi"
+    }
+  },
+  "pricing": {
+    "title": "Piani e prezzi",
+    "subtitle": "Che tu stia inviando grandi file per lavoro o per condividere i tuoi progetti creativi, abbiamo il piano giusto per te.",
+    "monthly": "Una volta al mese",
+    "annual": "Annuale",
+    "annualDiscount": "-20%",
+    "perMonth": "Al mese, fatturato {billing}.",
+    "billedMonthly": "mensilmente",
+    "billedAnnually": "annualmente",
+    "freeForever": "Goditi FlyFile gratuitamente",
+    "currentPlan": "Piano attuale",
+    "activePlan": "Piano attivo",
+    "mostPopular": "Più popolare",
+    "loading": "Caricamento...",
+    "chooseTitle": "Scegli il piano che fa per te",
+    "chooseSubtitle": "Confronta tutte le funzionalità dei nostri piani",
+    "featureLabel": "Funzionalità",
+    "popular": "Popolare",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "Per iniziare con condivisioni basilari",
+        "cta": "Crea un account",
+        "features": {
+          "0": "Condividi e ricevi fino a 5GB/mese",
+          "1": "10 trasferimenti al mese",
+          "2": "Conservazione 5 giorni",
+          "3": "Crittografia AES-256",
+          "4": "Dimensione file illimitata"
+        }
+      },
+      "starter": {
+        "name": "Starter",
+        "description": "Per professionisti e piccoli team",
+        "cta": "Continua",
+        "features": {
+          "0": "Condividi e ricevi fino a 300GB/mese",
+          "1": "15 trasferimenti al mese",
+          "2": "Conservazione 7 giorni",
+          "3": "Dashboard avanzata",
+          "4": "Dimensione file illimitata"
+        }
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Per team e agenzie creative",
+        "cta": "Continua",
+        "features": {
+          "0": "Condividi e ricevi fino a 500GB/mese",
+          "1": "30 trasferimenti al mese",
+          "2": "Conservazione 30 giorni",
+          "3": "Protezione password",
+          "4": "UI personalizzabile",
+          "5": "Dimensione file illimitata"
+        }
+      },
+      "business": {
+        "name": "Business",
+        "description": "Per organizzazioni e grandi team",
+        "cta": "Continua",
+        "badge": "Migliore per le aziende",
+        "features": {
+          "0": "Condividi e ricevi illimitato",
+          "1": "Trasferimenti illimitati",
+          "2": "Conservazione 1 anno",
+          "3": "Gestione team avanzata",
+          "4": "3 membri inclusi",
+          "5": "Support prioritario",
+          "6": "Dimensione file illimitata"
+        }
+      }
+    },
+    "comparison": {
+      "transfers": "Trasferimenti",
+      "customization": "Personalizzazione",
+      "teamManagement": "Team e gestione",
+      "unlimitedFileSize": "Dimensione file illimitata",
+      "monthlyStorage": "Storage mensile",
+      "monthlyTransfers": "Trasferimenti al mese",
+      "fileRetention": "Conservazione file",
+      "aesEncryption": "Crittografia AES-256",
+      "customDownloadPage": "Pagina di download personalizzata",
+      "customEmails": "Email personalizzate",
+      "customBranding": "Branding personalizzato",
+      "advancedDashboard": "Dashboard avanzata",
+      "teamManagementFeature": "Gestione team",
+      "includedMembers": "Membri inclusi",
+      "passwordProtection": "Protezione password",
+      "prioritySupport": "Supporto prioritario",
+      "unlimited": "Illimitato",
+      "unlimitedPlural": "Illimitati",
+      "5gb": "5 GB",
+      "300gb": "300 GB",
+      "500gb": "500 GB",
+      "5days": "5 giorni",
+      "7days": "7 giorni",
+      "30days": "30 giorni",
+      "1year": "1 anno"
+    },
+    "faq": {
+      "title": "Domande frequenti",
+      "subtitle": "Tutto quello che devi sapere sui nostri piani e servizi",
+      "items": {
+        "0": {
+          "question": "Cosa succede dopo che mi iscrivo e pago?",
+          "answer": "Dopo il pagamento, il tuo piano viene attivato immediatamente. Avrai accesso a tutte le funzionalità incluse nel piano scelto e potrai iniziare a inviare file subito."
+        },
+        "1": {
+          "question": "I miei destinatari devono registrarsi?",
+          "answer": "No, i destinatari non devono registrarsi per scaricare i file. Riceveranno un link di download via email o potrai condividere il link direttamente."
+        },
+        "2": {
+          "question": "Posso ricevere trasferimenti più grandi da chiunque?",
+          "answer": "Sì, chiunque può inviarti file tramite FlyFile. La dimensione massima del trasferimento dipende dal piano del mittente."
+        },
+        "3": {
+          "question": "Come posso aggiungere (e rimuovere) membri del team?",
+          "answer": "Con il piano Business puoi gestire i membri del team dalla dashboard. Vai su Team > Invita membro per aggiungere nuovi utenti, oppure rimuovili dalla lista membri."
+        },
+        "4": {
+          "question": "Quali metodi di pagamento posso utilizzare?",
+          "answer": "Accettiamo tutte le principali carte di credito e debito (Visa, Mastercard, American Express) tramite Stripe. Il pagamento è sicuro e crittografato."
+        },
+        "5": {
+          "question": "Cosa succede se supero il mio limite di archiviazione?",
+          "answer": "Se raggiungi il limite di storage del tuo piano, non potrai caricare nuovi file fino al rinnovo mensile o fino a quando non passi a un piano superiore."
+        },
+        "6": {
+          "question": "Posso cambiare piano in qualsiasi momento?",
+          "answer": "Sì, puoi effettuare l'upgrade o il downgrade del tuo piano in qualsiasi momento. Le modifiche si applicheranno al prossimo ciclo di fatturazione."
+        },
+        "7": {
+          "question": "Offrite sconti per il pagamento annuale?",
+          "answer": "Sì, pagando annualmente ottieni uno sconto del 20% su tutti i piani."
+        }
+      }
+    },
+    "cta": {
+      "title": "Pronto per iniziare?",
+      "subtitle": "Crea il tuo account gratuito e inizia a condividere file in modo sicuro.",
+      "button": "Crea un account gratis"
+    }
+  },
+  "features": {
+    "hero": {
+      "badge": "Funzionalità Avanzate",
+      "title": "Tutto quello che serve per",
+      "titleItalic": "condividere in sicurezza",
+      "subtitle": "Scopri le funzionalità enterprise-grade che rendono FlyFile la scelta preferita per professionisti e aziende di tutto il mondo."
+    },
+    "core": {
+      "label": "Funzionalità principali",
+      "title": "Sicurezza, condivisione e analytics",
+      "subtitle": "FlyFile combina sicurezza enterprise, facilità d'uso e prestazioni elevate per offrirti la migliore esperienza di condivisione file.",
+      "encryption": {
+        "title": "Crittografia AES-256",
+        "description": "Ogni file è protetto con crittografia end-to-end di livello militare. I tuoi dati sono al sicuro anche se i nostri server vengono compromessi.",
+        "feature1": "Chiavi uniche per ogni file",
+        "feature2": "Crittografia lato server",
+        "feature3": "Standard bancario"
+      },
+      "sharing": {
+        "title": "Condivisione Intelligente",
+        "description": "Link personalizzabili, scadenze automatiche e controlli di accesso avanzati per ogni tipo di condivisione.",
+        "feature1": "Link con scadenza personalizzata",
+        "feature2": "Protezione con password",
+        "feature3": "Limitazioni di download"
+      },
+      "analytics": {
+        "title": "Analytics Avanzate",
+        "description": "Monitora chi, quando e come accede ai tuoi file con analytics dettagliate in tempo reale.",
+        "feature1": "Tracking download in tempo reale",
+        "feature2": "Geolocalizzazione accessi",
+        "feature3": "Statistiche browser e OS"
+      }
+    },
+    "advanced": {
+      "label": "Funzionalità avanzate",
+      "title": "Strumenti per team e sviluppatori",
+      "subtitle": "Strumenti professionali per team e organizzazioni che hanno bisogno di controllo completo sui loro dati.",
+      "team": {
+        "title": "Gestione Team",
+        "description": "Collabora in sicurezza con il tuo team. Invita membri e monitora l'attività di gruppo.",
+        "feature1": "Inviti via email",
+        "feature2": "Fino a 3 membri inclusi",
+        "feature3": "Dashboard condivisa",
+        "feature4": "Analytics di team"
+      },
+      "api": {
+        "title": "API REST",
+        "description": "Integra FlyFile nei tuoi workflow esistenti con la nostra API REST completa e documentazione dettagliata.",
+        "feature1": "Endpoint completi",
+        "feature2": "Autenticazione Bearer Token",
+        "feature3": "Esempi di codice",
+        "feature4": "Webhook real-time"
+      }
+    },
+    "stats": {
+      "label": "Prestazioni e scalabilità",
+      "title": "Infrastruttura pensata per crescere",
+      "subtitle": "Infrastruttura cloud progettata per gestire qualsiasi volume di dati con prestazioni costanti.",
+      "uptime": "Uptime SLA",
+      "fileSize": "Dimensione file",
+      "unlimited": "Illimitato",
+      "encryption": "Crittografia",
+      "cdn": "CDN globale"
+    },
+    "cta": {
+      "title": "Pronto a iniziare?",
+      "subtitle": "Unisciti a migliaia di professionisti che hanno scelto FlyFile per le loro esigenze di condivisione file sicura."
+    }
+  },
+  "security": {
+    "hero": {
+      "badge": "Sicurezza Enterprise",
+      "title": "La tua sicurezza è la nostra",
+      "titleLine2": "priorità assoluta",
+      "subtitle": "Standard di sicurezza enterprise, conformità GDPR e crittografia di livello militare per proteggere i tuoi dati più importanti."
+    },
+    "encryption": {
+      "title": "Crittografia End-to-End",
+      "subtitle": "Ogni file è protetto con la stessa crittografia utilizzata da banche e governi. I tuoi dati sono al sicuro, sempre.",
+      "aesTitle": "Crittografia AES-256",
+      "aesDescription": "Utilizziamo lo standard di crittografia AES-256, lo stesso utilizzato dal governo americano per i documenti top-secret. Ogni file riceve una chiave di crittografia unica che viene generata automaticamente.",
+      "uniqueKeys": "Chiavi uniche per ogni singolo file",
+      "serverSide": "Crittografia lato server prima dello storage",
+      "secureDecrypt": "Decrittografia sicura al momento del download",
+      "howItWorks": "Come Funziona",
+      "step1Title": "Upload",
+      "step1Desc": "Il file viene crittografato sul nostro server prima dello storage",
+      "step2Title": "Storage",
+      "step2Desc": "Il file crittografato viene archiviato in modo sicuro",
+      "step3Title": "Download",
+      "step3Desc": "Il file viene decrittografato solo al momento del download autorizzato"
+    },
+    "features": {
+      "title": "Funzionalità di Sicurezza",
+      "subtitle": "Protezione a 360 gradi per ogni aspetto della condivisione dei tuoi file.",
+      "secureTransfer": {
+        "title": "Trasferimenti Sicuri",
+        "description": "Tutte le comunicazioni avvengono tramite HTTPS con certificati SSL/TLS per garantire che i dati in transito siano sempre protetti.",
+        "feature1": "Certificati SSL/TLS",
+        "feature2": "HTTPS obbligatorio",
+        "feature3": "Protezione HSTS"
+      },
+      "accessControl": {
+        "title": "Controllo Accessi",
+        "description": "Controlla chi può accedere ai tuoi file con protezione password, scadenze automatiche e limitazioni di download.",
+        "feature1": "Protezione password",
+        "feature2": "Scadenze personalizzate",
+        "feature3": "Limitazioni download"
+      },
+      "monitoring": {
+        "title": "Monitoraggio Sicurezza",
+        "description": "Monitoriamo continuamente l'accesso ai tuoi file e ti forniamo log dettagliati per tracciare ogni attività.",
+        "feature1": "Log accessi completi",
+        "feature2": "Geolocalizzazione IP",
+        "feature3": "Alert in tempo reale"
+      }
+    },
+    "compliance": {
+      "title": "Conformità e Standard",
+      "subtitle": "Rispettiamo le normative europee per la protezione dei dati e implementiamo le migliori pratiche di sicurezza.",
+      "gdpr": {
+        "title": "GDPR Compliant",
+        "description": "Completamente conforme al Regolamento Generale sulla Protezione dei Dati dell'Unione Europea."
+      },
+      "aes": {
+        "title": "Crittografia AES-256",
+        "description": "Standard di crittografia di livello bancario per proteggere tutti i tuoi file in transito e a riposo."
+      },
+      "eu": {
+        "title": "Server in Europa",
+        "description": "I tuoi dati sono archiviati su server europei con CDN globale Cloudflare per prestazioni ottimali."
+      }
+    },
+    "infrastructure": {
+      "title": "Sicurezza dell'Infrastruttura",
+      "subtitle": "La nostra infrastruttura è progettata con sicurezza multi-livello per proteggere i tuoi dati a ogni strato.",
+      "cloud": {
+        "title": "Infrastruttura Cloud",
+        "description": "Utilizziamo Cloudflare R2 per lo storage dei file, garantendo velocità globale e affidabilità enterprise.",
+        "feature1": "CDN globale Cloudflare",
+        "feature2": "Storage ridondante multi-regione",
+        "feature3": "99.9% di uptime SLA"
+      },
+      "network": {
+        "title": "Sicurezza di Rete",
+        "description": "Protezione multi-livello con firewall avanzati, sistemi di rilevamento intrusioni e monitoraggio continuo.",
+        "feature1": "Firewall avanzati e WAF",
+        "feature2": "Sistemi IDS/IPS in tempo reale",
+        "feature3": "Protezione DDoS avanzata"
+      }
+    },
+    "bestPractices": {
+      "title": "Best Practice di Sicurezza",
+      "subtitle": "Consigli per massimizzare la sicurezza dei tuoi trasferimenti di file con FlyFile.",
+      "passwords": {
+        "title": "Password Forti",
+        "description": "Usa password complesse per proteggere i trasferimenti sensibili"
+      },
+      "expiry": {
+        "title": "Scadenze Brevi",
+        "description": "Imposta scadenze rapide per ridurre la finestra di esposizione"
+      },
+      "monitor": {
+        "title": "Monitora Accessi",
+        "description": "Controlla regolarmente chi ha accesso ai tuoi file"
+      },
+      "limitSharing": {
+        "title": "Condivisione Limitata",
+        "description": "Condividi link solo con destinatari autorizzati"
+      }
+    },
+    "ctaSection": {
+      "title": "Sicurezza Garantita per i Tuoi Dati",
+      "subtitle": "Affidati alla piattaforma di condivisione file più sicura. Inizia oggi con la massima protezione per i tuoi dati sensibili."
+    }
+  },
+  "about": {
+    "breadcrumb": "Chi Siamo",
+    "hero": {
+      "badge": "La piattaforma sicura per la condivisione file",
+      "titleLine1": "Condividere file",
+      "titleLine2": "dovrebbe essere",
+      "titleLine3": "semplice e sicuro",
+      "subtitle": "FlyFile nasce con una missione chiara: rendere la condivisione di file accessibile a tutti, senza compromettere la sicurezza dei tuoi dati.",
+      "cta": "Inizia a condividere"
+    },
+    "stats": {
+      "freeTransfers": "Trasferimenti gratuiti",
+      "e2eEncryption": "Crittografia end-to-end",
+      "uptimeGuaranteed": "Uptime garantito",
+      "dataSold": "Dati venduti a terzi"
+    },
+    "mission": {
+      "label": "La nostra missione",
+      "title": "Crediamo che la privacy sia un diritto, non un privilegio",
+      "subtitle": "Troppo spesso la condivisione di file significa rinunciare al controllo sui propri dati. Con FlyFile abbiamo voluto creare qualcosa di diverso: una piattaforma dove sicurezza e semplicità vanno di pari passo, accessibile a tutti.",
+      "leftP1": "FlyFile è nato a <strong>Milano</strong> dalla convinzione che condividere file non debba essere complicato né insicuro. Ogni giorno milioni di persone inviano documenti importanti attraverso piattaforme che non garantiscono una protezione adeguata.",
+      "leftP2": "Abbiamo costruito FlyFile partendo dalla crittografia: ogni file viene cifrato con lo standard <strong>AES-256</strong> prima ancora di lasciare il tuo dispositivo. Non è un'opzione, è il modo in cui funzioniamo.",
+      "rightP1": "La nostra piattaforma è pensata per <strong>professionisti, team e aziende</strong> che hanno bisogno di trasferire file di grandi dimensioni in modo rapido, affidabile e conforme alle normative europee sulla privacy.",
+      "rightP2": "Con server in Europa e piena conformità GDPR, i tuoi dati non lasciano mai il continente e non vengono mai venduti o condivisi. <strong>La tua privacy è la nostra priorità.</strong>"
+    },
+    "values": {
+      "label": "I nostri valori",
+      "title": "Su cosa costruiamo FlyFile",
+      "subtitle": "Quattro principi che guidano ogni decisione, dal design del prodotto alla gestione dei dati.",
+      "security": {
+        "title": "Sicurezza prima di tutto",
+        "description": "Ogni file trasferito con FlyFile viene protetto con crittografia AES-256 end-to-end. I tuoi dati sono al sicuro, sempre."
+      },
+      "simplicity": {
+        "title": "Semplicità senza compromessi",
+        "description": "Condividere file deve essere semplice. Nessuna registrazione obbligatoria, nessuna procedura complessa. Carica, condividi, fatto."
+      },
+      "teams": {
+        "title": "Pensato per i team",
+        "description": "Dashboard avanzate, gestione membri, analytics dettagliate. Tutto ciò che serve al tuo team per collaborare in modo efficace."
+      },
+      "privacy": {
+        "title": "Privacy europea",
+        "description": "Server in Europa, conformità GDPR e massima trasparenza. I tuoi dati non vengono mai venduti o condivisi con terze parti."
+      }
+    },
+    "company": {
+      "label": "La nostra azienda",
+      "title": "Un prodotto di I-Creativi",
+      "description": "FlyFile è sviluppato e mantenuto da <strong>I-Creativi</strong>, agenzia digitale con sede a Milano. Progettiamo soluzioni tecnologiche che mettono l'utente al centro.",
+      "headquarters": "Sede",
+      "address": "Via Villapizzone, 26 — 20156 Milano, Italia",
+      "contactsLabel": "Contatti",
+      "ctaTitle": "Pronti ad iniziare?",
+      "ctaDescription": "Crea un account gratuito e inizia a condividere file in modo sicuro. Nessuna carta di credito richiesta.",
+      "ctaRegister": "Crea account gratuito",
+      "ctaTry": "Prova senza registrazione"
+    }
+  },
+  "contact": {
+    "breadcrumb": "Contatti",
+    "hero": {
+      "badge": "Contattaci",
+      "titleLine1": "Siamo qui per",
+      "titleLine2": "aiutarti",
+      "subtitle": "Il nostro team e disponibile per supportarti in ogni fase del tuo percorso con FlyFile."
+    },
+    "success": {
+      "title": "Messaggio inviato!",
+      "subtitle": "Ti risponderemo nel piu breve tempo possibile. Grazie per averci contattato!",
+      "sendAnother": "Invia un altro messaggio",
+      "immediateHelp": "Hai bisogno di assistenza immediata?"
+    },
+    "methods": {
+      "sales": {
+        "title": "Team Commerciale",
+        "description": "Scopri il piano perfetto per la tua organizzazione.",
+        "responseTime": "Risposta: 2-4 ore"
+      },
+      "support": {
+        "title": "Supporto Tecnico",
+        "description": "Assistenza per problemi tecnici e integrazione API.",
+        "responseTime": "Risposta: 24 ore"
+      },
+      "security": {
+        "title": "Team Security",
+        "description": "Segnalazione vulnerabilita e conformita enterprise.",
+        "responseTime": "Risposta: 12 ore"
+      }
+    },
+    "form": {
+      "label": "Scrivici",
+      "title": "Invia un messaggio",
+      "subtitle": "Compila il form e ti risponderemo nel piu breve tempo possibile.",
+      "fullName": "Nome Completo",
+      "email": "Indirizzo Email",
+      "company": "Azienda",
+      "category": "Categoria",
+      "selectCategory": "Seleziona una categoria",
+      "categorySales": "Informazioni Commerciali",
+      "categorySupport": "Supporto Tecnico",
+      "categorySecurity": "Questioni di Sicurezza",
+      "categoryBilling": "Fatturazione e Pagamenti",
+      "categoryPartnership": "Partnership",
+      "categoryOther": "Altro",
+      "message": "Messaggio",
+      "messagePlaceholder": "Descrivi la tua richiesta in dettaglio...",
+      "privacyConsent": "Acconsento al trattamento dei miei dati personali secondo la",
+      "privacyLink": "Privacy Policy",
+      "submit": "Invia Messaggio",
+      "sending": "Invio in corso...",
+      "errorDefault": "Errore nell'invio del messaggio",
+      "errorUnknown": "Errore sconosciuto",
+      "errorConnection": "Errore di connessione. Riprova."
+    },
+    "info": {
+      "title": "Informazioni Aziendali",
+      "headquarters": "Sede Principale",
+      "phone": "Telefono",
+      "supportHours": "Orari di Supporto",
+      "supportHoursValue": "Lun-Ven: 9:00 - 18:00 CET",
+      "supportHoursWeekend": "Weekend: Solo emergenze",
+      "companyName": "Ragione Sociale"
+    },
+    "links": {
+      "title": "Link Utili",
+      "documentation": "Documentazione",
+      "documentationDesc": "Guide, tutorial e API reference",
+      "security": "Sicurezza",
+      "securityDesc": "Crittografia e conformita",
+      "pricing": "Piani e Prezzi",
+      "pricingDesc": "Trova il piano perfetto per te",
+      "features": "Funzionalita",
+      "featuresDesc": "Scopri tutte le caratteristiche"
+    },
+    "emergency": {
+      "title": "Emergenze Sicurezza",
+      "description": "Per segnalazioni urgenti di sicurezza o violazioni dei dati:"
+    }
+  },
+  "documentation": {
+    "hero": {
+      "badge": "Documentazione",
+      "title": "Tutto quello che serve",
+      "titleLine2": "per iniziare",
+      "subtitle": "Guide complete, tutorial passo-passo e riferimenti API per sfruttare al massimo le potenzialità di FlyFile.",
+      "quickGuide": "Guida Rapida",
+      "apiReference": "API Reference"
+    },
+    "quickStart": {
+      "title": "Guida Rapida",
+      "subtitle": "Inizia a condividere file in modo sicuro in meno di 5 minuti.",
+      "step1": {
+        "title": "Crea Account",
+        "description": "Registrati gratuitamente per accedere a tutte le funzionalità di sicurezza e tracking.",
+        "feature1": "Email e password",
+        "feature2": "Verifica email automatica",
+        "feature3": "Accesso immediato"
+      },
+      "step2": {
+        "title": "Upload File",
+        "description": "Trascina i file nell'area di upload o selezionali dal tuo dispositivo.",
+        "feature1": "Drag & drop",
+        "feature2": "Upload multipli",
+        "feature3": "Crittografia automatica"
+      },
+      "step3": {
+        "title": "Condividi",
+        "description": "Personalizza le impostazioni di sicurezza e condividi il link generato.",
+        "feature1": "Link sicuro",
+        "feature2": "Protezione password",
+        "feature3": "Scadenza personalizzata"
+      },
+      "tips": {
+        "title": "Suggerimenti Pro",
+        "securityTitle": "Sicurezza Avanzata",
+        "securityTip1": "Usa password complesse per i file sensibili",
+        "securityTip2": "Imposta scadenze brevi per ridurre i rischi",
+        "securityTip3": "Monitora gli accessi nella dashboard",
+        "productivityTitle": "Produttività",
+        "productivityTip1": "Salva destinatari frequenti per invii rapidi",
+        "productivityTip2": "Usa template per messaggi ricorrenti",
+        "productivityTip3": "Sfrutta le API per automatizzare i workflow"
+      }
+    },
+    "featuresGuide": {
+      "title": "Guide alle Funzionalità",
+      "subtitle": "Approfondimenti dettagliati su come utilizzare al meglio ogni funzionalità di FlyFile.",
+      "upload": {
+        "title": "Upload Avanzato",
+        "description": "Gestione file multipli, validazione automatica e progress tracking in tempo reale."
+      },
+      "security": {
+        "title": "Impostazioni Sicurezza",
+        "description": "Protezione password, controlli di accesso e configurazioni di scadenza avanzate."
+      },
+      "analytics": {
+        "title": "Analytics e Reporting",
+        "description": "Monitoraggio accessi, statistiche dettagliate e report esportabili."
+      },
+      "team": {
+        "title": "Gestione Team",
+        "description": "Inviti membri, ruoli personalizzati e dashboard collaborativa per team business."
+      },
+      "api": {
+        "title": "Integrazione API",
+        "description": "REST API completa, autenticazione OAuth2 e SDK per linguaggi popolari."
+      },
+      "troubleshooting": {
+        "title": "Risoluzione Problemi",
+        "description": "Soluzioni ai problemi comuni, FAQ dettagliate e procedure di diagnostic."
+      }
+    },
+    "apiReference": {
+      "title": "API Reference",
+      "subtitle": "Documentazione completa per integrare FlyFile nei tuoi sistemi e workflow.",
+      "baseEndpoint": "Endpoint Base",
+      "authentication": "Autenticazione",
+      "bearerToken": "Bearer Token (Laravel Sanctum)",
+      "getToken": "Come ottenere il token",
+      "getTokenDesc": "Genera un token API dalla tua dashboard utente nella sezione \"Impostazioni API\" (richiede piano Business).",
+      "mainEndpoints": "Endpoint Principali",
+      "createTransfer": "Crea un nuovo trasferimento file",
+      "getTransfer": "Recupera dettagli trasferimento",
+      "getAnalytics": "Statistiche e analytics",
+      "inviteTeam": "Invita membri al team",
+      "codeExamples": "Esempi di Codice"
+    },
+    "faq": {
+      "title": "Domande Frequenti",
+      "subtitle": "Risposte alle domande più comuni su FlyFile e le sue funzionalità.",
+      "q1": "Come funziona la crittografia end-to-end?",
+      "a1": "Ogni file caricato su FlyFile viene crittografato con AES-256 utilizzando una chiave unica generata automaticamente. Il file viene crittografato sul nostro server prima di essere archiviato e viene decrittografato solo quando un utente autorizzato lo scarica. Questo garantisce che nemmeno noi possiamo accedere ai contenuti dei tuoi file.",
+      "q2": "Quali sono i limiti di trasferimento?",
+      "a2": "La dimensione dei singoli file è illimitata su tutti i piani. Il limite riguarda la quota mensile: Free (5GB/mese), Starter (300GB/mese), Pro (500GB/mese), Business (illimitato). Ogni piano ha anche un limite di trasferimenti mensili.",
+      "q3": "I file vengono eliminati automaticamente?",
+      "a3": "Sì, tutti i file hanno una scadenza automatica basata sul tuo piano: Free (5 giorni), Starter (7 giorni), Pro (30 giorni), Business (1 anno). Con i piani Pro e Business puoi personalizzare la scadenza. Una volta scaduti, i file vengono eliminati definitivamente.",
+      "q4": "Posso integrare FlyFile nei miei sistemi?",
+      "a4": "Sì! Con il piano Business hai accesso alla nostra API REST completa con autenticazione Bearer Token e webhook per notifiche in tempo reale. La documentazione completa è disponibile nella sezione API Reference di questa pagina.",
+      "q5": "FlyFile è conforme al GDPR?",
+      "a5": "Sì, FlyFile è completamente conforme al GDPR e ad altri standard internazionali per la protezione dei dati. Abbiamo implementato tutte le misure tecniche e organizzative necessarie per garantire la sicurezza dei dati personali e rispettare i diritti degli utenti."
+    },
+    "ctaSection": {
+      "title": "Hai bisogno di aiuto?",
+      "subtitle": "Il nostro team di supporto è qui per aiutarti. Contattaci per assistenza tecnica, domande sui piani o supporto per l'integrazione.",
+      "contactSupport": "Contatta il Supporto"
+    }
+  },
+  "supportPage": {
+    "hero": {
+      "badge": "Beta Testing Program",
+      "title": "Benvenuto, Beta Tester",
+      "subtitle": "Grazie per aiutarci a migliorare FlyFile! Il tuo feedback è prezioso per noi."
+    },
+    "quickActions": {
+      "title": "Come possiamo aiutarti?",
+      "subtitle": "Scegli una delle opzioni qui sotto per contattarci rapidamente.",
+      "reportBug": {
+        "title": "Segnala un Bug",
+        "description": "Hai trovato qualcosa che non funziona? Faccelo sapere!",
+        "cta": "Segnala"
+      },
+      "requestFeature": {
+        "title": "Richiedi Feature",
+        "description": "Hai un'idea per migliorare FlyFile? Condividila!",
+        "cta": "Suggerisci"
+      },
+      "askQuestion": {
+        "title": "Fai una Domanda",
+        "description": "Hai bisogno di aiuto o chiarimenti? Chiedi pure!",
+        "cta": "Chiedi Aiuto"
+      }
+    },
+    "benefits": {
+      "title": "Vantaggi Beta Tester",
+      "feature1": {
+        "bold": "3 Mesi Gratis",
+        "text": "di piano Pro o Business"
+      },
+      "feature2": {
+        "bold": "Accesso anticipato",
+        "text": "alle nuove funzionalità"
+      },
+      "feature3": {
+        "bold": "Supporto prioritario",
+        "text": "diretto dal team"
+      },
+      "feature4": {
+        "bold": "Influenza diretta",
+        "text": "sullo sviluppo del prodotto"
+      },
+      "feature5": {
+        "bold": "Badge esclusivo",
+        "text": "Beta Tester"
+      }
+    },
+    "contribute": {
+      "title": "Come Contribuire",
+      "step1": "Usa FlyFile nelle tue attività quotidiane",
+      "step2": "Segnala bug o comportamenti inaspettati",
+      "step3": "Suggerisci miglioramenti e nuove funzionalità",
+      "step4": "Fornisci feedback dettagliato sulla tua esperienza",
+      "step5": "Rispondi ai nostri sondaggi e richieste di feedback"
+    },
+    "channels": {
+      "title": "Altri Canali di Supporto",
+      "subtitle": "Puoi raggiungerci anche attraverso questi canali.",
+      "email": {
+        "title": "Email Diretta",
+        "value": "support@flyfile.it"
+      },
+      "docs": {
+        "title": "Documentazione",
+        "value": "Guide e tutorial"
+      }
+    },
+    "thankYou": {
+      "title": "Grazie per il Tuo Supporto!",
+      "description": "Il tuo contributo è fondamentale per rendere FlyFile il miglior servizio di condivisione file. Insieme stiamo costruendo qualcosa di grande!"
+    }
+  },
+  "legal": {
+    "privacy": {
+      "badge": "Privacy Policy",
+      "heroTitle": "La tua privacy è la nostra",
+      "heroTitleItalic": "priorità assoluta",
+      "lastUpdated": "Ultimo aggiornamento: Gennaio 2026",
+      "introLabel": "Introduzione",
+      "introTitle": "Il nostro impegno per i tuoi dati",
+      "introText": "FlyFile (\"noi\", \"nostro\" o \"la società\") è impegnata a proteggere la privacy e la sicurezza dei dati personali degli utenti (\"tu\" o \"utente\"). Questa Privacy Policy descrive come raccogliamo, utilizziamo, conserviamo e proteggiamo le tue informazioni quando utilizzi il nostro servizio di condivisione file sicura.",
+      "dataCollectedLabel": "Dati raccolti",
+      "dataCollectedTitle": "Informazioni che Raccogliamo",
+      "accountInfo": "Informazioni di Account",
+      "usageData": "Dati di Utilizzo",
+      "contactTitle": "Contattaci",
+      "dpo": "Data Protection Officer",
+      "generalSupport": "Supporto Generale",
+      "gdprNote": "Ci impegniamo a rispondere alle tue richieste entro 30 giorni come richiesto dal GDPR."
+    },
+    "terms": {
+      "badge": "Termini di Servizio",
+      "heroTitle": "Termini e Condizioni",
+      "heroTitleLine2": "d'uso del servizio",
+      "lastUpdated": "Ultimo aggiornamento: Gennaio 2026"
+    },
+    "cookies": {
+      "badge": "Cookie Policy",
+      "heroTitle": "Informativa sui Cookie",
+      "heroSubtitle": "Trasparenza totale su come utilizziamo i cookie per migliorare la tua esperienza su FlyFile.",
+      "lastUpdated": "Ultimo aggiornamento: Gennaio 2026",
+      "whatAreCookies": "Cosa sono i Cookie?",
+      "typesTitle": "Tipi di Cookie Utilizzati",
+      "detailTitle": "Dettaglio Cookie Utilizzati",
+      "managementTitle": "Gestione dei Cookie",
+      "browserTitle": "Impostazioni del Browser",
+      "questionsTitle": "Domande sui Cookie?"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Accedi a FlyFile",
+      "subtitle": "Inserisci la tua email per continuare",
+      "loading": "Caricamento...",
+      "continue": "Continua",
+      "or": "oppure",
+      "googleLogin": "Accedi con Google",
+      "noAccount": "Non hai un account?",
+      "register": "Registrati",
+      "backToHome": "Torna alla home",
+      "loggingIn": "Accesso in corso...",
+      "enterPassword": "Inserisci la password",
+      "passwordFor": "Accedi con la tua password per",
+      "password": "Password",
+      "loginButton": "Accedi",
+      "useCodeInstead": "Usa codice invece",
+      "forgotPassword": "Password dimenticata?",
+      "checkEmail": "Controlla la tua email",
+      "codeSentTo": "Abbiamo inviato un codice a",
+      "verifying": "Verifica in corso...",
+      "resendIn": "Invia di nuovo tra {seconds}s",
+      "resend": "Invia di nuovo",
+      "invalidPassword": "Password non valida",
+      "invalidCode": "Codice non valido",
+      "codeSendError": "Errore nell'invio del codice",
+      "googleFailed": "Accesso con Google fallito"
+    },
+    "register": {
+      "title": "Crea il tuo account",
+      "subtitle": "Inizia gratis, nessuna carta richiesta",
+      "sending": "Invio in corso...",
+      "continue": "Continua",
+      "termsAgreement": "Creando un account, si accettano i",
+      "termsLink": "Termini di servizio",
+      "and": "e la",
+      "privacyLink": "Dichiarazione sulla privacy e cookie",
+      "or": "oppure",
+      "googleRegister": "Registrati con Google",
+      "hasAccount": "Hai già un account?",
+      "login": "Accedi",
+      "checkEmail": "Controlla la tua email",
+      "codeSentTo": "Abbiamo inviato un codice a",
+      "verifying": "Verifica in corso...",
+      "createAccount": "Crea account",
+      "registering": "Registrazione in corso...",
+      "codeSendError": "Errore nell'invio del codice",
+      "invalidCode": "Codice non valido",
+      "googleFailed": "Registrazione con Google fallita",
+      "resendIn": "Invia di nuovo tra {seconds}s",
+      "resend": "Invia di nuovo",
+      "backToHome": "Torna alla home"
+    }
+  },
+  "navbar": {
+    "transfers": "Trasferimenti",
+    "pricing": "Prezzi",
+    "aboutUs": "Chi siamo",
+    "support": "Supporto",
+    "login": "Login",
+    "register": "Iscrizione",
+    "upgrade": "Effettua l'upgrade",
+    "plan": "Piano {plan}",
+    "removeLimits": "Rimuovi limiti",
+    "accountSettings": "Impostazioni account",
+    "help": "Assistenza",
+    "legalPrivacy": "Informazioni legali e Privacy",
+    "signOut": "Esci",
+    "transfersPanel": {
+      "title": "Trasferimenti",
+      "usedOf": "utilizzati su",
+      "sent": "Inviati",
+      "requested": "Richiesti",
+      "received": "Ricevuti",
+      "sortBy": "Ordina per:",
+      "sortDate": "Data",
+      "sortSize": "Dimensioni",
+      "sortTitle": "Titolo",
+      "sortExpiry": "Data di scadenza",
+      "searchPlaceholder": "Cerca per titolo, nome del file o e-mail",
+      "expired": "Scaduto",
+      "active": "Attivo",
+      "loading": "Caricamento...",
+      "linkCopied": "Link copiato!",
+      "copyLink": "Copia link",
+      "open": "Apri",
+      "delete": "Elimina",
+      "confirmDelete": "Sei sicuro di voler eliminare questo trasferimento?",
+      "emptyTitle": "Tutti i trasferimenti che invii saranno visualizzati qui",
+      "emptyDesc": "Controlla lo stato del download oppure modifica, inoltra o elimina il trasferimento",
+      "requestedTitle": "Le richieste di file saranno visualizzate qui",
+      "requestedDesc": "Quando richiedi file a qualcuno, troverai i risultati in questa sezione",
+      "receivedTitle": "I trasferimenti ricevuti saranno visualizzati qui",
+      "receivedDesc": "Quando qualcuno ti invia dei file, li troverai in questa sezione",
+      "transfersUsage": "Hai utilizzato {used}/{total} trasferimenti negli ultimi 30 giorni. Ogni trasferimento smette di contare verso il tuo limite 30 giorni dopo essere stato caricato.",
+      "storageUsage": "Hai caricato {used}/{total} negli ultimi 30 giorni. Ogni trasferimento smette di contare verso il tuo limite 30 giorni dopo essere stato caricato.",
+      "increaseLimit": "Aumenta il limite",
+      "unlimited": "Illimitato"
+    }
+  },
+  "cookieBanner": {
+    "title": "Utilizziamo i Cookie",
+    "description": "Utilizziamo cookie essenziali per il funzionamento del sito e cookie opzionali per migliorare la tua esperienza.",
+    "learnMore": "Scopri di più nella nostra Cookie Policy",
+    "managePreferences": "Gestisci Preferenze",
+    "essentialOnly": "Solo Essenziali",
+    "acceptAll": "Accetta Tutti",
+    "preferencesTitle": "Preferenze Cookie",
+    "preferencesDescription": "Personalizza le tue preferenze sui cookie. Puoi modificare queste impostazioni in qualsiasi momento.",
+    "essential": {
+      "title": "Cookie Essenziali",
+      "badge": "Sempre Attivi",
+      "description": "Necessari per il funzionamento del sito web. Include autenticazione, sicurezza e preferenze di base."
+    },
+    "functional": {
+      "title": "Cookie Funzionali",
+      "description": "Migliorano l'esperienza utente con preferenze personalizzate, impostazioni dell'interfaccia e funzionalità avanzate."
+    },
+    "analytics": {
+      "title": "Cookie Analitici",
+      "description": "Ci aiutano a capire come utilizzi il sito per migliorare le prestazioni. Tutti i dati sono anonimi e aggregati."
+    },
+    "savePreferences": "Salva Preferenze",
+    "cancel": "Annulla"
+  },
+  "languageSwitcher": {
+    "label": "Lingua"
+  },
+  "download": {
+    "loadingTransfer": "Caricamento trasferimento...",
+    "notFoundTitle": "Transfer Non Trovato",
+    "notFoundDescription": "Il trasferimento che stai cercando non esiste o potrebbe essere stato eliminato.",
+    "backToHome": "Torna alla Home",
+    "expiredTitle": "Transfer Scaduto",
+    "expiredDescription": "Questo trasferimento è scaduto e i file non sono più disponibili per il download.",
+    "protectedTitle": "Transfer Protetto",
+    "protectedDescription": "Inserisci la password per accedere ai file",
+    "passwordPlaceholder": "Inserisci la password",
+    "verifyPassword": "Verifica Password",
+    "verifying": "Verifica...",
+    "incorrectPassword": "Password non corretta",
+    "passwordVerifyError": "Errore nella verifica della password",
+    "downloadUnavailable": "Download non disponibile",
+    "downloadError": "Errore durante il download. Riprova.",
+    "encryptedDownloadError": "Impossibile scaricare il file cifrato",
+    "downloading": "Download in corso...",
+    "downloadAll": "Scarica",
+    "downloadAllFiles": "tutti i file",
+    "user": "Utente",
+    "fileCount": "{count} file",
+    "encryptionBadge": "Crittografia AES-256 end-to-end",
+    "httpsSecure": "Connessione sicura HTTPS",
+    "preview": "Anteprima",
+    "download": "Scarica",
+    "poweredBy": "Powered by ",
+    "promoText": "Vuoi inviare file in modo sicuro? ",
+    "promoSuffix": " — Prova gratis"
+  },
+  "subscription": {
+    "success": {
+      "title": "Pagamento completato!",
+      "metaTitle": "Pagamento Completato - FlyFile",
+      "metaDescription": "Il tuo abbonamento FlyFile è stato attivato con successo.",
+      "badge": "Abbonamento Attivato",
+      "subtitle": "Benvenuto nella famiglia FlyFile. Il tuo piano è ora attivo e puoi iniziare subito a utilizzare tutte le funzionalità.",
+      "statusLabel": "Stato",
+      "statusValue": "Attivo",
+      "paymentLabel": "Pagamento",
+      "paymentValue": "Confermato",
+      "receiptLabel": "Ricevuta",
+      "receiptValue": "Inviata via email",
+      "nextStepsBadge": "Inizia subito",
+      "nextStepsTitle": "Cosa puoi fare adesso",
+      "nextStepsSubtitle": "Il tuo piano è attivo immediatamente. Ecco come iniziare a sfruttare FlyFile al massimo.",
+      "uploadTitle": "Carica i tuoi file",
+      "uploadDescription": "Inizia a condividere file con crittografia AES-256 e link personalizzati.",
+      "uploadCta": "Vai al caricamento",
+      "manageTitle": "Gestisci abbonamento",
+      "manageDescription": "Visualizza fatture, modifica piano o aggiorna i dati di pagamento.",
+      "manageCta": "Vai alle impostazioni",
+      "emailConfirmTitle": "Conferma via email",
+      "emailConfirmDescription": "Riceverai a breve un'email di conferma con i dettagli del tuo abbonamento e la ricevuta di pagamento.",
+      "needHelp": "Hai bisogno di aiuto?",
+      "contactUs": "Contattaci",
+      "helpCenter": "Centro assistenza"
+    },
+    "cancelled": {
+      "title": "Pagamento annullato",
+      "metaTitle": "Pagamento Annullato - FlyFile",
+      "metaDescription": "Il processo di pagamento è stato annullato.",
+      "subtitle": "Nessun addebito è stato effettuato. Puoi riprovare quando vuoi o continuare a usare FlyFile gratuitamente.",
+      "viewPlans": "Vedi i piani",
+      "backToUpload": "Torna al caricamento",
+      "whyFlyFileBadge": "Perché scegliere FlyFile",
+      "whyFlyFileTitle": "Condividi file senza limiti",
+      "whyFlyFileSubtitle": "Passa a un piano a pagamento per sbloccare funzionalità avanzate e maggiore capacità.",
+      "unlimitedSizeTitle": "Dimensione illimitata",
+      "unlimitedSizeDescription": "Nessun limite alla dimensione dei singoli file caricati.",
+      "encryptionTitle": "Crittografia AES-256",
+      "encryptionDescription": "Sicurezza enterprise per ogni file condiviso.",
+      "teamTitle": "Collaborazione team",
+      "teamDescription": "Gestisci il tuo team con il piano Business.",
+      "brandingTitle": "Branding personalizzato",
+      "brandingDescription": "Personalizza la pagina di download con il tuo brand.",
+      "notReadyText": "Non sei ancora pronto? Puoi continuare con il piano gratuito.",
+      "startFree": "Inizia con il piano Free"
+    }
+  },
+  "metadata": {
+    "login": {
+      "title": "Accedi — FlyFile",
+      "description": "Accedi al tuo account FlyFile per condividere file in modo sicuro con crittografia AES-256."
+    },
+    "register": {
+      "title": "Registrati — FlyFile",
+      "description": "Crea il tuo account FlyFile gratuito e inizia a condividere file in modo sicuro."
+    },
+    "download": {
+      "title": "Scarica File — FlyFile",
+      "description": "Scarica i file condivisi tramite FlyFile con crittografia AES-256 end-to-end."
+    },
+    "home": {
+      "title": "FlyFile — Invia File Online Gratis | Trasferimento Sicuro",
+      "description": "Invia file online gratis fino a 5GB con crittografia AES-256 end-to-end. Trasferimento file sicuro, veloce e senza registrazione. La migliore alternativa a WeTransfer."
+    },
+    "features": {
+      "title": "Funzionalità — Condivisione File Avanzata",
+      "description": "Scopri le funzionalità enterprise-grade di FlyFile: crittografia AES-256, condivisione intelligente, analytics avanzate e molto altro."
+    },
+    "pricing": {
+      "title": "Prezzi e Piani",
+      "description": "Scopri i piani di FlyFile: Free, Starter, Pro e Business. Condivisione file sicura con crittografia AES-256, a partire da 0 euro."
+    },
+    "security": {
+      "title": "Sicurezza — Crittografia AES-256",
+      "description": "Standard di sicurezza enterprise, conformità GDPR e crittografia di livello militare per proteggere i tuoi dati più importanti."
+    },
+    "about": {
+      "title": "Chi Siamo",
+      "description": "Scopri chi è FlyFile: la piattaforma italiana per la condivisione file sicura con crittografia AES-256. Nata a Milano, pensata per professionisti e team."
+    },
+    "documentation": {
+      "title": "Documentazione",
+      "description": "Guide complete, tutorial passo-passo e riferimenti API per sfruttare al massimo le potenzialità di FlyFile."
+    },
+    "support": {
+      "title": "Supporto",
+      "description": "Pagina di supporto dedicata ai beta tester di FlyFile. Segnala bug, richiedi features e ottieni aiuto."
+    },
+    "contact": {
+      "title": "Contatti",
+      "description": "Contattaci per supporto, informazioni commerciali o assistenza tecnica. Il team FlyFile è a tua disposizione."
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "description": "Informativa sulla privacy e trattamento dei dati di FlyFile. Scopri come proteggiamo i tuoi dati personali."
+    },
+    "terms": {
+      "title": "Termini di Servizio",
+      "description": "Termini e condizioni di utilizzo del servizio FlyFile. Leggi attentamente prima di utilizzare il nostro servizio di condivisione file."
+    },
+    "cookies": {
+      "title": "Cookie Policy",
+      "description": "Informativa sui cookie e le tecnologie di tracciamento utilizzate da FlyFile."
+    }
+  }
+}

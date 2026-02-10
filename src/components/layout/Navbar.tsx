@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/context/AuthContext';
 import { Menu, X, ChevronDown, Check, X as XIcon, Zap, Settings, HelpCircle, FileText, LogOut, Search, ArrowUpDown, Copy, ExternalLink, Trash2, Calendar, Download, Lock, FolderOpen } from 'lucide-react';
 import { PLANS } from '@/types';
 import { formatBytes } from '@/lib/format';
 import { collection, query, where, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { PRICING_PLANS, COMPARISON_SECTIONS, FAQ_ITEMS } from '@/data/pricing';
+import { PRICING_PLANS } from '@/data/pricing';
 
 interface TransferItem {
   id: string;
@@ -26,6 +27,47 @@ interface TransferItem {
 
 export default function Navbar() {
   const { user, userProfile, signOut } = useAuth();
+  const t = useTranslations('navbar');
+  const tp = useTranslations('pricing');
+  const tc = useTranslations('common');
+
+  // Build comparison/FAQ data from translations
+  const comparisonSections = [
+    {
+      title: tp('comparison.transfers'),
+      features: [
+        [tp('comparison.unlimitedFileSize'), true, true, true, true],
+        [tp('comparison.monthlyStorage'), tp('comparison.5gb'), tp('comparison.300gb'), tp('comparison.500gb'), tp('comparison.unlimited')],
+        [tp('comparison.monthlyTransfers'), '10', '15', '30', tp('comparison.unlimitedPlural')],
+        [tp('comparison.fileRetention'), tp('comparison.5days'), tp('comparison.7days'), tp('comparison.30days'), tp('comparison.1year')],
+        [tp('comparison.aesEncryption'), true, true, true, true],
+      ],
+    },
+    {
+      title: tp('comparison.customization'),
+      features: [
+        [tp('comparison.customDownloadPage'), false, false, true, true],
+        [tp('comparison.customEmails'), false, false, true, true],
+        [tp('comparison.customBranding'), false, false, true, true],
+      ],
+    },
+    {
+      title: tp('comparison.teamManagement'),
+      features: [
+        [tp('comparison.advancedDashboard'), false, true, true, true],
+        [tp('comparison.teamManagementFeature'), false, false, false, true],
+        [tp('comparison.includedMembers'), '1', '1', '1', '3'],
+        [tp('comparison.passwordProtection'), false, false, true, true],
+        [tp('comparison.prioritySupport'), false, false, false, true],
+      ],
+    },
+  ];
+
+  const faqItems = Array.from({ length: 8 }, (_, i) => ({
+    question: tp(`faq.items.${i}.question`),
+    answer: tp(`faq.items.${i}.answer`),
+  }));
+
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isPricingOpen, setIsPricingOpen] = useState(false);
@@ -67,7 +109,7 @@ export default function Navbar() {
         const expiresAt = data.expiresAt?.toDate();
         list.push({
           id: docSnap.id,
-          title: data.title || data.originalName || 'Trasferimento senza titolo',
+          title: data.title || data.originalName || 'Untitled',
           originalName: data.originalName,
           size: data.size,
           downloadCount: data.downloadCount || 0,
@@ -112,12 +154,12 @@ export default function Navbar() {
 
   const handleCopyLink = (id: string) => {
     navigator.clipboard.writeText(`${window.location.origin}/s/${id}`);
-    setTransferToast('Link copiato!');
+    setTransferToast(t('transfersPanel.linkCopied'));
     setTimeout(() => setTransferToast(null), 2000);
   };
 
   const handleDeleteTransfer = async (id: string, r2Key: string) => {
-    if (!confirm('Sei sicuro di voler eliminare questo trasferimento?')) return;
+    if (!confirm(t('transfersPanel.confirmDelete'))) return;
     try {
       await fetch('/api/files/delete', {
         method: 'DELETE',
@@ -132,7 +174,7 @@ export default function Navbar() {
   };
 
   const formatTransferDate = (date: Date) => {
-    return date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
   const getInitials = (name: string) => {
@@ -186,11 +228,11 @@ export default function Navbar() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        setCheckoutError(data.error || 'Errore nella creazione del checkout');
+        setCheckoutError(data.error || 'Checkout error');
       }
     } catch (error) {
       console.error('Error creating checkout:', error);
-      setCheckoutError('Errore di connessione. Riprova.');
+      setCheckoutError('Connection error');
     } finally {
       setCheckoutLoading(null);
     }
@@ -218,26 +260,26 @@ export default function Navbar() {
                   onClick={() => setIsTransfersOpen(true)}
                   className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors"
                 >
-                  Trasferimenti
+                  {t('transfers')}
                 </button>
               )}
               <button
                 onClick={() => setIsPricingOpen(true)}
                 className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors"
               >
-                Prezzi
+                {t('pricing')}
               </button>
               <Link
                 href="/chi-siamo"
                 className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors"
               >
-                Chi siamo
+                {t('aboutUs')}
               </Link>
               <Link
                 href="/supporto"
                 className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors"
               >
-                Supporto
+                {t('support')}
               </Link>
 
               {/* Separator */}
@@ -254,7 +296,7 @@ export default function Navbar() {
                         className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-l-full text-sm font-medium text-purple-600 hover:bg-purple-50 transition-colors"
                       >
                         <Zap className="w-4 h-4" />
-                        Effettua l&apos;upgrade
+                        {t('upgrade')}
                       </button>
                     )}
 
@@ -267,7 +309,7 @@ export default function Navbar() {
                     >
                       <div className="text-right">
                         <p className="text-sm font-medium text-gray-900 leading-tight">{user.email}</p>
-                        <p className="text-xs text-gray-500 leading-tight">Piano {PLANS[userProfile?.plan || 'free']?.name || 'Free'}</p>
+                        <p className="text-xs text-gray-500 leading-tight">{t('plan', { plan: PLANS[userProfile?.plan || 'free']?.name || 'Free' })}</p>
                       </div>
                       {userProfile?.photoURL ? (
                         <img
@@ -305,16 +347,16 @@ export default function Navbar() {
                       {/* Plan info + usage bars */}
                       <div className="px-4 py-3 border-b border-gray-100">
                         <p className="text-sm font-semibold text-gray-900 mb-3">
-                          Piano {PLANS[userProfile?.plan || 'free']?.name || 'Free'}
+                          {t('plan', { plan: PLANS[userProfile?.plan || 'free']?.name || 'Free' })}
                         </p>
 
                         {/* Transfers bar */}
                         <div className="mb-3">
                           <div className="flex justify-between text-xs text-gray-500 mb-1">
-                            <span>Trasferimenti</span>
+                            <span>{t('transfers')}</span>
                             <span>
                               {userProfile?.maxMonthlyTransfers === -1
-                                ? 'Illimitato'
+                                ? t('transfersPanel.unlimited')
                                 : `${userProfile?.monthlyTransfers || 0}/${userProfile?.maxMonthlyTransfers || 0}`}
                             </span>
                           </div>
@@ -336,7 +378,7 @@ export default function Navbar() {
                             <span>Storage</span>
                             <span>
                               {userProfile?.storageLimit === -1
-                                ? 'Illimitato'
+                                ? t('transfersPanel.unlimited')
                                 : `${formatBytes(userProfile?.storageUsed || 0)}/${formatBytes(userProfile?.storageLimit || 0)}`}
                             </span>
                           </div>
@@ -362,7 +404,7 @@ export default function Navbar() {
                             className="flex items-center gap-1.5 text-xs font-medium text-purple-600 hover:text-purple-800 transition-colors mt-1"
                           >
                             <Zap className="w-3.5 h-3.5" />
-                            Rimuovi limiti
+                            {t('removeLimits')}
                           </button>
                         )}
                       </div>
@@ -375,7 +417,7 @@ export default function Navbar() {
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           <Settings className="w-4 h-4 mr-3 text-gray-400" />
-                          Impostazioni account
+                          {t('accountSettings')}
                         </Link>
                         <Link
                           href="/supporto"
@@ -383,7 +425,7 @@ export default function Navbar() {
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           <HelpCircle className="w-4 h-4 mr-3 text-gray-400" />
-                          Assistenza
+                          {t('help')}
                         </Link>
                         <Link
                           href="/privacy"
@@ -391,7 +433,7 @@ export default function Navbar() {
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           <FileText className="w-4 h-4 mr-3 text-gray-400" />
-                          Informazioni legali e Privacy
+                          {t('legalPrivacy')}
                         </Link>
                       </div>
 
@@ -405,7 +447,7 @@ export default function Navbar() {
                           className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                         >
                           <LogOut className="w-4 h-4 mr-3" />
-                          Esci
+                          {t('signOut')}
                         </button>
                       </div>
                     </div>
@@ -417,13 +459,13 @@ export default function Navbar() {
                     href="/accedi"
                     className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors"
                   >
-                    Login
+                    {t('login')}
                   </Link>
                   <Link
                     href="/registrati"
                     className="px-5 py-2 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-full transition-colors"
                   >
-                    Iscrizione
+                    {t('register')}
                   </Link>
                 </div>
               )}
@@ -453,7 +495,7 @@ export default function Navbar() {
                   }}
                   className="block w-full text-left px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors"
                 >
-                  Trasferimenti
+                  {t('transfers')}
                 </button>
               )}
               <button
@@ -463,21 +505,21 @@ export default function Navbar() {
                 }}
                 className="block w-full text-left px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors"
               >
-                Prezzi
+                {t('pricing')}
               </button>
               <Link
                 href="/chi-siamo"
                 className="block px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors"
                 onClick={() => setIsOpen(false)}
               >
-                Chi siamo
+                {t('aboutUs')}
               </Link>
               <Link
                 href="/supporto"
                 className="block px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors"
                 onClick={() => setIsOpen(false)}
               >
-                Supporto
+                {t('support')}
               </Link>
             </div>
 
@@ -493,7 +535,7 @@ export default function Navbar() {
                   )}
                   <div>
                     <div className="font-medium text-sm text-gray-900">{user.email}</div>
-                    <div className="text-xs text-gray-500">Piano {PLANS[userProfile?.plan || 'free']?.name || 'Free'}</div>
+                    <div className="text-xs text-gray-500">{t('plan', { plan: PLANS[userProfile?.plan || 'free']?.name || 'Free' })}</div>
                   </div>
                 </div>
                 {(!userProfile?.plan || userProfile.plan === 'free') && (
@@ -505,7 +547,7 @@ export default function Navbar() {
                     className="mx-4 mb-2 flex items-center justify-center gap-1.5 w-[calc(100%-2rem)] py-2.5 border border-gray-200 rounded-full text-sm font-medium text-purple-600 hover:bg-purple-50 transition-colors"
                   >
                     <Zap className="w-4 h-4" />
-                    Effettua l&apos;upgrade
+                    {t('upgrade')}
                   </button>
                 )}
                 <div className="space-y-1">
@@ -514,14 +556,14 @@ export default function Navbar() {
                     className="block px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
-                    Impostazioni account
+                    {t('accountSettings')}
                   </Link>
                   <Link
                     href="/supporto"
                     className="block px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
-                    Assistenza
+                    {t('help')}
                   </Link>
                   <button
                     onClick={() => {
@@ -530,7 +572,7 @@ export default function Navbar() {
                     }}
                     className="block w-full text-left px-4 py-2.5 text-base font-medium text-red-600 hover:bg-red-50 transition-colors"
                   >
-                    Esci
+                    {t('signOut')}
                   </button>
                 </div>
               </div>
@@ -541,14 +583,14 @@ export default function Navbar() {
                   className="text-sm font-medium text-gray-700 hover:text-black transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
-                  Login
+                  {t('login')}
                 </Link>
                 <Link
                   href="/registrati"
                   className="flex-1 text-center py-2.5 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
-                  Iscrizione
+                  {t('register')}
                 </Link>
               </div>
             )}
@@ -578,7 +620,7 @@ export default function Navbar() {
             className="flex items-center gap-2 text-gray-500 hover:text-black transition-colors"
           >
             <X className="w-5 h-5" />
-            <span className="text-sm font-medium">Chiudi</span>
+            <span className="text-sm font-medium">{tc('cta.close')}</span>
           </button>
         </div>
 
@@ -587,10 +629,10 @@ export default function Navbar() {
           {/* Header */}
           <div className="text-center mb-10">
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-              Piani e prezzi
+              {tp('title')}
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-8">
-              Che tu stia inviando grandi file per lavoro o per condividere i tuoi progetti creativi, abbiamo il piano giusto per te.
+              {tp('subtitle')}
             </p>
 
             {/* Monthly/Annual Toggle */}
@@ -601,7 +643,7 @@ export default function Navbar() {
                   !isAnnual ? 'bg-black text-white shadow-sm' : 'text-gray-600 hover:text-black'
                 }`}
               >
-                Una volta al mese
+                {tp('monthly')}
               </button>
               <button
                 onClick={() => setIsAnnual(true)}
@@ -609,8 +651,8 @@ export default function Navbar() {
                   isAnnual ? 'bg-black text-white shadow-sm' : 'text-gray-600 hover:text-black'
                 }`}
               >
-                Annuale
-                <span className="ml-1.5 text-xs text-green-500 font-semibold">-20%</span>
+                {tp('annual')}
+                <span className="ml-1.5 text-xs text-green-500 font-semibold">{tp('annualDiscount')}</span>
               </button>
             </div>
           </div>
@@ -645,26 +687,26 @@ export default function Navbar() {
                 {isCurrentPlan ? (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span className="bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
-                      Piano attuale
+                      {tp('currentPlan')}
                     </span>
                   </div>
                 ) : plan.popular ? (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                      Più popolare
+                      {tp('mostPopular')}
                     </span>
                   </div>
                 ) : plan.badge ? (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span className="bg-orange-100 text-orange-600 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
-                      {plan.badge}
+                      {tp(`plans.${plan.id}.badge`)}
                     </span>
                   </div>
                 ) : null}
 
                 <div className={isCurrentPlan || plan.popular || plan.badge ? 'mt-2' : ''}>
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{plan.name}</h3>
-                  <p className="text-sm text-gray-500 mb-5">{plan.description}</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">{tp(`plans.${plan.id}.name`)}</h3>
+                  <p className="text-sm text-gray-500 mb-5">{tp(`plans.${plan.id}.description`)}</p>
                 </div>
 
                 {/* Price */}
@@ -677,22 +719,22 @@ export default function Navbar() {
                   </span>
                   {plan.priceMonthly > 0 && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Al mese, fatturato {isAnnual ? 'annualmente' : 'mensilmente'}.
+                      {tp('perMonth', { billing: isAnnual ? tp('billedAnnually') : tp('billedMonthly') })}
                     </p>
                   )}
                   {plan.priceMonthly === 0 && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Goditi FlyFile gratuitamente
+                      {tp('freeForever')}
                     </p>
                   )}
                 </div>
 
                 {/* Features */}
                 <ul className="space-y-2.5 mb-6 flex-grow">
-                  {plan.features.map((feature, i) => (
+                  {plan.features.map((_, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
                       <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      {feature}
+                      {tp(`plans.${plan.id}.features.${i}`)}
                     </li>
                   ))}
                 </ul>
@@ -713,7 +755,7 @@ export default function Navbar() {
                             : 'border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
                   }`}
                 >
-                  {isCurrentPlan ? 'Piano attivo' : checkoutLoading === plan.id ? 'Caricamento...' : plan.cta}
+                  {isCurrentPlan ? tp('activePlan') : checkoutLoading === plan.id ? tp('loading') : tp(`plans.${plan.id}.cta`)}
                 </button>
               </div>
               );
@@ -724,10 +766,10 @@ export default function Navbar() {
           <div className="mt-20 max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-                Scegli il piano che fa per te
+                {tp('chooseTitle')}
               </h3>
               <p className="text-gray-500 text-base">
-                Confronta tutte le funzionalità dei nostri piani
+                {tp('chooseSubtitle')}
               </p>
             </div>
 
@@ -735,7 +777,7 @@ export default function Navbar() {
               {/* Sticky column headers */}
               <div className="grid grid-cols-5 bg-gray-50 border-b border-gray-200">
                 <div className="py-4 px-5 text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                  Funzionalità
+                  {tp('featureLabel')}
                 </div>
                 {['Free', 'Starter', 'Pro', 'Business'].map((name, i) => (
                   <div
@@ -747,14 +789,14 @@ export default function Navbar() {
                     {name}
                     {i === 2 && (
                       <span className="block text-[10px] font-semibold text-blue-500 uppercase tracking-wider mt-0.5">
-                        Popolare
+                        {tp('popular')}
                       </span>
                     )}
                   </div>
                 ))}
               </div>
 
-              {COMPARISON_SECTIONS.map((section, sIdx) => (
+              {comparisonSections.map((section, sIdx) => (
                 <div key={sIdx}>
                   {/* Section header */}
                   <div className="grid grid-cols-5 bg-white border-b border-gray-200">
@@ -807,15 +849,15 @@ export default function Navbar() {
           <div className="mt-20 max-w-3xl mx-auto pb-12">
             <div className="text-center mb-10">
               <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-                Domande frequenti
+                {tp('faq.title')}
               </h3>
               <p className="text-gray-500 text-base">
-                Tutto quello che devi sapere sui nostri piani e servizi
+                {tp('faq.subtitle')}
               </p>
             </div>
 
             <div className="space-y-0">
-              {FAQ_ITEMS.map((item, idx) => (
+              {faqItems.map((item, idx) => (
                 <div
                   key={idx}
                   className="border-b border-gray-200 first:border-t"
@@ -884,7 +926,7 @@ export default function Navbar() {
             className="flex items-center gap-2 text-gray-500 hover:text-black transition-colors"
           >
             <X className="w-5 h-5" />
-            <span className="text-sm font-medium">Chiudi</span>
+            <span className="text-sm font-medium">{tc('cta.close')}</span>
           </button>
         </div>
 
@@ -896,12 +938,12 @@ export default function Navbar() {
               {user?.email}
             </p>
             <h2 className="text-4xl font-bold text-gray-900">
-              Trasferimenti
+              {t('transfersPanel.title')}
             </h2>
             {userProfile?.plan !== 'free' && (
               <p className="text-sm text-gray-500 mt-2">
-                {formatBytes(userProfile?.storageUsed || 0)} utilizzati su{' '}
-                {userProfile?.storageLimit === -1 ? 'Illimitato' : formatBytes(userProfile?.storageLimit || 0)}
+                {formatBytes(userProfile?.storageUsed || 0)} {t('transfersPanel.usedOf')}{' '}
+                {userProfile?.storageLimit === -1 ? t('transfersPanel.unlimited') : formatBytes(userProfile?.storageLimit || 0)}
               </p>
             )}
           </div>
@@ -917,7 +959,7 @@ export default function Navbar() {
                     : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
-                Inviati
+                {t('transfersPanel.sent')}
               </button>
               <button
                 onClick={() => setTransfersTab('requested')}
@@ -927,7 +969,7 @@ export default function Navbar() {
                     : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
-                Richiesti
+                {t('transfersPanel.requested')}
               </button>
               <button
                 onClick={() => setTransfersTab('received')}
@@ -937,17 +979,17 @@ export default function Navbar() {
                     : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
-                Ricevuti
+                {t('transfersPanel.received')}
               </button>
             </div>
 
             <div className="relative flex items-center gap-2">
-              <span className="text-sm text-gray-400">Ordina per:</span>
+              <span className="text-sm text-gray-400">{t('transfersPanel.sortBy')}</span>
               <button
                 onClick={() => setTransfersSortOpen(!transfersSortOpen)}
                 className="flex items-center gap-1 text-sm font-medium text-gray-900 underline underline-offset-2 hover:text-gray-600 transition-colors"
               >
-                {{ date: 'Data', size: 'Dimensioni', title: 'Titolo', expiry: 'Data di scadenza' }[transfersSortBy]}
+                {{ date: t('transfersPanel.sortDate'), size: t('transfersPanel.sortSize'), title: t('transfersPanel.sortTitle'), expiry: t('transfersPanel.sortExpiry') }[transfersSortBy]}
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
 
@@ -956,11 +998,11 @@ export default function Navbar() {
                   <div className="fixed inset-0 z-10" onClick={() => setTransfersSortOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1 overflow-hidden">
                     {([
-                      { key: 'date', label: 'Data' },
-                      { key: 'size', label: 'Dimensioni' },
-                      { key: 'title', label: 'Titolo' },
-                      { key: 'expiry', label: 'Data di scadenza' },
-                    ] as const).map((opt) => (
+                      { key: 'date', label: t('transfersPanel.sortDate') },
+                      { key: 'size', label: t('transfersPanel.sortSize') },
+                      { key: 'title', label: t('transfersPanel.sortTitle') },
+                      { key: 'expiry', label: t('transfersPanel.sortExpiry') },
+                    ] as { key: 'date' | 'size' | 'title' | 'expiry'; label: string }[]).map((opt) => (
                       <button
                         key={opt.key}
                         onClick={() => {
@@ -991,7 +1033,7 @@ export default function Navbar() {
               type="text"
               value={transfersSearch}
               onChange={(e) => setTransfersSearch(e.target.value)}
-              placeholder="Cerca per titolo, nome del file o e-mail"
+              placeholder={t('transfersPanel.searchPlaceholder')}
               className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 transition-colors"
             />
           </div>
@@ -1008,9 +1050,10 @@ export default function Navbar() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-700">
-                    Hai utilizzato{' '}
-                    <strong>{userProfile?.monthlyTransfers || 0}/{userProfile?.maxMonthlyTransfers || 0} trasferimenti</strong>{' '}
-                    negli ultimi 30 giorni. Ogni trasferimento smette di contare verso il tuo limite 30 giorni dopo essere stato caricato.
+                    {t('transfersPanel.transfersUsage', {
+                      used: String(userProfile?.monthlyTransfers || 0),
+                      total: String(userProfile?.maxMonthlyTransfers || 0),
+                    })}
                   </p>
                 </div>
                 <button
@@ -1020,7 +1063,7 @@ export default function Navbar() {
                   }}
                   className="shrink-0 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-full hover:bg-purple-700 transition-colors"
                 >
-                  Aumenta il limite
+                  {t('transfersPanel.increaseLimit')}
                 </button>
               </div>
 
@@ -1033,9 +1076,10 @@ export default function Navbar() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-700">
-                    Hai caricato{' '}
-                    <strong>{formatBytes(userProfile?.storageUsed || 0)}/{formatBytes(userProfile?.storageLimit || 0)}</strong>{' '}
-                    negli ultimi 30 giorni. Ogni trasferimento smette di contare verso il tuo limite 30 giorni dopo essere stato caricato.
+                    {t('transfersPanel.storageUsage', {
+                      used: formatBytes(userProfile?.storageUsed || 0),
+                      total: formatBytes(userProfile?.storageLimit || 0),
+                    })}
                   </p>
                 </div>
                 <button
@@ -1045,7 +1089,7 @@ export default function Navbar() {
                   }}
                   className="shrink-0 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-full hover:bg-purple-700 transition-colors"
                 >
-                  Aumenta il limite
+                  {t('transfersPanel.increaseLimit')}
                 </button>
               </div>
             </div>
@@ -1057,7 +1101,7 @@ export default function Navbar() {
               {transfersLoading ? (
                 <div className="py-16 text-center">
                   <div className="w-8 h-8 border-2 border-gray-900 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                  <p className="text-gray-500 text-sm">Caricamento...</p>
+                  <p className="text-gray-500 text-sm">{t('transfersPanel.loading')}</p>
                 </div>
               ) : filteredTransfers.length > 0 ? (
                 <div className="space-y-3">
@@ -1071,9 +1115,9 @@ export default function Navbar() {
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="text-sm font-semibold text-gray-900 truncate">{transfer.title}</h4>
                             {transfer.isExpired ? (
-                              <span className="shrink-0 text-[10px] font-medium bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Scaduto</span>
+                              <span className="shrink-0 text-[10px] font-medium bg-red-100 text-red-700 px-1.5 py-0.5 rounded">{t('transfersPanel.expired')}</span>
                             ) : (
-                              <span className="shrink-0 text-[10px] font-medium bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Attivo</span>
+                              <span className="shrink-0 text-[10px] font-medium bg-green-100 text-green-700 px-1.5 py-0.5 rounded">{t('transfersPanel.active')}</span>
                             )}
                             {transfer.hasPassword && (
                               <Lock className="w-3 h-3 text-gray-400 shrink-0" />
@@ -1096,15 +1140,15 @@ export default function Navbar() {
                           <button
                             onClick={() => handleCopyLink(transfer.id)}
                             className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="Copia link"
+                            title={t('transfersPanel.copyLink')}
                           >
                             <Copy className="w-4 h-4" />
                           </button>
                           <Link
-                            href={`/s/${transfer.id}`}
+                            href={{ pathname: '/s/[id]', params: { id: transfer.id } }}
                             target="_blank"
                             className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="Apri"
+                            title={t('transfersPanel.open')}
                           >
                             <ExternalLink className="w-4 h-4" />
                           </Link>
@@ -1112,7 +1156,7 @@ export default function Navbar() {
                             <button
                               onClick={() => handleDeleteTransfer(transfer.id, transfer.r2Key)}
                               className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Elimina"
+                              title={t('transfersPanel.delete')}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -1125,10 +1169,10 @@ export default function Navbar() {
               ) : (
                 <div className="py-16 text-center">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    Tutti i trasferimenti che invii saranno visualizzati qui
+                    {t('transfersPanel.emptyTitle')}
                   </h3>
                   <p className="text-gray-500 text-sm max-w-md mx-auto">
-                    Controlla lo stato del download oppure modifica, inoltra o elimina il trasferimento
+                    {t('transfersPanel.emptyDesc')}
                   </p>
                 </div>
               )}
@@ -1138,10 +1182,10 @@ export default function Navbar() {
           {transfersTab === 'requested' && (
             <div className="py-16 text-center">
               <h3 className="text-xl font-bold text-gray-900 mb-2">
-                Le richieste di file saranno visualizzate qui
+                {t('transfersPanel.requestedTitle')}
               </h3>
               <p className="text-gray-500 text-sm max-w-md mx-auto">
-                Quando richiedi file a qualcuno, troverai i risultati in questa sezione
+                {t('transfersPanel.requestedDesc')}
               </p>
             </div>
           )}
@@ -1149,10 +1193,10 @@ export default function Navbar() {
           {transfersTab === 'received' && (
             <div className="py-16 text-center">
               <h3 className="text-xl font-bold text-gray-900 mb-2">
-                I trasferimenti ricevuti saranno visualizzati qui
+                {t('transfersPanel.receivedTitle')}
               </h3>
               <p className="text-gray-500 text-sm max-w-md mx-auto">
-                Quando qualcuno ti invia dei file, li troverai in questa sezione
+                {t('transfersPanel.receivedDesc')}
               </p>
             </div>
           )}

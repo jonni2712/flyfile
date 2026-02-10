@@ -1,8 +1,12 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function Footer() {
+  const t = useTranslations('common');
+
   return (
     <footer className="bg-gray-950 text-white">
       <div className="max-w-6xl mx-auto px-6 pt-16 pb-8">
@@ -14,37 +18,40 @@ export default function Footer() {
               FlyFile
             </Link>
             <p className="mt-3 text-sm text-gray-400 leading-relaxed max-w-sm">
-              La piattaforma sicura per la condivisione file con crittografia AES-256 end-to-end. Pensata per professionisti e team.
+              {t('footer.description')}
             </p>
+            <div className="mt-4">
+              <LanguageSwitcher />
+            </div>
           </div>
 
           {/* Prodotto */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Prodotto</h4>
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t('footer.product')}</h4>
             <ul className="space-y-3">
               <li>
                 <Link href="/" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Home
+                  {t('nav.home')}
                 </Link>
               </li>
               <li>
                 <Link href="/chi-siamo" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Chi siamo
+                  {t('nav.aboutUs')}
                 </Link>
               </li>
               <li>
                 <Link href="/prezzi" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Prezzi
+                  {t('nav.pricing')}
                 </Link>
               </li>
               <li>
                 <Link href="/funzionalita" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Funzionalità
+                  {t('nav.features')}
                 </Link>
               </li>
               <li>
                 <Link href="/sicurezza" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Sicurezza
+                  {t('nav.security')}
                 </Link>
               </li>
             </ul>
@@ -52,21 +59,21 @@ export default function Footer() {
 
           {/* Supporto */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Supporto</h4>
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t('footer.support')}</h4>
             <ul className="space-y-3">
               <li>
                 <Link href="/supporto" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Centro assistenza
+                  {t('footer.helpCenter')}
                 </Link>
               </li>
               <li>
                 <Link href="/documentazione" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Documentazione
+                  {t('nav.documentation')}
                 </Link>
               </li>
               <li>
                 <Link href="/contatti" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Contatti
+                  {t('nav.contact')}
                 </Link>
               </li>
               <li>
@@ -84,21 +91,21 @@ export default function Footer() {
 
           {/* Legale */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Legale</h4>
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{t('footer.legal')}</h4>
             <ul className="space-y-3">
               <li>
                 <Link href="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Privacy Policy
+                  {t('footer.privacyPolicy')}
                 </Link>
               </li>
               <li>
                 <Link href="/termini" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Termini di Servizio
+                  {t('footer.termsOfService')}
                 </Link>
               </li>
               <li>
                 <Link href="/cookie" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Cookie Policy
+                  {t('footer.cookiePolicy')}
                 </Link>
               </li>
             </ul>
@@ -112,10 +119,10 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
           {/* Left — copyright */}
           <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-            <span>&copy; {new Date().getFullYear()} FlyFile. Tutti i diritti riservati.</span>
+            <span>&copy; {new Date().getFullYear()} FlyFile. {t('footer.allRightsReserved')}</span>
             <span className="hidden sm:inline">&middot;</span>
             <span>
-              Un servizio di{' '}
+              {t('footer.aServiceOf')}{' '}
               <a
                 href="https://i-creativi.com"
                 target="_blank"

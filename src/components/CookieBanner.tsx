@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import {
   Cookie,
   Settings,
@@ -18,6 +19,7 @@ interface CookiePreferences {
 }
 
 export default function CookieBanner() {
+  const t = useTranslations('cookieBanner');
   const [showBanner, setShowBanner] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -126,11 +128,11 @@ export default function CookieBanner() {
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">Utilizziamo i Cookie</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{t('title')}</h3>
                       <p className="text-gray-600 text-sm leading-relaxed">
-                        Utilizziamo cookie essenziali per il funzionamento del sito e cookie opzionali per migliorare la tua esperienza.{' '}
+                        {t('description')}{' '}
                         <Link href="/cookie" className="text-blue-600 hover:text-blue-700 underline">
-                          Scopri di più nella nostra Cookie Policy
+                          {t('learnMore')}
                         </Link>
                       </p>
                     </div>
@@ -144,14 +146,14 @@ export default function CookieBanner() {
                     className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium transition-all text-sm"
                   >
                     <Settings className="w-4 h-4 inline mr-2" />
-                    Gestisci Preferenze
+                    {t('managePreferences')}
                   </button>
 
                   <button
                     onClick={acceptEssential}
                     className="px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-full font-medium transition-all text-sm"
                   >
-                    Solo Essenziali
+                    {t('essentialOnly')}
                   </button>
 
                   <button
@@ -159,7 +161,7 @@ export default function CookieBanner() {
                     className="px-6 py-3 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 text-white rounded-full font-medium transition-all shadow-lg text-sm"
                   >
                     <Check className="w-4 h-4 inline mr-2" />
-                    Accetta Tutti
+                    {t('acceptAll')}
                   </button>
                 </div>
               </div>
@@ -182,7 +184,7 @@ export default function CookieBanner() {
                     <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                       <Cog className="w-5 h-5" />
                     </div>
-                    <h2 className="text-xl font-bold">Preferenze Cookie</h2>
+                    <h2 className="text-xl font-bold">{t('preferencesTitle')}</h2>
                   </div>
                   <button
                     onClick={closeSettings}
@@ -196,7 +198,7 @@ export default function CookieBanner() {
               {/* Content */}
               <div className="p-6 max-h-96 overflow-y-auto">
                 <p className="text-gray-600 mb-6 leading-relaxed">
-                  Personalizza le tue preferenze sui cookie. Puoi modificare queste impostazioni in qualsiasi momento.
+                  {t('preferencesDescription')}
                 </p>
 
                 <div className="space-y-4">
@@ -207,14 +209,14 @@ export default function CookieBanner() {
                         <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                           <Check className="w-4 h-4 text-green-600" />
                         </div>
-                        <h3 className="font-semibold text-gray-900">Cookie Essenziali</h3>
+                        <h3 className="font-semibold text-gray-900">{t('essential.title')}</h3>
                       </div>
                       <span className="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
-                        Sempre Attivi
+                        {t('essential.badge')}
                       </span>
                     </div>
                     <p className="text-gray-600 text-sm">
-                      Necessari per il funzionamento del sito web. Include autenticazione, sicurezza e preferenze di base.
+                      {t('essential.description')}
                     </p>
                   </div>
 
@@ -225,7 +227,7 @@ export default function CookieBanner() {
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                           <Cog className="w-4 h-4 text-blue-600" />
                         </div>
-                        <h3 className="font-semibold text-gray-900">Cookie Funzionali</h3>
+                        <h3 className="font-semibold text-gray-900">{t('functional.title')}</h3>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -238,7 +240,7 @@ export default function CookieBanner() {
                       </label>
                     </div>
                     <p className="text-gray-600 text-sm">
-                      Migliorano l&apos;esperienza utente con preferenze personalizzate, impostazioni dell&apos;interfaccia e funzionalità avanzate.
+                      {t('functional.description')}
                     </p>
                   </div>
 
@@ -249,7 +251,7 @@ export default function CookieBanner() {
                         <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                           <BarChart3 className="w-4 h-4 text-purple-600" />
                         </div>
-                        <h3 className="font-semibold text-gray-900">Cookie Analitici</h3>
+                        <h3 className="font-semibold text-gray-900">{t('analytics.title')}</h3>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -262,7 +264,7 @@ export default function CookieBanner() {
                       </label>
                     </div>
                     <p className="text-gray-600 text-sm">
-                      Ci aiutano a capire come utilizzi il sito per migliorare le prestazioni. Tutti i dati sono anonimi e aggregati.
+                      {t('analytics.description')}
                     </p>
                   </div>
                 </div>
@@ -275,13 +277,13 @@ export default function CookieBanner() {
                     onClick={closeSettings}
                     className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full font-medium transition-colors"
                   >
-                    Annulla
+                    {t('cancel')}
                   </button>
                   <button
                     onClick={saveSettings}
                     className="px-6 py-3 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 text-white rounded-full font-medium transition-all shadow-lg"
                   >
-                    Salva Preferenze
+                    {t('savePreferences')}
                   </button>
                 </div>
               </div>
