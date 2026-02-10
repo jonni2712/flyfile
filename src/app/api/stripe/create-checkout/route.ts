@@ -142,24 +142,9 @@ export async function POST(request: NextRequest) {
       tax_id_collection: { enabled: true },
     };
 
-    // If user has billing data, add extra options
+    // If user has billing data, add phone number collection
     if (billing) {
-      // Pre-fill phone number collection
       sessionParams.phone_number_collection = { enabled: true };
-
-      // Add invoice creation for proper billing
-      sessionParams.invoice_creation = {
-        enabled: true,
-        invoice_data: {
-          metadata: {
-            userId,
-            userType: billing.userType || 'individual',
-          },
-          custom_fields: billing.userType === 'business' && billing.vatNumber ? [
-            { name: 'Partita IVA', value: billing.vatNumber },
-          ] : undefined,
-        },
-      };
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);

@@ -143,6 +143,9 @@ export default function Navbar() {
     return name.substring(0, 2).toUpperCase();
   };
 
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
   const handleSubscribe = async (plan: typeof PRICING_PLANS[number]) => {
     if (plan.id === 'free') {
       setIsPricingOpen(false);
@@ -155,6 +158,9 @@ export default function Navbar() {
       window.location.href = '/registrati';
       return;
     }
+
+    setCheckoutError(null);
+    setCheckoutLoading(plan.id);
 
     try {
       const priceId = isAnnual ? plan.stripePriceIdAnnual : plan.stripePriceIdMonthly;
@@ -179,9 +185,14 @@ export default function Navbar() {
       const data = await response.json();
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        setCheckoutError(data.error || 'Errore nella creazione del checkout');
       }
     } catch (error) {
       console.error('Error creating checkout:', error);
+      setCheckoutError('Errore di connessione. Riprova.');
+    } finally {
+      setCheckoutLoading(null);
     }
   };
 
@@ -604,6 +615,15 @@ export default function Navbar() {
             </div>
           </div>
 
+          {/* Checkout Error */}
+          {checkoutError && (
+            <div className="max-w-5xl mx-auto mb-4">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm text-center">
+                {checkoutError}
+              </div>
+            </div>
+          )}
+
           {/* Plan Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
             {PRICING_PLANS.map((plan) => {
@@ -680,18 +700,20 @@ export default function Navbar() {
                 {/* CTA */}
                 <button
                   onClick={() => !isCurrentPlan && handleSubscribe(plan)}
-                  disabled={!!isCurrentPlan}
+                  disabled={!!isCurrentPlan || checkoutLoading === plan.id}
                   className={`w-full py-2.5 rounded-full text-sm font-semibold transition-colors ${
                     isCurrentPlan
                       ? 'bg-green-500 text-white cursor-default'
-                      : plan.popular
-                        ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                        : plan.id === 'free'
-                          ? 'border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'
-                          : 'border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
+                      : checkoutLoading === plan.id
+                        ? 'bg-gray-300 text-gray-500 cursor-wait'
+                        : plan.popular
+                          ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                          : plan.id === 'free'
+                            ? 'border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'
+                            : 'border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
                   }`}
                 >
-                  {isCurrentPlan ? 'Piano attivo' : plan.cta}
+                  {isCurrentPlan ? 'Piano attivo' : checkoutLoading === plan.id ? 'Caricamento...' : plan.cta}
                 </button>
               </div>
               );
