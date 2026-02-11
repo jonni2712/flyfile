@@ -185,7 +185,8 @@ export default async function CookiesPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8 text-center">{t('detailTitle')}</h2>
 
-          <div className="border border-gray-200 rounded-xl overflow-hidden">
+          {/* Desktop table - hidden on mobile */}
+          <div className="hidden md:block border border-gray-200 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50">
@@ -238,6 +239,94 @@ export default async function CookiesPage() {
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile card layout - visible only on mobile */}
+          <div className="md:hidden space-y-4">
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-xs text-gray-800">flyfile_session</span>
+                <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Essenziale</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Durata</span>
+                  <span className="text-gray-700">Sessione</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Scopo</span>
+                  <span className="text-gray-700 text-right ml-4">Mantiene la sessione utente attiva</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-xs text-gray-800">XSRF-TOKEN</span>
+                <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Essenziale</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Durata</span>
+                  <span className="text-gray-700">Sessione</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Scopo</span>
+                  <span className="text-gray-700 text-right ml-4">Protezione CSRF</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-xs text-gray-800">cookie_consent</span>
+                <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Essenziale</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Durata</span>
+                  <span className="text-gray-700">1 anno</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Scopo</span>
+                  <span className="text-gray-700 text-right ml-4">Memorizza le preferenze cookie</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-xs text-gray-800">_ga</span>
+                <span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Analitico</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Durata</span>
+                  <span className="text-gray-700">2 anni</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Scopo</span>
+                  <span className="text-gray-700 text-right ml-4">Google Analytics - identificazione</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-xs text-gray-800">preferences</span>
+                <span className="px-2.5 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">Funzionale</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Durata</span>
+                  <span className="text-gray-700">1 anno</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Scopo</span>
+                  <span className="text-gray-700 text-right ml-4">Preferenze utente</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

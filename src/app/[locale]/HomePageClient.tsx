@@ -948,15 +948,15 @@ export default function HomePageClient() {
       )}
 
       {/* Full-page gradient background with card overlay */}
-      <div className="min-h-screen -mt-16 pt-16 relative overflow-x-hidden overflow-y-visible bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
+      <div className="h-dvh lg:h-auto lg:min-h-screen -mt-16 pt-16 relative overflow-hidden lg:overflow-x-hidden lg:overflow-y-visible bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
         {/* Decorative circles */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute bottom-10 right-20 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
+        <div className="relative z-10 flex flex-col lg:flex-row h-full lg:min-h-[calc(100vh-4rem)]">
           {/* Left Panel — Upload Card */}
           <div
-            className="w-full lg:w-[480px] lg:min-w-[480px] flex flex-col items-center justify-center px-6 py-8 flex-shrink-0"
+            className="w-full lg:w-[480px] lg:min-w-[480px] flex flex-col items-center justify-center px-4 lg:px-6 py-4 lg:py-8 flex-1 lg:flex-none"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -1297,7 +1297,7 @@ export default function HomePageClient() {
             </div>
 
             {/* Tagline below card */}
-            <p className="mt-6 text-sm text-white/70 text-center max-w-[360px]">
+            <p className="hidden lg:block mt-6 text-sm text-white/70 text-center max-w-[360px]">
               {planLimits.maxFilesPerTransfer === -1
                 ? t('upload.taglineUnlimited')
                 : t('upload.tagline', { max: planLimits.maxFilesPerTransfer })}
@@ -1311,7 +1311,7 @@ export default function HomePageClient() {
         </div>
 
         {/* Bottom Ad space (visible on mobile, entire area below card is the ad container) */}
-        <div id="ad-container-mobile" className="lg:hidden relative z-10 flex-1 min-h-[250px] flex flex-col items-center justify-center px-6 pb-8">
+        <div id="ad-container-mobile" className="hidden relative z-10 flex-1 min-h-[250px] flex flex-col items-center justify-center px-6 pb-8">
           {/* Inserire qui il contenuto pubblicitario mobile */}
         </div>
       </div>

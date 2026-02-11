@@ -349,14 +349,14 @@ export default async function DocumentationPage() {
           </div>
 
           {/* Base URL */}
-          <div className="bg-gray-950 rounded-2xl p-8 mb-8">
+          <div className="bg-gray-950 rounded-2xl p-8 mb-8 overflow-hidden">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white">{t('apiReference.baseEndpoint')}</h3>
               <span className="px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-full">
                 REST API v1
               </span>
             </div>
-            <div className="bg-gray-900 rounded-xl p-6 font-mono text-sm">
+            <div className="bg-gray-900 rounded-xl p-6 font-mono text-sm overflow-x-auto">
               <div className="text-green-400 mb-2">Base URL:</div>
               <div className="text-white">https://flyfile.it/api/v1</div>
             </div>
@@ -364,14 +364,14 @@ export default async function DocumentationPage() {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Authentication */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-100">
+            <div className="bg-white rounded-2xl p-8 border border-gray-100 min-w-0">
               <h3 className="text-xl font-bold text-gray-900 mb-6">{t('apiReference.authentication')}</h3>
               <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold text-gray-800 mb-2">
                     {t('apiReference.bearerToken')}
                   </h4>
-                  <div className="bg-gray-100 rounded-lg p-4 font-mono text-sm">
+                  <div className="bg-gray-100 rounded-lg p-4 font-mono text-sm overflow-x-auto">
                     <span className="text-blue-600">Authorization:</span> Bearer {'{token}'}
                   </div>
                 </div>
@@ -385,24 +385,24 @@ export default async function DocumentationPage() {
             </div>
 
             {/* Endpoints */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-100">
+            <div className="bg-white rounded-2xl p-8 border border-gray-100 min-w-0">
               <h3 className="text-xl font-bold text-gray-900 mb-6">{t('apiReference.mainEndpoints')}</h3>
               <div className="space-y-4">
-                <div className="border-l-4 border-green-500 pl-4">
+                <div className="border-l-4 border-green-500 pl-4 overflow-x-auto">
                   <div className="font-mono text-sm text-green-600 mb-1">POST /transfers</div>
                   <p className="text-gray-600 text-sm">{t('apiReference.createTransfer')}</p>
                 </div>
-                <div className="border-l-4 border-blue-500 pl-4">
+                <div className="border-l-4 border-blue-500 pl-4 overflow-x-auto">
                   <div className="font-mono text-sm text-blue-600 mb-1">
                     GET /transfers/{'{id}'}
                   </div>
                   <p className="text-gray-600 text-sm">{t('apiReference.getTransfer')}</p>
                 </div>
-                <div className="border-l-4 border-purple-500 pl-4">
+                <div className="border-l-4 border-purple-500 pl-4 overflow-x-auto">
                   <div className="font-mono text-sm text-purple-600 mb-1">GET /analytics</div>
                   <p className="text-gray-600 text-sm">{t('apiReference.getAnalytics')}</p>
                 </div>
-                <div className="border-l-4 border-orange-500 pl-4">
+                <div className="border-l-4 border-orange-500 pl-4 overflow-x-auto">
                   <div className="font-mono text-sm text-orange-600 mb-1">
                     POST /teams/{'{id}'}/invite
                   </div>
@@ -418,7 +418,7 @@ export default async function DocumentationPage() {
 
             <div className="grid lg:grid-cols-2 gap-8">
               {/* JavaScript Example */}
-              <div className="bg-gray-950 rounded-2xl p-8">
+              <div className="bg-gray-950 rounded-2xl p-8 overflow-hidden min-w-0">
                 <div className="flex items-center justify-between mb-6">
                   <h4 className="text-lg font-bold text-white">JavaScript</h4>
                   <span className="px-3 py-1 bg-yellow-600 text-white text-xs font-medium rounded-full">
@@ -426,7 +426,7 @@ export default async function DocumentationPage() {
                   </span>
                 </div>
                 <div className="bg-gray-900 rounded-xl p-6 font-mono text-sm overflow-x-auto">
-                  <pre className="text-gray-300">
+                  <pre className="text-gray-300 whitespace-pre">
 {`const response = await fetch('https://flyfile.it/api/v1/upload', {
   method: 'POST',
   headers: {
@@ -443,7 +443,7 @@ console.log(result.shareUrl);`}
               </div>
 
               {/* Python Example */}
-              <div className="bg-gray-950 rounded-2xl p-8">
+              <div className="bg-gray-950 rounded-2xl p-8 overflow-hidden min-w-0">
                 <div className="flex items-center justify-between mb-6">
                   <h4 className="text-lg font-bold text-white">Python</h4>
                   <span className="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-full">
@@ -451,7 +451,7 @@ console.log(result.shareUrl);`}
                   </span>
                 </div>
                 <div className="bg-gray-900 rounded-xl p-6 font-mono text-sm overflow-x-auto">
-                  <pre className="text-gray-300">
+                  <pre className="text-gray-300 whitespace-pre">
 {`import requests
 
 headers = {

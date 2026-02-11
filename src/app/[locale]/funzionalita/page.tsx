@@ -52,6 +52,7 @@ export default async function FeaturesPage() {
 
   return (
     <MainLayout>
+      <div className="overflow-x-hidden">
       <BreadcrumbJsonLd items={[
         { name: 'Home', url: 'https://flyfile.it' },
         { name: t('hero.badge'), url: 'https://flyfile.it/funzionalita' },
@@ -217,7 +218,7 @@ export default async function FeaturesPage() {
               <p className="text-gray-600 leading-relaxed mb-6">
                 {t('advanced.team.description')}
               </p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div className="flex items-center text-sm text-gray-600">
                     <Check className="w-4 h-4 text-amber-500 mr-2 flex-shrink-0" />
@@ -252,7 +253,7 @@ export default async function FeaturesPage() {
               <p className="text-gray-600 leading-relaxed mb-6">
                 {t('advanced.api.description')}
               </p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div className="flex items-center text-sm text-gray-600">
                     <Check className="w-4 h-4 text-indigo-500 mr-2 flex-shrink-0" />
@@ -282,13 +283,13 @@ export default async function FeaturesPage() {
       {/* Performance Stats */}
       <div className="bg-white py-20 sm:py-28">
         <div className="max-w-5xl mx-auto px-6">
-          <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl p-12 sm:p-16 text-white relative overflow-hidden">
+          <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl p-5 sm:p-12 lg:p-16 text-white relative overflow-hidden">
             {/* Decorative circles */}
             <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-36 h-36 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
 
             <div className="relative z-10">
-              <div className="text-center mb-12">
+              <div className="text-center mb-8 sm:mb-12">
                 <span className="text-sm font-semibold text-white/70 uppercase tracking-wider">
                   {t('stats.label')}
                 </span>
@@ -300,12 +301,12 @@ export default async function FeaturesPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
                 <div className="text-center">
                   <div className="w-14 h-14 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Zap className="w-7 h-7 text-white" />
                   </div>
-                  <h3 className="text-3xl sm:text-4xl font-bold mb-1">99.9%</h3>
+                  <h3 className="text-xl sm:text-3xl lg:text-4xl font-bold mb-1">99.9%</h3>
                   <p className="text-white/70 text-sm">{t('stats.uptime')}</p>
                 </div>
 
@@ -313,7 +314,7 @@ export default async function FeaturesPage() {
                   <div className="w-14 h-14 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Cloud className="w-7 h-7 text-white" />
                   </div>
-                  <h3 className="text-3xl sm:text-4xl font-bold mb-1">{t('stats.unlimited')}</h3>
+                  <h3 className="text-xl sm:text-3xl lg:text-4xl font-bold mb-1">{t('stats.unlimited')}</h3>
                   <p className="text-white/70 text-sm">{t('stats.fileSize')}</p>
                 </div>
 
@@ -321,7 +322,7 @@ export default async function FeaturesPage() {
                   <div className="w-14 h-14 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Shield className="w-7 h-7 text-white" />
                   </div>
-                  <h3 className="text-3xl sm:text-4xl font-bold mb-1">AES-256</h3>
+                  <h3 className="text-xl sm:text-3xl lg:text-4xl font-bold mb-1">AES-256</h3>
                   <p className="text-white/70 text-sm">{t('stats.encryption')}</p>
                 </div>
 
@@ -329,7 +330,7 @@ export default async function FeaturesPage() {
                   <div className="w-14 h-14 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Globe className="w-7 h-7 text-white" />
                   </div>
-                  <h3 className="text-3xl sm:text-4xl font-bold mb-1">Cloudflare</h3>
+                  <h3 className="text-xl sm:text-3xl lg:text-4xl font-bold mb-1">Cloudflare</h3>
                   <p className="text-white/70 text-sm">{t('stats.cdn')}</p>
                 </div>
               </div>
@@ -342,7 +343,7 @@ export default async function FeaturesPage() {
       <div className="bg-gray-50 py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-6">
           <div className="relative">
-            <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl p-12 sm:p-16 text-white overflow-hidden">
+            <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl p-6 sm:p-12 lg:p-16 text-white overflow-hidden">
               {/* Decorative circles */}
               <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -371,6 +372,7 @@ export default async function FeaturesPage() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </MainLayout>
   );

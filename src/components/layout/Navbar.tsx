@@ -28,6 +28,16 @@ export default function Navbar() {
     return () => window.removeEventListener('openPricing', handleOpenPricing);
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
   const getInitials = (name: string) => {
     const parts = name.split(' ');
     if (parts.length >= 2) {
@@ -41,13 +51,49 @@ export default function Navbar() {
       <nav className="fixed top-0 left-0 right-0 z-50 mt-3">
         <div className="px-4 sm:px-6 lg:px-10">
           <div className="flex items-center justify-between h-16">
-            {/* Logo — far left */}
-            <div className="shrink-0 flex items-center">
+            {/* Logo — far left (desktop only) */}
+            <div className="hidden sm:flex shrink-0 items-center">
               <Link href="/" className="flex items-center">
                 <span className="text-2xl font-bold text-white">
                   FlyFile
                 </span>
               </Link>
+            </div>
+
+            {/* Mobile header: hamburger LEFT | logo CENTER | register RIGHT */}
+            <div className="flex sm:hidden items-center justify-between w-full">
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                aria-expanded={isOpen}
+                aria-label={isOpen ? 'Close menu' : 'Open menu'}
+                className="inline-flex items-center justify-center p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors min-h-[44px] min-w-[44px]"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+              <Link href="/" className="text-2xl font-bold text-white">
+                FlyFile
+              </Link>
+              {!user ? (
+                <Link
+                  href="/registrati"
+                  className="px-4 py-2 bg-white text-black text-sm font-medium rounded-full transition-colors min-h-[44px] flex items-center"
+                >
+                  {t('register')}
+                </Link>
+              ) : (
+                <button
+                  onClick={() => setIsOpen(!isOpen)}
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+                >
+                  {userProfile?.photoURL ? (
+                    <img src={userProfile.photoURL} alt="Avatar" className="w-9 h-9 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      {getInitials(userProfile?.displayName || user.email || 'U')}
+                    </div>
+                  )}
+                </button>
+              )}
             </div>
 
             {/* Right side — white pill bar containing everything */}
@@ -271,136 +317,123 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Mobile menu button */}
-            <div className="sm:hidden flex items-center">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                aria-expanded={isOpen}
-                aria-label={isOpen ? 'Close menu' : 'Open menu'}
-                className="inline-flex items-center justify-center p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors min-h-[44px] min-w-[44px]"
-              >
-                {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </button>
-            </div>
           </div>
         </div>
 
-        {/* Mobile Navigation Menu with slide-down animation */}
-        <div
-          className={`sm:hidden bg-white border-t border-gray-200 overflow-hidden transition-all duration-300 ease-in-out ${
-            isOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <div className="py-2 space-y-1">
-            {user && (
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  setIsTransfersOpen(true);
-                }}
-                className="block w-full text-left px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors min-h-[44px]"
-              >
-                {t('transfers')}
-              </button>
-            )}
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                setIsPricingOpen(true);
-              }}
-              className="block w-full text-left px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors min-h-[44px]"
-            >
-              {t('pricing')}
-            </button>
-            <Link
-              href="/chi-siamo"
-              className="block px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors min-h-[44px]"
-              onClick={() => setIsOpen(false)}
-            >
-              {t('aboutUs')}
-            </Link>
-            <Link
-              href="/supporto"
-              className="block px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors min-h-[44px]"
-              onClick={() => setIsOpen(false)}
-            >
-              {t('support')}
-            </Link>
-          </div>
+      </nav>
 
-          {user ? (
-            <div className="border-t border-gray-200 py-3">
-              <div className="px-4 mb-2 flex items-center gap-3">
-                {userProfile?.photoURL ? (
-                  <img src={userProfile.photoURL} alt="Avatar" className="w-10 h-10 rounded-lg object-cover" />
-                ) : (
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-sm font-bold">
-                    {getInitials(userProfile?.displayName || user?.email || 'U')}
-                  </div>
-                )}
-                <div>
-                  <div className="font-medium text-sm text-gray-900">{user.email}</div>
-                  <div className="text-xs text-gray-500">{t('plan', { plan: PLANS[userProfile?.plan || 'free']?.name || 'Free' })}</div>
-                </div>
-              </div>
-              {(!userProfile?.plan || userProfile.plan === 'free') && (
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    setIsPricingOpen(true);
-                  }}
-                  className="mx-4 mb-2 flex items-center justify-center gap-1.5 w-[calc(100%-2rem)] py-2.5 border border-gray-200 rounded-full text-sm font-medium text-purple-600 hover:bg-purple-50 transition-colors min-h-[44px]"
-                >
-                  <Zap className="w-4 h-4" />
-                  {t('upgrade')}
-                </button>
-              )}
-              <div className="space-y-1">
-                <Link
-                  href="/settings/profile"
-                  className="block px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors min-h-[44px]"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {t('accountSettings')}
-                </Link>
-                <Link
-                  href="/supporto"
-                  className="block px-4 py-2.5 text-base font-medium text-gray-700 hover:text-black hover:bg-gray-50 transition-colors min-h-[44px]"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {t('help')}
-                </Link>
-                <button
-                  onClick={() => {
-                    signOut();
-                    setIsOpen(false);
-                  }}
-                  className="block w-full text-left px-4 py-2.5 text-base font-medium text-red-600 hover:bg-red-50 transition-colors min-h-[44px]"
-                >
-                  {t('signOut')}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="border-t border-gray-200 py-3 px-4 flex items-center gap-3">
-              <Link
-                href="/accedi"
-                className="text-sm font-medium text-gray-700 hover:text-black transition-colors min-h-[44px] flex items-center"
-                onClick={() => setIsOpen(false)}
-              >
-                {t('login')}
-              </Link>
+      {/* Mobile Full-Screen Overlay Menu */}
+      <div
+        className={`fixed inset-0 z-[60] bg-gray-950 sm:hidden flex flex-col transition-all duration-300 ${
+          isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+        }`}
+      >
+        {/* Top bar — mirrors the mobile header */}
+        <div className="px-4 mt-3">
+          <div className="flex items-center justify-between h-16">
+            {/* Close button */}
+            <button
+              onClick={() => setIsOpen(false)}
+              aria-label="Close menu"
+              className="inline-flex items-center justify-center p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors min-h-[44px] min-w-[44px]"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            {/* Logo */}
+            <span className="text-2xl font-bold text-white">FlyFile</span>
+            {/* Register / Avatar */}
+            {!user ? (
               <Link
                 href="/registrati"
-                className="flex-1 text-center py-2.5 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors min-h-[44px] flex items-center justify-center"
+                className="px-4 py-2 bg-white text-black text-sm font-medium rounded-full transition-colors min-h-[44px] flex items-center"
                 onClick={() => setIsOpen(false)}
               >
                 {t('register')}
               </Link>
-            </div>
-          )}
+            ) : (
+              <div className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                {userProfile?.photoURL ? (
+                  <img src={userProfile.photoURL} alt="Avatar" className="w-9 h-9 rounded-full object-cover" />
+                ) : (
+                  <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    {getInitials(userProfile?.displayName || user.email || 'U')}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </nav>
+
+        {/* Menu items — centered vertically */}
+        <div className="flex-1 flex flex-col items-center justify-center px-8">
+          <div className="w-full max-w-sm">
+            {user && (
+              <>
+                <button
+                  onClick={() => { setIsOpen(false); setIsTransfersOpen(true); }}
+                  className="w-full py-5 text-2xl font-medium text-white text-center hover:text-white/80 transition-colors"
+                >
+                  {t('transfers')}
+                </button>
+                <div className="w-full h-px bg-white/20" />
+              </>
+            )}
+            <button
+              onClick={() => { setIsOpen(false); setIsPricingOpen(true); }}
+              className="w-full py-5 text-2xl font-medium text-white text-center hover:text-white/80 transition-colors"
+            >
+              {t('pricing')}
+            </button>
+            <div className="w-full h-px bg-white/20" />
+            <Link
+              href="/chi-siamo"
+              className="block w-full py-5 text-2xl font-medium text-white text-center hover:text-white/80 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              {t('aboutUs')}
+            </Link>
+            <div className="w-full h-px bg-white/20" />
+            <Link
+              href="/supporto"
+              className="block w-full py-5 text-2xl font-medium text-white text-center hover:text-white/80 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              {t('support')}
+            </Link>
+
+            {user ? (
+              <>
+                <div className="w-full h-px bg-white/20" />
+                <Link
+                  href="/settings/profile"
+                  className="block w-full py-5 text-2xl font-medium text-white text-center hover:text-white/80 transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {t('accountSettings')}
+                </Link>
+                <div className="w-full h-px bg-white/20" />
+                <button
+                  onClick={() => { signOut(); setIsOpen(false); }}
+                  className="w-full py-5 text-2xl font-medium text-red-400 text-center hover:text-red-300 transition-colors"
+                >
+                  {t('signOut')}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="w-full h-px bg-white/20" />
+                <Link
+                  href="/accedi"
+                  className="block w-full py-5 text-2xl font-medium text-white text-center hover:text-white/80 transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {t('login')}
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Lazy-loaded Panels */}
       <PricingPanel isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)} />
