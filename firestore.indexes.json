@@ -9,13 +9,6 @@
       ]
     },
     {
-      "collectionGroup": "transfers",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "transferId", "order": "ASCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "files",
       "queryScope": "COLLECTION",
       "fields": [
