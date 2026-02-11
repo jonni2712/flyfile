@@ -166,7 +166,7 @@ export default async function LocaleLayout({
   };
 
   return (
-    <html lang={locale} style={{ backgroundColor: '#3b82f6' }}>
+    <html lang={locale}>
       <head>
         {/* JSON-LD Structured Data */}
         <script
