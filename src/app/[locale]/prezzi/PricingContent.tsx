@@ -233,7 +233,7 @@ export default function PricingContent() {
                 </div>
 
                 {/* Features */}
-                <ul className="space-y-2.5 mb-6 flex-grow">
+                <ul className="hidden md:block space-y-2.5 mb-6 flex-grow">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
                       <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
