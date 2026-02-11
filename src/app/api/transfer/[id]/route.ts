@@ -13,6 +13,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // SECURITY: Rate limit to prevent enumeration/scraping
+    const rateLimitResponse = await checkRateLimit(request, 'download');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { id: transferId } = await params;
     const db = getAdminFirestore();
 
@@ -50,13 +54,18 @@ export async function GET(
       );
     }
 
-    // Fetch files
+    // Fetch files - SECURITY: Only expose safe fields, never internal storage details
     const filesSnapshot = await db.collection('transfers').doc(docId).collection('files').get();
-    const files = filesSnapshot.docs.map(fileDoc => ({
-      id: fileDoc.id,
-      ...fileDoc.data(),
-      createdAt: fileDoc.data().createdAt?.toDate()?.toISOString() || null,
-    }));
+    const files = filesSnapshot.docs.map(fileDoc => {
+      const fData = fileDoc.data();
+      return {
+        id: fileDoc.id,
+        originalName: fData.originalName,
+        size: fData.size,
+        mimeType: fData.mimeType,
+        createdAt: fData.createdAt?.toDate()?.toISOString() || null,
+      };
+    });
 
     // Return transfer data (excluding password hash for security)
     const { password, ...safeData } = data;

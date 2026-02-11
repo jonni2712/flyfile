@@ -4,9 +4,14 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { deleteFile } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
+import { csrfProtection } from '@/lib/csrf';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY FIX: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     // Rate limiting
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;

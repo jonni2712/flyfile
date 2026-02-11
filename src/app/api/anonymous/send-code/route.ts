@@ -5,9 +5,9 @@ import { sendEmail, getVerificationCodeEmail } from '@/lib/email';
 import { checkRateLimit } from '@/lib/rate-limit';
 import crypto from 'crypto';
 
-// Generate 6-digit verification code
+// SECURITY: Generate 6-digit verification code using cryptographically secure randomness
 function generateVerificationCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 999999).toString();
 }
 
 // SECURITY: Hash verification code before storing

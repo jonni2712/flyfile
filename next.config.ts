@@ -36,6 +36,11 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
+      // TODO: SECURITY — Replace 'unsafe-inline' and 'unsafe-eval' with nonce-based CSP
+      // when Next.js supports per-request nonces in static headers (see next.config.ts headers()).
+      // Current limitation: Next.js requires 'unsafe-inline' for its own script injection
+      // and 'unsafe-eval' for development/HMR. Consider using middleware-based CSP with nonces
+      // for stricter production security.
       // Scripts: self, inline for Next.js, Vercel analytics, Stripe, Google APIs, GTM, reCAPTCHA
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com https://apis.google.com https://accounts.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
       // Styles: self, inline for CSS-in-JS

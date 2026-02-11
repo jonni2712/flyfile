@@ -1,6 +1,68 @@
 import { collection, addDoc, query, where, getDocs, deleteDoc, doc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import crypto from 'crypto';
+import dns from 'dns/promises';
+import { encryptTotpSecret, decryptTotpSecret, isTotpSecretEncrypted } from './encryption';
+
+// SECURITY: Check if a URL resolves to an internal/private IP (SSRF protection)
+async function isInternalUrl(url: string): Promise<boolean> {
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname;
+
+    // Block localhost variants
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '[::1]') {
+      return true;
+    }
+
+    // Resolve DNS to check actual IP
+    const addresses = await dns.resolve4(hostname).catch(() => [] as string[]);
+    const addresses6 = await dns.resolve6(hostname).catch(() => [] as string[]);
+    const allAddresses = [...addresses, ...addresses6];
+
+    for (const addr of allAddresses) {
+      // IPv4 private ranges
+      if (addr.startsWith('127.') || addr.startsWith('10.') || addr.startsWith('192.168.') || addr.startsWith('169.254.')) {
+        return true;
+      }
+      // 172.16.0.0 - 172.31.255.255
+      if (addr.startsWith('172.')) {
+        const second = parseInt(addr.split('.')[1], 10);
+        if (second >= 16 && second <= 31) return true;
+      }
+      // IPv6 private ranges
+      if (addr === '::1' || addr.startsWith('fc00:') || addr.startsWith('fd') || addr.startsWith('fe80:')) {
+        return true;
+      }
+      // IPv4-mapped IPv6
+      if (addr.startsWith('::ffff:127.') || addr.startsWith('::ffff:10.') || addr.startsWith('::ffff:192.168.')) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch {
+    // If we can't parse or resolve, block it for safety
+    return true;
+  }
+}
+
+// SECURITY: Encrypt webhook secret before storing in Firestore
+function encryptWebhookSecret(secret: string): string {
+  return encryptTotpSecret(secret); // Reuses same AES-256-GCM envelope encryption
+}
+
+// SECURITY: Decrypt webhook secret read from Firestore
+function decryptWebhookSecret(ciphertext: string): string {
+  return decryptTotpSecret(ciphertext);
+}
+
+// Check if a stored secret is encrypted (vs legacy plaintext)
+function isWebhookSecretEncrypted(data: string): boolean {
+  // Plaintext webhook secrets start with 'whsec_'
+  if (data.startsWith('whsec_')) return false;
+  return isTotpSecretEncrypted(data);
+}
 
 export type WebhookEvent =
   | 'transfer.created'
@@ -66,13 +128,18 @@ export async function createWebhook(params: {
   url: string;
   events: WebhookEvent[];
 }): Promise<{ webhook: Webhook; secret: string }> {
+  // SECURITY: Block SSRF — reject internal/private URLs
+  if (await isInternalUrl(params.url)) {
+    throw new Error('Webhook URL must not point to internal or private addresses');
+  }
+
   const secret = generateWebhookSecret();
 
   const webhookData = {
     userId: params.userId,
     name: params.name,
     url: params.url,
-    secret, // Stored in Firestore for signing payloads
+    secret: encryptWebhookSecret(secret), // SECURITY: Encrypt before storing
     events: params.events,
     isActive: true,
     failureCount: 0,
@@ -114,8 +181,12 @@ export async function getUserWebhooks(userId: string): Promise<Webhook[]> {
       userId: data.userId,
       name: data.name,
       url: data.url,
-      // SECURITY: Never expose full secret - only show masked version
-      secretMask: maskSecret(data.secret || ''),
+      // SECURITY: Never expose full secret - decrypt then mask for display
+      secretMask: maskSecret(
+        data.secret
+          ? (isWebhookSecretEncrypted(data.secret) ? decryptWebhookSecret(data.secret) : data.secret)
+          : ''
+      ),
       events: data.events,
       isActive: data.isActive,
       failureCount: data.failureCount || 0,
@@ -174,6 +245,11 @@ export async function updateWebhook(
   userId: string,
   updates: { name?: string; url?: string; events?: WebhookEvent[] }
 ): Promise<boolean> {
+  // SECURITY: Block SSRF if URL is being updated
+  if (updates.url && await isInternalUrl(updates.url)) {
+    throw new Error('Webhook URL must not point to internal or private addresses');
+  }
+
   const webhookRef = doc(db, 'webhooks', webhookId);
   const webhookSnap = await getDoc(webhookRef);
 
@@ -213,7 +289,7 @@ export async function regenerateWebhookSecret(
   const newSecret = generateWebhookSecret();
 
   await updateDoc(webhookRef, {
-    secret: newSecret,
+    secret: encryptWebhookSecret(newSecret), // SECURITY: Encrypt before storing
     updatedAt: Timestamp.now(),
   });
 
@@ -241,10 +317,15 @@ export async function triggerWebhooks(
     snapshot.forEach((docSnap) => {
       const webhookData = docSnap.data();
       if (webhookData.events.includes(event)) {
+        // SECURITY: Decrypt secret before use (handle legacy plaintext)
+        const rawSecret = webhookData.secret;
+        const plainSecret = isWebhookSecretEncrypted(rawSecret)
+          ? decryptWebhookSecret(rawSecret)
+          : rawSecret;
         webhooksToTrigger.push({
           id: docSnap.id,
           url: webhookData.url,
-          secret: webhookData.secret,
+          secret: plainSecret,
         });
       }
     });
@@ -267,6 +348,12 @@ async function sendWebhook(
   data: Record<string, unknown>
 ): Promise<void> {
   try {
+    // SECURITY: Re-validate URL to prevent SSRF at delivery time
+    if (await isInternalUrl(url)) {
+      console.error(`Webhook ${webhookId} blocked: URL resolves to internal address`);
+      return;
+    }
+
     const payload: WebhookPayload = {
       event,
       timestamp: new Date().toISOString(),

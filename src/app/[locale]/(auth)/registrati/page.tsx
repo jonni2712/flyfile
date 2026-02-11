@@ -134,6 +134,7 @@ export default function RegisterPage() {
 
               <form onSubmit={handleSendCode} className="space-y-4">
                 <div>
+                  <label htmlFor="email" className="sr-only">{t('title')}</label>
                   <input
                     id="email"
                     name="email"
@@ -142,7 +143,7 @@ export default function RegisterPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors min-h-[44px]"
                     placeholder="mario@esempio.com"
                   />
                 </div>
@@ -230,6 +231,7 @@ export default function RegisterPage() {
 
               <form onSubmit={handleVerifyCode} className="space-y-4">
                 <div>
+                  <label htmlFor="code" className="sr-only">{t('checkEmail')}</label>
                   <input
                     ref={codeInputRef}
                     id="code"
@@ -244,7 +246,7 @@ export default function RegisterPage() {
                       const val = e.target.value.replace(/\D/g, '');
                       if (val.length <= 6) setCode(val);
                     }}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 text-center text-2xl tracking-[0.5em] font-mono placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 text-center text-2xl tracking-[0.5em] font-mono placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors min-h-[44px]"
                     placeholder="000000"
                   />
                 </div>

@@ -1098,6 +1098,7 @@ export default function HomePageClient() {
                       value={recipientEmail}
                       onChange={(e) => setRecipientEmail(e.target.value)}
                       disabled={isUploading}
+                      aria-label={t('upload.recipientEmail')}
                       className="w-full py-3 text-sm text-gray-900 placeholder-gray-400 bg-transparent border-none outline-none focus:ring-0 disabled:opacity-50"
                       placeholder={t('upload.recipientEmail')}
                     />
@@ -1116,6 +1117,7 @@ export default function HomePageClient() {
                           setIsEmailVerified(false);
                         }}
                         disabled={isUploading || isEmailVerified}
+                        aria-label={t('upload.yourEmail')}
                         className="w-full py-3 text-sm text-gray-900 placeholder-gray-400 bg-transparent border-none outline-none focus:ring-0 disabled:opacity-50"
                         placeholder={t('upload.yourEmail')}
                       />
@@ -1140,6 +1142,7 @@ export default function HomePageClient() {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     disabled={isUploading}
+                    aria-label={t('upload.titlePlaceholder')}
                     className="w-full py-3 text-sm text-gray-900 placeholder-gray-400 bg-transparent border-none outline-none focus:ring-0 disabled:opacity-50"
                     placeholder={t('upload.titlePlaceholder')}
                   />
@@ -1152,6 +1155,7 @@ export default function HomePageClient() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     disabled={isUploading}
+                    aria-label={t('upload.messagePlaceholder')}
                     className="w-full py-3 text-sm text-gray-900 placeholder-gray-400 bg-transparent border-none outline-none focus:ring-0 resize-none disabled:opacity-50"
                     placeholder={t('upload.messagePlaceholder')}
                   />

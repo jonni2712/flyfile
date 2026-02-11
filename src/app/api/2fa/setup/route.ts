@@ -4,6 +4,9 @@ import { generateTotpSecret, generateTotpUri, generateBackupCodes, enable2FA, ve
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 import { csrfProtection } from '@/lib/csrf';
+import { FieldValue } from 'firebase-admin/firestore';
+import QRCode from 'qrcode';
+import crypto from 'crypto';
 
 // GET - Generate 2FA setup data
 export async function GET(request: NextRequest) {
@@ -59,11 +62,27 @@ export async function GET(request: NextRequest) {
     const secret = generateTotpSecret();
     const totpUri = generateTotpUri(secret, userData.email || userId);
 
+    // SECURITY: Store secret server-side with TTL instead of sending to client
+    const setupId = crypto.randomUUID();
+    await db.collection('twoFactorSetup').doc(setupId).set({
+      userId,
+      secret,
+      createdAt: FieldValue.serverTimestamp(),
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minute TTL
+    });
+
+    // SECURITY: Generate QR code server-side as base64 data URI
+    const qrCodeDataUri = await QRCode.toDataURL(totpUri, {
+      width: 200,
+      margin: 1,
+      color: { dark: '#000000', light: '#ffffff' },
+    });
+
     return NextResponse.json({
       success: true,
-      secret,
+      setupId,
       totpUri,
-      qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(totpUri)}`,
+      qrCodeUrl: qrCodeDataUri,
     });
   } catch (error) {
     console.error('Error generating 2FA setup:', error);
@@ -89,11 +108,11 @@ export async function POST(request: NextRequest) {
     if (authError) return authError;
 
     const body = await request.json();
-    const { userId, secret, token } = body;
+    const { userId, setupId, token } = body;
 
-    if (!userId || !secret || !token) {
+    if (!userId || !setupId || !token) {
       return NextResponse.json(
-        { error: 'userId, secret e token richiesti' },
+        { error: 'userId, setupId e token richiesti' },
         { status: 400 }
       );
     }
@@ -105,6 +124,40 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
+
+    // SECURITY: Retrieve secret from server-side storage using setupId
+    const db = getAdminFirestore();
+    const setupRef = db.collection('twoFactorSetup').doc(setupId);
+    const setupSnap = await setupRef.get();
+
+    if (!setupSnap.exists) {
+      return NextResponse.json(
+        { error: 'Sessione di setup non trovata o scaduta. Riprova.' },
+        { status: 400 }
+      );
+    }
+
+    const setupData = setupSnap.data()!;
+
+    // Verify the setup belongs to this user
+    if (setupData.userId !== userId) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 403 }
+      );
+    }
+
+    // Check if setup has expired
+    const expiresAt = setupData.expiresAt?.toDate?.() || setupData.expiresAt;
+    if (expiresAt && expiresAt < new Date()) {
+      await setupRef.delete();
+      return NextResponse.json(
+        { error: 'Sessione di setup scaduta. Riprova.' },
+        { status: 400 }
+      );
+    }
+
+    const secret = setupData.secret;
 
     // Verify the token
     if (!verifyTotp(secret, token)) {
@@ -126,6 +179,9 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Clean up the setup document
+    await setupRef.delete();
 
     return NextResponse.json({
       success: true,

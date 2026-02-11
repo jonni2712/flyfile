@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { HardDrive, AlertTriangle, Crown } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 
 interface StorageQuotaProps {
   storageUsed: number;
@@ -17,6 +18,7 @@ export default function StorageQuota({
   pendingSize = 0,
   compact = false
 }: StorageQuotaProps) {
+  const t = useTranslations('storageQuota');
   // Ensure storageUsed is never negative
   const safeStorageUsed = Math.max(0, storageUsed || 0);
 
@@ -78,7 +80,7 @@ export default function StorageQuota({
         </div>
         <span className="text-xs text-blue-200/60 whitespace-nowrap">
           {isUnlimited ? (
-            'Illimitato'
+            t('unlimited')
           ) : (
             `${formatBytes(safeStorageUsed)} / ${formatBytes(storageLimit)}`
           )}
@@ -92,12 +94,12 @@ export default function StorageQuota({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <HardDrive className={`w-5 h-5 ${willExceed ? 'text-red-400' : 'text-cyan-400'}`} />
-          <span className="text-sm font-medium text-white">Storage</span>
+          <span className="text-sm font-medium text-white">{t('storage')}</span>
         </div>
         {isUnlimited ? (
           <span className="text-sm text-cyan-400 flex items-center gap-1">
             <Crown className="w-4 h-4" />
-            Illimitato
+            {t('unlimited')}
           </span>
         ) : (
           <span className="text-sm text-blue-200/80">
@@ -125,10 +127,10 @@ export default function StorageQuota({
 
           <div className="flex items-center justify-between text-xs">
             <span className="text-blue-200/60">
-              {percentage}% utilizzato
+              {percentage}% {t('used')}
             </span>
             <span className="text-blue-200/60">
-              {formatBytes(Math.max(0, storageLimit - safeStorageUsed))} disponibili
+              {formatBytes(Math.max(0, storageLimit - safeStorageUsed))} {t('available')}
             </span>
           </div>
         </>
@@ -139,10 +141,10 @@ export default function StorageQuota({
           <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm text-red-200">
-              I file selezionati ({formatBytes(pendingSize)}) supererebbero il tuo limite di storage.
+              {t('exceedLimit', { size: formatBytes(pendingSize) })}
             </p>
             <Link href="/prezzi" className="text-sm text-red-400 hover:text-red-300 font-medium mt-1 inline-block">
-              Passa a un piano superiore
+              {t('upgradePlan')}
             </Link>
           </div>
         </div>
@@ -153,10 +155,10 @@ export default function StorageQuota({
           <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm text-yellow-200">
-              Stai esaurendo lo spazio disponibile.
+              {t('nearLimit')}
             </p>
             <Link href="/prezzi" className="text-sm text-yellow-400 hover:text-yellow-300 font-medium mt-1 inline-block">
-              Aumenta il tuo spazio
+              {t('increaseSpace')}
             </Link>
           </div>
         </div>

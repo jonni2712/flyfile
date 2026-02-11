@@ -6,9 +6,8 @@ import {
   doc,
   getDoc,
   getDocs,
-  addDoc,
-  updateDoc,
   deleteDoc,
+  updateDoc,
   query,
   where,
   serverTimestamp,
@@ -38,6 +37,16 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const [team, setTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Helper to get auth headers
+  const getAuthHeaders = useCallback(async (): Promise<Record<string, string>> => {
+    if (!user) throw new Error('Non autorizzato');
+    const token = await user.getIdToken();
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    };
+  }, [user]);
 
   // Fetch user's team
   const fetchTeam = useCallback(async () => {
@@ -135,52 +144,35 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  // Create a new team
+  // Create a new team via API (server-side with Admin SDK)
   const createTeam = useCallback(async (name: string, description?: string): Promise<Team> => {
     if (!user) throw new Error('Non autorizzato');
 
-    // Check if user has business plan
     if (userProfile?.plan !== 'business') {
       throw new Error('Piano Business richiesto per creare un team');
     }
 
     try {
-      // Create team document
-      const teamData = {
-        name,
-        description: description || null,
-        ownerId: user.uid,
-        memberCount: 1,
-        storageUsed: 0,
-        maxMembers: 3, // Base plan includes 3 members
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      const teamRef = await addDoc(collection(db, 'teams'), teamData);
-
-      // Add owner as first member
-      await addDoc(collection(db, 'teamMembers'), {
-        teamId: teamRef.id,
-        userId: user.uid,
-        role: 'owner',
-        storageUsed: 0,
-        joinedAt: serverTimestamp(),
+      const headers = await getAuthHeaders();
+      const response = await fetch('/api/team', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ userId: user.uid, name, description }),
       });
 
-      await fetchTeam();
+      const data = await response.json();
 
-      return {
-        id: teamRef.id,
-        ...teamData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as Team;
+      if (!response.ok) {
+        throw new Error(data.error || 'Impossibile creare il team');
+      }
+
+      await fetchTeam();
+      return data.team;
     } catch (err) {
       console.error('Error creating team:', err);
-      throw new Error('Impossibile creare il team');
+      throw err instanceof Error ? err : new Error('Impossibile creare il team');
     }
-  }, [user, userProfile, fetchTeam]);
+  }, [user, userProfile, fetchTeam, getAuthHeaders]);
 
   // Update team
   const updateTeam = useCallback(async (data: Partial<Team>): Promise<void> => {
@@ -243,45 +235,34 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     }
   }, [user, team]);
 
-  // Invite member
+  // Invite member via API (server-side with Admin SDK)
   const inviteMember = useCallback(async (email: string): Promise<void> => {
     if (!user || !team) throw new Error('Non autorizzato');
 
-    // Check if user is owner
     if (team.ownerId !== user.uid) {
       throw new Error('Solo il proprietario può invitare membri');
     }
 
-    // Check member limit
-    const currentMembers = team.members?.length || 1;
-    const pendingInvitations = team.pendingInvitations?.length || 0;
-    if (currentMembers + pendingInvitations >= team.maxMembers) {
-      throw new Error(`Limite massimo di ${team.maxMembers} membri raggiunto`);
-    }
-
     try {
-      // Generate invitation token
-      const token = crypto.randomUUID();
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
-
-      await addDoc(collection(db, 'teamInvitations'), {
-        teamId: team.id,
-        email,
-        token,
-        status: 'pending',
-        expiresAt,
-        createdAt: serverTimestamp(),
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/team/${team.id}/invite`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ email }),
       });
 
-      // TODO: Send invitation email
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Impossibile inviare l\'invito');
+      }
 
       await fetchTeam();
     } catch (err) {
       console.error('Error inviting member:', err);
-      throw new Error('Impossibile inviare l\'invito');
+      throw err instanceof Error ? err : new Error('Impossibile inviare l\'invito');
     }
-  }, [user, team, fetchTeam]);
+  }, [user, team, fetchTeam, getAuthHeaders]);
 
   // Remove member
   const removeMember = useCallback(async (memberId: string): Promise<void> => {
@@ -339,66 +320,30 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     }
   }, [user, team, fetchTeam]);
 
-  // Accept invitation
+  // Accept invitation via API (server-side with Admin SDK)
   const acceptInvitation = useCallback(async (token: string): Promise<void> => {
     if (!user) throw new Error('Devi effettuare il login');
 
     try {
-      // Find invitation by token
-      const invitationsRef = collection(db, 'teamInvitations');
-      const q = query(
-        invitationsRef,
-        where('token', '==', token),
-        where('status', '==', 'pending')
-      );
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) {
-        throw new Error('Invito non valido o scaduto');
-      }
-
-      const invitationDoc = snapshot.docs[0];
-      const invitation = invitationDoc.data();
-
-      // Check if expired
-      if (invitation.expiresAt?.toDate() < new Date()) {
-        throw new Error('Invito scaduto');
-      }
-
-      // Check if email matches
-      if (invitation.email !== user.email) {
-        throw new Error('Questo invito è per un altro indirizzo email');
-      }
-
-      // Add user as team member
-      await addDoc(collection(db, 'teamMembers'), {
-        teamId: invitation.teamId,
-        userId: user.uid,
-        role: 'member',
-        storageUsed: 0,
-        joinedAt: serverTimestamp(),
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/team/invitation/${token}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({}),
       });
 
-      // Update invitation status
-      await updateDoc(doc(db, 'teamInvitations', invitationDoc.id), {
-        status: 'accepted',
-      });
+      const data = await response.json();
 
-      // Update team member count
-      const teamDoc = await getDoc(doc(db, 'teams', invitation.teamId));
-      if (teamDoc.exists()) {
-        await updateDoc(doc(db, 'teams', invitation.teamId), {
-          memberCount: (teamDoc.data().memberCount || 1) + 1,
-          updatedAt: serverTimestamp(),
-        });
+      if (!response.ok) {
+        throw new Error(data.error || 'Invito non valido o scaduto');
       }
 
       await fetchTeam();
     } catch (err) {
       console.error('Error accepting invitation:', err);
-      throw err;
+      throw err instanceof Error ? err : new Error('Impossibile accettare l\'invito');
     }
-  }, [user, fetchTeam]);
+  }, [user, fetchTeam, getAuthHeaders]);
 
   const value = {
     team,

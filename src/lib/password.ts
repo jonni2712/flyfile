@@ -6,7 +6,8 @@ const SALT_ROUNDS = 12;
 // Legacy SHA-256 hashing (for migration purposes)
 async function legacyHashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
-  const salt = process.env.PASSWORD_SALT || 'flyfile-salt';
+  const salt = process.env.PASSWORD_SALT;
+  if (!salt) throw new Error('PASSWORD_SALT environment variable is required');
   const data = encoder.encode(password + salt);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -52,6 +53,29 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 export function needsHashUpgrade(hash: string): boolean {
   // SHA-256 hashes are 64 hex characters
   return hash.length === 64 && /^[a-f0-9]+$/i.test(hash);
+}
+
+/**
+ * Validate password strength
+ * Requires: 8-128 chars, at least one lowercase, one uppercase, one digit
+ */
+export function validatePasswordStrength(password: string): { valid: boolean; error?: string } {
+  if (password.length < 8) {
+    return { valid: false, error: 'La password deve contenere almeno 8 caratteri' };
+  }
+  if (password.length > 128) {
+    return { valid: false, error: 'La password non può superare 128 caratteri' };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, error: 'La password deve contenere almeno una lettera minuscola' };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, error: 'La password deve contenere almeno una lettera maiuscola' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, error: 'La password deve contenere almeno un numero' };
+  }
+  return { valid: true };
 }
 
 /**

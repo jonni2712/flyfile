@@ -213,6 +213,7 @@ export default function LoginPage() {
 
               <form onSubmit={handleContinue} className="space-y-4">
                 <div>
+                  <label htmlFor="email" className="sr-only">{t('title')}</label>
                   <input
                     id="email"
                     name="email"
@@ -221,7 +222,7 @@ export default function LoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors min-h-[44px]"
                     placeholder="mario@esempio.com"
                   />
                 </div>
@@ -300,6 +301,7 @@ export default function LoginPage() {
 
               <form onSubmit={handlePasswordLogin} className="space-y-4">
                 <div className="relative">
+                  <label htmlFor="password" className="sr-only">{t('password')}</label>
                   <input
                     ref={passwordInputRef}
                     id="password"
@@ -309,7 +311,7 @@ export default function LoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors"
+                    className="w-full px-4 py-3 pr-12 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors min-h-[44px]"
                     placeholder={t('password')}
                   />
                   <button
@@ -375,6 +377,7 @@ export default function LoginPage() {
 
               <form onSubmit={handleVerifyCode} className="space-y-4">
                 <div>
+                  <label htmlFor="code" className="sr-only">{t('checkEmail')}</label>
                   <input
                     ref={codeInputRef}
                     id="code"
@@ -389,7 +392,7 @@ export default function LoginPage() {
                       const val = e.target.value.replace(/\D/g, '');
                       if (val.length <= 6) setCode(val);
                     }}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 text-center text-2xl tracking-[0.5em] font-mono placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 text-center text-2xl tracking-[0.5em] font-mono placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors min-h-[44px]"
                     placeholder="000000"
                   />
                 </div>

@@ -117,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.error('Failed to ensure Stripe customer:', e);
             }
           }
-          document.cookie = `__session=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+          document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax; Secure`;
 
           // Small delay to ensure cookie is set
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -141,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await fetchUserProfile(user.uid);
         // Set session cookie for middleware authentication
         const token = await user.getIdToken();
-        document.cookie = `__session=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+        document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax; Secure`;
       } else {
         setUserProfile(null);
         // Clear session cookie on logout

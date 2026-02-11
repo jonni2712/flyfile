@@ -41,6 +41,16 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
   }
 }
 
+// SECURITY: Escape HTML entities to prevent XSS/HTML injection in email templates
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 // Email Templates
 
 // Shared email styles — full-width, no box, dark/light mode safe
@@ -72,6 +82,8 @@ export function getTeamInviteEmail(params: {
   inviteLink: string;
 }) {
   const { teamName, inviterName, inviteLink } = params;
+  const safeInviterName = escapeHtml(inviterName);
+  const safeTeamName = escapeHtml(teamName);
 
   const html = `
 <!DOCTYPE html>
@@ -93,7 +105,7 @@ export function getTeamInviteEmail(params: {
       <h2 style="${emailStyles.title}">Sei stato invitato!</h2>
 
       <p style="${emailStyles.text}">
-        <strong>${inviterName}</strong> ti ha invitato a unirti al team <strong>"${teamName}"</strong> su FlyFile.
+        <strong>${safeInviterName}</strong> ti ha invitato a unirti al team <strong>"${safeTeamName}"</strong> su FlyFile.
       </p>
 
       <p style="${emailStyles.text}">
@@ -154,6 +166,9 @@ export function getTransferNotificationEmail(params: {
   expiresAt: string;
 }) {
   const { senderName, title, message, downloadLink, fileCount, totalSize, expiresAt } = params;
+  const safeSenderName = escapeHtml(senderName);
+  const safeTitle = escapeHtml(title);
+  const safeMessage = message ? escapeHtml(message) : undefined;
 
   const html = `
 <!DOCTYPE html>
@@ -175,12 +190,12 @@ export function getTransferNotificationEmail(params: {
       <h2 style="${emailStyles.title}">Hai ricevuto dei file!</h2>
 
       <p style="${emailStyles.text}">
-        <strong>${senderName}</strong> ti ha inviato dei file tramite FlyFile.
+        <strong>${safeSenderName}</strong> ti ha inviato dei file tramite FlyFile.
       </p>
 
       <div style="${emailStyles.infoBox}">
-        <h3 style="color: #111827; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">${title}</h3>
-        ${message ? `<p style="color: #6b7280; margin: 0 0 12px 0; font-style: italic; font-size: 14px;">"${message}"</p>` : ''}
+        <h3 style="color: #111827; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">${safeTitle}</h3>
+        ${safeMessage ? `<p style="color: #6b7280; margin: 0 0 12px 0; font-style: italic; font-size: 14px;">"${safeMessage}"</p>` : ''}
         <div style="color: #6b7280; font-size: 13px;">
           <span style="margin-right: 16px;">${fileCount} file</span>
           <span>${totalSize}</span>
@@ -525,6 +540,9 @@ export function getUploadConfirmationEmail(params: {
   recipientEmail?: string;
 }) {
   const { senderName, title, downloadLink, fileCount, totalSize, expiresAt, recipientEmail } = params;
+  const safeSenderName = escapeHtml(senderName);
+  const safeTitle = escapeHtml(title);
+  const safeRecipientEmail = recipientEmail ? escapeHtml(recipientEmail) : undefined;
 
   const html = `
 <!DOCTYPE html>
@@ -552,15 +570,15 @@ export function getUploadConfirmationEmail(params: {
       <h2 style="${emailStyles.title}; text-align: center;">Upload Completato!</h2>
 
       <p style="${emailStyles.text}">
-        Ciao <strong>${senderName}</strong>, il tuo trasferimento è stato caricato con successo.
+        Ciao <strong>${safeSenderName}</strong>, il tuo trasferimento è stato caricato con successo.
       </p>
 
       <div style="${emailStyles.infoBox}">
-        <h3 style="color: #111827; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">${title}</h3>
+        <h3 style="color: #111827; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">${safeTitle}</h3>
         <div style="color: #6b7280; font-size: 13px;">
           <div style="margin-bottom: 6px;">${fileCount} file</div>
           <div style="margin-bottom: 6px;">${totalSize}</div>
-          ${recipientEmail ? `<div style="margin-bottom: 6px;">Inviato a: ${recipientEmail}</div>` : ''}
+          ${safeRecipientEmail ? `<div style="margin-bottom: 6px;">Inviato a: ${safeRecipientEmail}</div>` : ''}
         </div>
       </div>
 
@@ -627,6 +645,9 @@ export function getDownloadNotificationEmail(params: {
   recipientInfo?: string;
 }) {
   const { senderName, title, downloadLink, fileCount, downloadCount, recipientInfo } = params;
+  const safeSenderName = escapeHtml(senderName);
+  const safeTitle = escapeHtml(title);
+  const safeRecipientInfo = recipientInfo ? escapeHtml(recipientInfo) : undefined;
 
   const html = `
 <!DOCTYPE html>
@@ -648,15 +669,15 @@ export function getDownloadNotificationEmail(params: {
       <h2 style="${emailStyles.title}; text-align: center;">I tuoi file sono stati scaricati!</h2>
 
       <p style="${emailStyles.text}">
-        Ciao <strong>${senderName}</strong>, qualcuno ha scaricato i tuoi file.
+        Ciao <strong>${safeSenderName}</strong>, qualcuno ha scaricato i tuoi file.
       </p>
 
       <div style="${emailStyles.infoBox}">
-        <h3 style="color: #111827; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">${title}</h3>
+        <h3 style="color: #111827; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">${safeTitle}</h3>
         <div style="color: #6b7280; font-size: 13px;">
           <div style="margin-bottom: 6px;">${fileCount} file</div>
           <div style="margin-bottom: 6px;">Download totali: <strong>${downloadCount}</strong></div>
-          ${recipientInfo ? `<div style="margin-bottom: 6px;">Scaricato da: ${recipientInfo}</div>` : ''}
+          ${safeRecipientInfo ? `<div style="margin-bottom: 6px;">Scaricato da: ${safeRecipientInfo}</div>` : ''}
         </div>
       </div>
 
@@ -713,6 +734,13 @@ export function getContactNotificationEmail(params: {
   messageId: string;
 }) {
   const { name, email, company, subject, message, ip, userAgent, messageId } = params;
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeCompany = company ? escapeHtml(company) : undefined;
+  const safeSubject = escapeHtml(subject);
+  const safeMessage = escapeHtml(message);
+  const safeIp = escapeHtml(ip);
+  const safeUserAgent = escapeHtml(userAgent);
 
   const html = `
 <!DOCTYPE html>
@@ -731,23 +759,23 @@ export function getContactNotificationEmail(params: {
     </div>
 
     <div style="${emailStyles.content}">
-      <h2 style="${emailStyles.title}">${subject}</h2>
+      <h2 style="${emailStyles.title}">${safeSubject}</h2>
 
       <div style="${emailStyles.infoBox}">
         <h3 style="color: #6b7280; margin: 0 0 14px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Informazioni Mittente</h3>
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
             <td style="color: #6b7280; padding: 4px 0; width: 80px; font-size: 13px;">Nome:</td>
-            <td style="color: #111827; padding: 4px 0; font-weight: 600; font-size: 13px;">${name}</td>
+            <td style="color: #111827; padding: 4px 0; font-weight: 600; font-size: 13px;">${safeName}</td>
           </tr>
           <tr>
             <td style="color: #6b7280; padding: 4px 0; font-size: 13px;">Email:</td>
-            <td style="color: #111827; padding: 4px 0; font-size: 13px;"><a href="mailto:${email}" style="${emailStyles.link}">${email}</a></td>
+            <td style="color: #111827; padding: 4px 0; font-size: 13px;"><a href="mailto:${safeEmail}" style="${emailStyles.link}">${safeEmail}</a></td>
           </tr>
-          ${company ? `
+          ${safeCompany ? `
           <tr>
             <td style="color: #6b7280; padding: 4px 0; font-size: 13px;">Azienda:</td>
-            <td style="color: #111827; padding: 4px 0; font-size: 13px;">${company}</td>
+            <td style="color: #111827; padding: 4px 0; font-size: 13px;">${safeCompany}</td>
           </tr>
           ` : ''}
         </table>
@@ -755,11 +783,11 @@ export function getContactNotificationEmail(params: {
 
       <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin: 0 0 24px 0;">
         <h3 style="color: #6b7280; margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Messaggio</h3>
-        <p style="color: #111827; line-height: 1.7; margin: 0; white-space: pre-wrap; font-size: 14px;">${message}</p>
+        <p style="color: #111827; line-height: 1.7; margin: 0; white-space: pre-wrap; font-size: 14px;">${safeMessage}</p>
       </div>
 
       <div style="text-align: center; margin: 32px 0;">
-        <a href="mailto:${email}?subject=Re: ${encodeURIComponent(subject)}" style="${emailStyles.btnPrimary}">
+        <a href="mailto:${safeEmail}?subject=Re: ${encodeURIComponent(subject)}" style="${emailStyles.btnPrimary}">
           Rispondi
         </a>
       </div>
@@ -768,9 +796,9 @@ export function getContactNotificationEmail(params: {
 
       <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px;">
         <p style="color: #9ca3af; font-size: 11px; margin: 0; line-height: 1.6;">
-          <strong>ID:</strong> ${messageId}<br>
-          <strong>IP:</strong> ${ip}<br>
-          <strong>UA:</strong> ${userAgent}
+          <strong>ID:</strong> ${escapeHtml(messageId)}<br>
+          <strong>IP:</strong> ${safeIp}<br>
+          <strong>UA:</strong> ${safeUserAgent}
         </p>
       </div>
     </div>
@@ -811,6 +839,7 @@ export function getBetaTesterWelcomeEmail(params: {
   couponCode: string;
 }) {
   const { userName, couponCode } = params;
+  const safeUserName = escapeHtml(userName);
 
   const html = `
 <!DOCTYPE html>
@@ -829,7 +858,7 @@ export function getBetaTesterWelcomeEmail(params: {
     </div>
 
     <div style="${emailStyles.content}">
-      <h2 style="${emailStyles.title}">Ciao ${userName}!</h2>
+      <h2 style="${emailStyles.title}">Ciao ${safeUserName}!</h2>
 
       <p style="${emailStyles.text}">
         Grazie per esserti unito al nostro esclusivo programma beta! Sei tra i primi a provare FlyFile e il tuo feedback sarà fondamentale per migliorare il servizio.
@@ -905,6 +934,8 @@ export function getSubscriptionConfirmationEmail(params: {
   billingUrl: string;
 }) {
   const { userName, planName, billingCycle, billingUrl } = params;
+  const safeUserName = escapeHtml(userName);
+  const safePlanName = escapeHtml(planName);
   const cycleLabel = billingCycle === 'annual' ? 'annuale' : 'mensile';
 
   const html = `
@@ -933,14 +964,14 @@ export function getSubscriptionConfirmationEmail(params: {
       <h2 style="${emailStyles.title}; text-align: center;">Abbonamento Attivato!</h2>
 
       <p style="${emailStyles.text}">
-        Ciao <strong>${userName}</strong>, il tuo abbonamento FlyFile è stato attivato con successo.
+        Ciao <strong>${safeUserName}</strong>, il tuo abbonamento FlyFile è stato attivato con successo.
       </p>
 
       <div style="${emailStyles.infoBox}">
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
             <td style="color: #6b7280; padding: 6px 0; font-size: 13px;">Piano:</td>
-            <td style="color: #111827; padding: 6px 0; font-weight: 600; font-size: 13px; text-align: right;">${planName}</td>
+            <td style="color: #111827; padding: 6px 0; font-weight: 600; font-size: 13px; text-align: right;">${safePlanName}</td>
           </tr>
           <tr>
             <td style="color: #6b7280; padding: 6px 0; font-size: 13px;">Fatturazione:</td>

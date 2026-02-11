@@ -135,36 +135,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
+    // SECURITY: Log full error details server-side, return generic message to client
     console.error('Error creating checkout session:', error);
 
-    // Extract error details
-    let errorMessage = 'Failed to create checkout session';
-    let errorCode = 'UNKNOWN_ERROR';
-    let stripeMessage = '';
-
-    if (error instanceof Error) {
-      errorMessage = error.message;
-      stripeMessage = error.message;
-
-      // Stripe specific errors
-      if ('type' in error) {
-        errorCode = (error as { type: string }).type;
-      }
-      // Get Stripe's specific error message
-      if ('raw' in error) {
-        const raw = (error as { raw?: { message?: string } }).raw;
-        if (raw?.message) stripeMessage = raw.message;
-      }
-    }
-
-    // Return detailed error for debugging
     return NextResponse.json(
-      {
-        error: errorMessage,
-        code: errorCode,
-        stripeMessage,
-        details: String(error)
-      },
+      { error: 'Errore nella creazione della sessione di pagamento' },
       { status: 500 }
     );
   }

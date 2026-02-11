@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import {
   Upload,
@@ -37,6 +38,7 @@ interface Transfer {
 
 export default function FilesPage() {
   const { user, userProfile, loading } = useAuth();
+  const t = useTranslations('files');
   const router = useRouter();
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [filteredTransfers, setFilteredTransfers] = useState<Transfer[]>([]);
@@ -93,7 +95,7 @@ export default function FilesPage() {
 
         transfersList.push({
           id: docSnap.id,
-          title: data.title || data.originalName || 'Trasferimento senza titolo',
+          title: data.title || data.originalName || t('untitledTransfer'),
           originalName: data.originalName,
           size: data.size,
           downloadCount: data.downloadCount || 0,
@@ -121,7 +123,7 @@ export default function FilesPage() {
       });
     } catch (error) {
       console.error('Error fetching transfers:', error);
-      showToast('Errore nel caricamento dei file', 'error');
+      showToast(t('loadError'), 'error');
     } finally {
       setLoadingTransfers(false);
     }
@@ -155,14 +157,14 @@ export default function FilesPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
-      showToast('Link copiato negli appunti!', 'success');
+      showToast(t('linkCopied'), 'success');
     }).catch(() => {
-      showToast('Errore durante la copia', 'error');
+      showToast(t('copyError'), 'error');
     });
   };
 
   const handleDelete = async (transferId: string, r2Key: string) => {
-    if (!confirm('Sei sicuro di voler eliminare questo transfer? Questa azione non può essere annullata.')) {
+    if (!confirm(t('confirmDelete'))) {
       return;
     }
 
@@ -180,10 +182,10 @@ export default function FilesPage() {
         next.delete(transferId);
         return next;
       });
-      showToast('Transfer eliminato con successo', 'success');
+      showToast(t('deleteSuccess'), 'success');
     } catch (error) {
       console.error('Error deleting transfer:', error);
-      showToast('Errore durante l\'eliminazione', 'error');
+      showToast(t('deleteError'), 'error');
     }
   };
 
@@ -211,7 +213,7 @@ export default function FilesPage() {
     if (selectedIds.size === 0) return;
 
     const count = selectedIds.size;
-    if (!confirm(`Sei sicuro di voler eliminare ${count} file? Questa azione non può essere annullata.`)) {
+    if (!confirm(t('confirmDelete'))) {
       return;
     }
 
@@ -236,18 +238,18 @@ export default function FilesPage() {
 
         if (data.results.failed.length > 0) {
           showToast(
-            `${data.results.deleted.length} eliminati, ${data.results.failed.length} falliti`,
+            t('bulkDeletePartial', { deleted: data.results.deleted.length, failed: data.results.failed.length }),
             'error'
           );
         } else {
-          showToast(`${data.results.deleted.length} file eliminati con successo`, 'success');
+          showToast(t('bulkDeleteSuccess', { count: data.results.deleted.length }), 'success');
         }
       } else {
-        showToast(data.error || 'Errore durante l\'eliminazione', 'error');
+        showToast(data.error || t('deleteError'), 'error');
       }
     } catch (error) {
       console.error('Error bulk deleting:', error);
-      showToast('Errore durante l\'eliminazione', 'error');
+      showToast(t('deleteError'), 'error');
     } finally {
       setBulkDeleting(false);
     }
@@ -274,13 +276,13 @@ export default function FilesPage() {
   const getTimeRemaining = (expiresAt: Date) => {
     const now = new Date();
     const diff = expiresAt.getTime() - now.getTime();
-    if (diff <= 0) return 'Scaduto';
+    if (diff <= 0) return t('expiredTime');
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
-    if (days > 0) return `${days} giorni`;
-    return `${hours} ore`;
+    if (days > 0) return t('days', { count: days });
+    return t('hours', { count: hours });
   };
 
   if (loading) {
@@ -318,15 +320,15 @@ export default function FilesPage() {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">I miei Upload</h1>
-              <p className="text-gray-600">Gestisci tutti i tuoi file caricati</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('myUploads')}</h1>
+              <p className="text-gray-600">{t('manageFiles')}</p>
             </div>
             <Link
               href="/"
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Upload className="w-4 h-4 mr-2" />
-              Nuovo Upload
+              {t('newUpload')}
             </Link>
           </div>
 
@@ -339,8 +341,9 @@ export default function FilesPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cerca per titolo..."
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder={t('searchPlaceholder')}
+                  aria-label={t('searchPlaceholder')}
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[44px]"
                 />
               </div>
             </div>
@@ -353,7 +356,7 @@ export default function FilesPage() {
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                Attivi
+                {t('active')}
               </button>
               <button
                 onClick={() => setStatusFilter('expired')}
@@ -363,7 +366,7 @@ export default function FilesPage() {
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                Scaduti
+                {t('expired')}
               </button>
               <button
                 onClick={() => setStatusFilter('all')}
@@ -373,7 +376,7 @@ export default function FilesPage() {
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                Tutti
+                {t('all')}
               </button>
             </div>
           </div>
@@ -393,13 +396,13 @@ export default function FilesPage() {
                   )}
                   <span>
                     {selectedIds.size === filteredTransfers.length && filteredTransfers.length > 0
-                      ? 'Deseleziona tutti'
-                      : 'Seleziona tutti'}
+                      ? t('deselectAll')
+                      : t('selectAll')}
                   </span>
                 </button>
                 {selectedIds.size > 0 && (
                   <span className="text-sm text-gray-500">
-                    {selectedIds.size} di {filteredTransfers.length} selezionati
+                    {t('selectedCount', { count: selectedIds.size, total: filteredTransfers.length })}
                   </span>
                 )}
               </div>
@@ -412,12 +415,12 @@ export default function FilesPage() {
                   {bulkDeleting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Eliminando...
+                      {t('deleting')}
                     </>
                   ) : (
                     <>
                       <Trash2 className="w-4 h-4 mr-2" />
-                      Elimina selezionati ({selectedIds.size})
+                      {t('deleteSelected', { count: selectedIds.size })}
                     </>
                   )}
                 </button>
@@ -426,22 +429,22 @@ export default function FilesPage() {
           )}
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-blue-50 rounded-lg p-4">
               <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-              <div className="text-sm text-blue-600/80">Transfer totali</div>
+              <div className="text-sm text-blue-600/80">{t('totalTransfers')}</div>
             </div>
             <div className="bg-green-50 rounded-lg p-4">
               <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-              <div className="text-sm text-green-600/80">Attivi</div>
+              <div className="text-sm text-green-600/80">{t('active')}</div>
             </div>
             <div className="bg-red-50 rounded-lg p-4">
               <div className="text-2xl font-bold text-red-600">{stats.expired}</div>
-              <div className="text-sm text-red-600/80">Scaduti</div>
+              <div className="text-sm text-red-600/80">{t('expired')}</div>
             </div>
             <div className="bg-purple-50 rounded-lg p-4">
               <div className="text-2xl font-bold text-purple-600">{stats.totalDownloads}</div>
-              <div className="text-sm text-purple-600/80">Download totali</div>
+              <div className="text-sm text-purple-600/80">{t('totalDownloads')}</div>
             </div>
           </div>
         </div>
@@ -451,7 +454,7 @@ export default function FilesPage() {
           {loadingTransfers ? (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-gray-500 mt-4">Caricamento...</p>
+              <p className="text-gray-500 mt-4">{t('loading')}</p>
             </div>
           ) : filteredTransfers.length > 0 ? (
             filteredTransfers.map((transfer) => (
@@ -461,97 +464,99 @@ export default function FilesPage() {
                   selectedIds.has(transfer.id) ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'
                 }`}
               >
-                <div className="flex items-start justify-between">
-                  {/* Checkbox */}
-                  {canDelete && (
-                    <button
-                      onClick={() => toggleSelection(transfer.id)}
-                      className="mr-4 mt-1 flex-shrink-0"
-                    >
-                      {selectedIds.has(transfer.id) ? (
-                        <CheckSquare className="w-5 h-5 text-blue-600" />
-                      ) : (
-                        <Square className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                      )}
-                    </button>
-                  )}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{transfer.title}</h3>
-                      {transfer.isExpired ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          Scaduto
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Attivo
-                        </span>
-                      )}
-                      {transfer.hasPassword && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          <Lock className="w-3 h-3 mr-1" />
-                          Protetto
-                        </span>
-                      )}
-                    </div>
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <div className="flex items-start flex-1 min-w-0">
+                    {/* Checkbox */}
+                    {canDelete && (
+                      <button
+                        onClick={() => toggleSelection(transfer.id)}
+                        className="mr-4 mt-1 flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      >
+                        {selectedIds.has(transfer.id) ? (
+                          <CheckSquare className="w-5 h-5 text-blue-600" />
+                        ) : (
+                          <Square className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                        )}
+                      </button>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <h3 className="text-lg font-semibold text-gray-900">{transfer.title}</h3>
+                        {transfer.isExpired ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            {t('expiredBadge')}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {t('activeBadge')}
+                          </span>
+                        )}
+                        {transfer.hasPassword && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            <Lock className="w-3 h-3 mr-1" />
+                            {t('protected')}
+                          </span>
+                        )}
+                      </div>
 
-                    <div className="flex items-center text-sm text-gray-600 space-x-4 mb-3 flex-wrap">
-                      <span className="flex items-center">
-                        <FileText className="w-4 h-4 mr-1" />
-                        1 file
-                      </span>
-                      <span className="flex items-center">
-                        <Download className="w-4 h-4 mr-1" />
-                        {formatBytes(transfer.size)}
-                      </span>
-                      <span className="flex items-center">
-                        <Download className="w-4 h-4 mr-1" />
-                        {transfer.downloadCount} download
-                      </span>
-                      <span className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        {formatDate(transfer.createdAt)}
-                      </span>
-                      {transfer.expiresAt && !transfer.isExpired && (
-                        <span className="flex items-center text-orange-600">
-                          Scade tra {getTimeRemaining(transfer.expiresAt)}
+                      <div className="flex items-center text-sm text-gray-600 gap-4 mb-3 flex-wrap">
+                        <span className="flex items-center">
+                          <FileText className="w-4 h-4 mr-1" />
+                          {t('fileCount')}
                         </span>
-                      )}
-                    </div>
+                        <span className="flex items-center">
+                          <Download className="w-4 h-4 mr-1" />
+                          {formatBytes(transfer.size)}
+                        </span>
+                        <span className="flex items-center">
+                          <Download className="w-4 h-4 mr-1" />
+                          {t('downloads', { count: transfer.downloadCount })}
+                        </span>
+                        <span className="flex items-center">
+                          <Calendar className="w-4 h-4 mr-1" />
+                          {formatDate(transfer.createdAt)}
+                        </span>
+                        {transfer.expiresAt && !transfer.isExpired && (
+                          <span className="flex items-center text-orange-600">
+                            {t('expiresIn', { time: getTimeRemaining(transfer.expiresAt) })}
+                          </span>
+                        )}
+                      </div>
 
-                    {/* File name */}
-                    <div className="text-sm text-gray-500">
-                      <FileText className="w-4 h-4 inline mr-1" />
-                      {transfer.originalName}
+                      {/* File name */}
+                      <div className="text-sm text-gray-500">
+                        <FileText className="w-4 h-4 inline mr-1" />
+                        {transfer.originalName}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col gap-2 ml-6">
+                  {/* Actions — row on mobile, column on desktop */}
+                  <div className="flex flex-row md:flex-col gap-2 md:ml-6">
                     <Link
                       href={{ pathname: '/s/[id]', params: { id: transfer.id } }}
                       target="_blank"
-                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors min-h-[44px]"
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
-                      Apri
+                      {t('open')}
                     </Link>
 
                     <button
                       onClick={() => copyToClipboard(`${window.location.origin}/s/${transfer.id}`)}
-                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]"
                     >
                       <Copy className="w-4 h-4 mr-2" />
-                      Copia Link
+                      {t('copyLink')}
                     </button>
 
                     {canDelete && (
                       <button
                         onClick={() => handleDelete(transfer.id, transfer.r2Key)}
-                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors min-h-[44px]"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Elimina
+                        {t('delete')}
                       </button>
                     )}
                   </div>
@@ -561,18 +566,18 @@ export default function FilesPage() {
           ) : (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
               <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Nessun transfer trovato</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{t('noTransfers')}</h3>
               <p className="text-gray-500 mb-6">
                 {searchQuery
-                  ? `Nessun risultato per "${searchQuery}"`
-                  : 'Non hai ancora caricato file'}
+                  ? t('noResults', { query: searchQuery })
+                  : t('noUploadsYet')}
               </p>
               <Link
                 href="/"
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Carica il primo file
+                {t('uploadFirst')}
               </Link>
             </div>
           )}

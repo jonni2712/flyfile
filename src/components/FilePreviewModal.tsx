@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import {
   X,
   Download,
@@ -15,6 +16,7 @@ import {
   ZoomOut,
   RotateCw
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { TransferFile } from '@/types';
 import { decryptFile, isEncryptionSupported } from '@/lib/client-encryption';
 
@@ -35,6 +37,10 @@ export default function FilePreviewModal({
   onDownload,
   isDownloading
 }: FilePreviewModalProps) {
+  const t = useTranslations('filePreview');
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, true);
+
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +93,7 @@ export default function FilePreviewModal({
         });
 
         if (!response.ok) {
-          throw new Error('Impossibile caricare anteprima');
+          throw new Error(t('loadError'));
         }
 
         const { downloadUrl } = await response.json();
@@ -95,7 +101,7 @@ export default function FilePreviewModal({
         // If file is encrypted, decrypt client-side and create blob URL
         if (fileIsEncrypted && canDecrypt) {
           const encryptedResponse = await fetch(downloadUrl);
-          if (!encryptedResponse.ok) throw new Error('Errore nel download del file criptato');
+          if (!encryptedResponse.ok) throw new Error(t('encryptedError'));
 
           const encryptedBlob = await encryptedResponse.blob();
           const decryptedBlob = await decryptFile(
@@ -107,13 +113,13 @@ export default function FilePreviewModal({
           const blobUrl = URL.createObjectURL(decryptedBlob);
           setPreviewUrl(blobUrl);
         } else if (fileIsEncrypted && !canDecrypt) {
-          setError('Anteprima non disponibile per file criptati');
+          setError(t('encryptedUnavailable'));
         } else {
           setPreviewUrl(downloadUrl);
         }
       } catch (err) {
         console.error('Preview error:', err);
-        setError('Impossibile caricare l\'anteprima del file');
+        setError(t('fileLoadError'));
       } finally {
         setLoading(false);
       }
@@ -152,7 +158,7 @@ export default function FilePreviewModal({
       return (
         <div className="flex flex-col items-center justify-center h-full">
           <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-          <p className="text-gray-500">Caricamento anteprima...</p>
+          <p className="text-gray-500">{t('loading')}</p>
         </div>
       );
     }
@@ -161,13 +167,13 @@ export default function FilePreviewModal({
       return (
         <div className="flex flex-col items-center justify-center h-full">
           <File className="w-16 h-16 text-gray-300 mb-4" />
-          <p className="text-gray-500 mb-4">{error || 'Anteprima non disponibile'}</p>
+          <p className="text-gray-500 mb-4">{error || t('unavailable')}</p>
           <button
             onClick={() => onDownload(file)}
             className="px-5 py-2.5 bg-[#409cff] hover:bg-[#3085e0] text-white rounded-full transition-colors flex items-center text-sm font-medium"
           >
             <Download className="w-4 h-4 mr-2" />
-            Scarica per visualizzare
+            {t('downloadToView')}
           </button>
         </div>
       );
@@ -206,7 +212,7 @@ export default function FilePreviewModal({
               className="max-w-full max-h-full rounded-xl"
               autoPlay={false}
             >
-              Il tuo browser non supporta la riproduzione video.
+              {t('videoNotSupported')}
             </video>
           </div>
         );
@@ -216,7 +222,7 @@ export default function FilePreviewModal({
           <div className="w-full h-full flex flex-col items-center justify-center">
             <FileAudio className="w-24 h-24 text-purple-400 mb-8" />
             <audio src={previewUrl} controls className="w-full max-w-md">
-              Il tuo browser non supporta la riproduzione audio.
+              {t('audioNotSupported')}
             </audio>
           </div>
         );
@@ -230,13 +236,13 @@ export default function FilePreviewModal({
         return (
           <div className="flex flex-col items-center justify-center h-full">
             <File className="w-16 h-16 text-gray-300 mb-4" />
-            <p className="text-gray-500 mb-4">Anteprima non disponibile per questo tipo di file</p>
+            <p className="text-gray-500 mb-4">{t('unsupportedType')}</p>
             <button
               onClick={() => onDownload(file)}
               className="px-5 py-2.5 bg-[#409cff] hover:bg-[#3085e0] text-white rounded-full transition-colors flex items-center text-sm font-medium"
             >
               <Download className="w-4 h-4 mr-2" />
-              Scarica per visualizzare
+              {t('downloadToView')}
             </button>
           </div>
         );
@@ -255,7 +261,7 @@ export default function FilePreviewModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col">
+    <div ref={modalRef} role="dialog" aria-modal="true" aria-label={file.originalName} className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
         <div className="flex items-center min-w-0 flex-1">
@@ -274,7 +280,7 @@ export default function FilePreviewModal({
               <button
                 onClick={() => setImageZoom(z => Math.max(0.5, z - 0.25))}
                 className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-                title="Zoom out"
+                title={t('zoomOut')}
               >
                 <ZoomOut className="w-5 h-5" />
               </button>
@@ -284,14 +290,14 @@ export default function FilePreviewModal({
               <button
                 onClick={() => setImageZoom(z => Math.min(3, z + 0.25))}
                 className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-                title="Zoom in"
+                title={t('zoomIn')}
               >
                 <ZoomIn className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setImageRotation(r => (r + 90) % 360)}
                 className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-                title="Ruota"
+                title={t('rotate')}
               >
                 <RotateCw className="w-5 h-5" />
               </button>
@@ -305,7 +311,7 @@ export default function FilePreviewModal({
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-              title="Apri in nuova scheda"
+              title={t('openInNewTab')}
             >
               <ExternalLink className="w-5 h-5" />
             </a>
@@ -321,7 +327,7 @@ export default function FilePreviewModal({
             ) : (
               <>
                 <Download className="w-4 h-4 mr-2" />
-                Scarica
+                {t('download')}
               </>
             )}
           </button>
@@ -345,6 +351,7 @@ export default function FilePreviewModal({
 
 // Text file preview component
 function TextPreview({ url, fileName }: { url: string; fileName: string }) {
+  const t = useTranslations('filePreview');
   const [content, setContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -376,7 +383,7 @@ function TextPreview({ url, fileName }: { url: string; fileName: string }) {
   if (error || !content) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-gray-500">Impossibile caricare il contenuto del file</p>
+        <p className="text-gray-500">{t('contentLoadError')}</p>
       </div>
     );
   }

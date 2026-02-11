@@ -15,7 +15,7 @@ export default function MainLayout({ children, showFooter = true }: MainLayoutPr
       <Navbar />
       {/* Spacer for fixed navigation */}
       <div className="h-16"></div>
-      <main className="flex-1">{children}</main>
+      <main role="main" className="flex-1">{children}</main>
       {showFooter && <Footer />}
     </div>
   );

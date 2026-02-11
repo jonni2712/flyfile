@@ -15,6 +15,7 @@
 
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { randomUUID } from 'crypto';
 
 // Storage provider types
 export type StorageProvider = 'minio' | 'r2' | 's3' | 'custom';
@@ -102,7 +103,7 @@ function getConfig(): StorageConfig {
 /**
  * Generate presigned URL for file upload
  */
-export async function getUploadUrl(key: string, contentType: string, expiresIn = 3600): Promise<string> {
+export async function getUploadUrl(key: string, contentType: string, fileSize?: number, expiresIn = 600): Promise<string> {
   const client = getStorageClient();
   const config = getConfig();
 
@@ -110,6 +111,7 @@ export async function getUploadUrl(key: string, contentType: string, expiresIn =
     Bucket: config.bucket,
     Key: key,
     ContentType: contentType,
+    ...(fileSize && { ContentLength: fileSize }),
   });
 
   return getSignedUrl(client, command, { expiresIn });
@@ -174,7 +176,7 @@ export async function fileExists(key: string): Promise<boolean> {
  */
 export function generateFileKey(userId: string, fileName: string): string {
   const timestamp = Date.now();
-  const randomString = Math.random().toString(36).substring(2, 8);
+  const randomString = randomUUID().replace(/-/g, '').substring(0, 12);
   const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
   return `${userId}/${timestamp}-${randomString}-${sanitizedFileName}`;
 }

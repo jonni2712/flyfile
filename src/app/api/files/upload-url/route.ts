@@ -6,7 +6,25 @@ import { v4 as uuidv4 } from 'uuid';
 import { getPlanLimits } from '@/types';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAuth } from '@/lib/auth-utils';
-import { validateFile, sanitizeFilename } from '@/lib/file-validation';
+import { validateFile, sanitizeFilename, getFileExtension } from '@/lib/file-validation';
+
+// SECURITY: Dangerous MIME types that should never be uploaded
+const BLOCKED_MIME_TYPES = new Set([
+  'text/html',
+  'text/javascript',
+  'application/javascript',
+  'application/x-javascript',
+  'text/x-javascript',
+  'application/xhtml+xml',
+  'application/x-httpd-php',
+  'application/x-php',
+  'text/x-php',
+  'application/x-shellscript',
+  'text/x-shellscript',
+  'application/x-csh',
+  'application/x-sh',
+  'application/x-msdownload',
+]);
 
 // Default limits for anonymous users (same as free plan)
 const ANONYMOUS_LIMITS = {
@@ -39,8 +57,8 @@ export async function POST(request: NextRequest) {
     let userPlan: 'anonymous' | 'free' | 'starter' | 'pro' | 'business' = 'free';
 
     if (isAnonymous) {
-      // Anonymous users: generate userId server-side (don't trust client)
-      userId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      // SECURITY: Anonymous users: generate userId server-side with crypto.randomUUID
+      userId = `anon_${crypto.randomUUID()}`;
       userPlan = 'anonymous';
     } else {
       // Authenticated users: verify token and extract userId
@@ -61,6 +79,14 @@ export async function POST(request: NextRequest) {
     if (!validation.valid) {
       return NextResponse.json(
         { error: validation.error, code: validation.errorCode },
+        { status: 400 }
+      );
+    }
+
+    // SECURITY: Block dangerous MIME types
+    if (BLOCKED_MIME_TYPES.has(contentType.toLowerCase())) {
+      return NextResponse.json(
+        { error: 'Tipo di file non permesso per motivi di sicurezza.', code: 'BLOCKED_MIME_TYPE' },
         { status: 400 }
       );
     }
@@ -179,8 +205,8 @@ export async function POST(request: NextRequest) {
     const fileId = uuidv4();
     const r2Key = generateFileKey(userId, sanitizedFileName);
 
-    // Get presigned upload URL from R2
-    const uploadUrl = await getUploadUrl(r2Key, contentType);
+    // Get presigned upload URL from R2 (with ContentLength enforcement)
+    const uploadUrl = await getUploadUrl(r2Key, contentType, fileSize);
 
     // Create file metadata in Firestore (pending status)
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';

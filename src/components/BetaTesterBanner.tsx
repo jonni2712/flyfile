@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslations } from 'next-intl';
 import { X, Bug, Lightbulb, MessageSquare, Github, ExternalLink } from 'lucide-react';
 
 const GITHUB_REPO_URL = 'https://github.com/jonni2712/flyfile';
 
 export default function BetaTesterBanner() {
   const { userProfile } = useAuth();
+  const t = useTranslations('betaTester');
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -48,14 +50,14 @@ export default function BetaTesterBanner() {
             <span className="text-lg">🧪</span>
           </div>
           <div>
-            <h3 className="text-white font-bold">Ciao Beta Tester!</h3>
-            <p className="text-purple-200/80 text-sm">Il tuo feedback è prezioso</p>
+            <h3 className="text-white font-bold">{t('title')}</h3>
+            <p className="text-purple-200/80 text-sm">{t('subtitle')}</p>
           </div>
         </div>
 
         {/* Message */}
         <p className="text-white/80 text-sm mb-4">
-          Hai trovato un bug o hai un suggerimento? Faccelo sapere su GitHub!
+          {t('message')}
         </p>
 
         {/* Action buttons */}
@@ -68,7 +70,7 @@ export default function BetaTesterBanner() {
           >
             <div className="flex items-center">
               <Bug className="w-4 h-4 mr-2 text-red-400" />
-              <span className="text-sm font-medium">Segnala un Bug</span>
+              <span className="text-sm font-medium">{t('reportBug')}</span>
             </div>
             <ExternalLink className="w-4 h-4 text-white/50 group-hover:text-white/80" />
           </a>
@@ -81,7 +83,7 @@ export default function BetaTesterBanner() {
           >
             <div className="flex items-center">
               <Lightbulb className="w-4 h-4 mr-2 text-green-400" />
-              <span className="text-sm font-medium">Suggerisci Funzionalità</span>
+              <span className="text-sm font-medium">{t('suggestFeature')}</span>
             </div>
             <ExternalLink className="w-4 h-4 text-white/50 group-hover:text-white/80" />
           </a>
@@ -94,7 +96,7 @@ export default function BetaTesterBanner() {
           >
             <div className="flex items-center">
               <MessageSquare className="w-4 h-4 mr-2 text-blue-400" />
-              <span className="text-sm font-medium">Lascia Feedback</span>
+              <span className="text-sm font-medium">{t('leaveFeedback')}</span>
             </div>
             <ExternalLink className="w-4 h-4 text-white/50 group-hover:text-white/80" />
           </a>
@@ -109,7 +111,7 @@ export default function BetaTesterBanner() {
             className="flex items-center justify-center text-white/60 hover:text-white text-sm transition-colors"
           >
             <Github className="w-4 h-4 mr-2" />
-            Vai al repository GitHub
+            {t('goToRepo')}
           </a>
         </div>
       </div>

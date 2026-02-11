@@ -26,17 +26,25 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId);
       allow create: if isAuthenticated() && request.auth.uid == userId;
-      allow update: if isOwner(userId);
+      // SECURITY: Prevent client-side modification of sensitive plan/billing fields
+      allow update: if isOwner(userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'plan', 'storageLimit', 'maxMonthlyTransfers', 'retentionDays',
+          'twoFactorSecret', 'twoFactorBackupCodes', 'stripeCustomerId'
+        ]);
       allow delete: if isOwner(userId);
     }
 
     // Transfers collection
     match /transfers/{transferId} {
-      // Anyone can read transfers (for download page)
-      allow read: if true;
+      // SECURITY: No client-side reads — all access via server-side API routes
+      allow read: if false;
 
-      // Anyone can create transfers (supports anonymous uploads)
-      allow create: if true;
+      // SECURITY: Validate required fields and types on create
+      allow create: if true &&
+        request.resource.data.keys().hasAll(['transferId', 'status', 'createdAt']) &&
+        request.resource.data.transferId is string &&
+        request.resource.data.status is string;
 
       // Only owner can update/delete (authenticated users only)
       allow update, delete: if isAuthenticated() &&
@@ -44,9 +52,16 @@ service cloud.firestore {
 
       // Files subcollection
       match /files/{fileId} {
-        allow read: if true;
-        // Anyone can create files in transfers (supports anonymous uploads)
-        allow create: if true;
+        // SECURITY: No client-side reads — prevents encryption key exposure
+        allow read: if false;
+
+        // SECURITY: Validate required fields on create
+        allow create: if true &&
+          request.resource.data.keys().hasAll(['name', 'size', 'type']) &&
+          request.resource.data.name is string &&
+          request.resource.data.size is int &&
+          request.resource.data.type is string;
+
         allow update, delete: if isAuthenticated() &&
           get(/databases/$(database)/documents/transfers/$(transferId)).data.userId == request.auth.uid;
       }
@@ -54,9 +69,14 @@ service cloud.firestore {
 
     // Files collection (standalone files)
     match /files/{fileId} {
-      allow read: if true;
-      // Anyone can create files (supports anonymous uploads)
-      allow create: if true;
+      // SECURITY: No client-side reads
+      allow read: if false;
+      // SECURITY: Validate required fields on create
+      allow create: if true &&
+        request.resource.data.keys().hasAll(['name', 'size', 'type']) &&
+        request.resource.data.name is string &&
+        request.resource.data.size is int &&
+        request.resource.data.type is string;
       // SECURITY FIX: Only authenticated owner can update
       allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
       // Only authenticated owner can delete
@@ -112,8 +132,10 @@ service cloud.firestore {
     match /anonymousUsers/{anonId} {
       // SECURITY FIX: No client reads - only server-side via Admin SDK
       allow read: if false;
-      // Allow creation for anonymous uploads
-      allow create: if true;
+      // SECURITY: Validate required fields on create
+      allow create: if true &&
+        request.resource.data.keys().hasAll(['createdAt']) &&
+        request.resource.data.createdAt is timestamp;
       // SECURITY FIX: No client updates - only server-side
       allow update: if false;
       allow delete: if false;
@@ -121,8 +143,13 @@ service cloud.firestore {
 
     // Transfer Downloads (analytics)
     match /transferDownloads/{downloadId} {
-      allow read: if isAuthenticated();
-      allow create: if true;
+      // SECURITY: Only the transfer owner can read download analytics
+      allow read: if isAuthenticated() &&
+        resource.data.transferOwnerId == request.auth.uid;
+      // SECURITY: Validate required fields on create
+      allow create: if true &&
+        request.resource.data.keys().hasAll(['transferId', 'downloadedAt']) &&
+        request.resource.data.transferId is string;
     }
 
     // API Keys collection - SECURITY: Only owner can access their keys
@@ -148,6 +175,11 @@ service cloud.firestore {
 
     // Contact Messages - SECURITY: Admin SDK only (server-side operations)
     match /contact_messages/{messageId} {
+      allow read, write: if false;
+    }
+
+    // 2FA Setup Tokens - SECURITY: Temporary server-side storage only
+    match /twoFactorSetup/{setupId} {
       allow read, write: if false;
     }
   }

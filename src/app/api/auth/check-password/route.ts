@@ -26,6 +26,9 @@ export async function POST(request: NextRequest) {
         (provider) => provider.providerId === 'password'
       );
 
+      // SECURITY: Always return 'code' for non-password users to prevent
+      // enumeration of auth methods. Password users get 'password' so the
+      // login form shows the password field.
       return NextResponse.json({
         method: hasPassword ? 'password' : 'code',
       });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { Link } from '@/i18n/navigation';
@@ -30,6 +30,8 @@ import { useTransfer, formatBytes, getTimeRemaining, getFileIcon } from '@/conte
 import { Transfer, TransferFile, BrandSettings } from '@/types';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { decryptFile, isEncryptionSupported } from '@/lib/client-encryption';
+import { useToast } from '@/components/Toast';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 // File icon component
 const FileIcon = ({ mimeType, className }: { mimeType: string; className?: string }) => {
@@ -62,6 +64,7 @@ export default function DownloadPage() {
   const router = useRouter();
   const transferId = params.id as string;
   const { getPublicTransfer, verifyPassword, incrementDownloadCount } = useTransfer();
+  const toast = useToast();
 
   const [transfer, setTransfer] = useState<Transfer | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,12 +73,14 @@ export default function DownloadPage() {
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
 
   // Password state
+  const passwordModalRef = useRef<HTMLDivElement>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordVerified, setPasswordVerified] = useState(false);
   const [verifyingPassword, setVerifyingPassword] = useState(false);
+  useFocusTrap(passwordModalRef, showPasswordModal);
 
   // File preview state
   const [previewFile, setPreviewFile] = useState<TransferFile | null>(null);
@@ -184,7 +189,7 @@ export default function DownloadPage() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download error:', err);
-      alert(t('downloadError'));
+      toast.error(t('downloadError'));
     } finally {
       setDownloading(false);
     }
@@ -269,7 +274,7 @@ export default function DownloadPage() {
       await incrementDownloadCount(transferId);
     } catch (err) {
       console.error('Download error:', err);
-      alert(t('downloadError'));
+      toast.error(t('downloadError'));
     } finally {
       setDownloadingFileId(null);
     }
@@ -396,7 +401,7 @@ export default function DownloadPage() {
       {/* Password Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-6">
+          <div ref={passwordModalRef} role="dialog" aria-modal="true" aria-label={t('protectedTitle')} className="bg-white rounded-2xl shadow-lg max-w-md w-full p-6">
             <div className="text-center mb-6">
               <div className="w-14 h-14 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Lock className="w-7 h-7 text-orange-500" />

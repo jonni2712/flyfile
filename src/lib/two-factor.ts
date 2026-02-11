@@ -87,7 +87,9 @@ export function verifyTotp(secret: string, token: string, window: number = 1): b
   // Check current and adjacent time windows
   for (let i = -window; i <= window; i++) {
     const expected = hmacOtp(secretBuffer, counter + i);
-    if (expected === token) {
+    // SECURITY: Use timing-safe comparison to prevent timing attacks
+    if (expected.length === token.length &&
+        crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(token))) {
       return true;
     }
   }
@@ -131,7 +133,11 @@ export function verifyBackupCode(code: string, hashedCodes: string[]): number {
     .update(code.replace('-', '').toUpperCase())
     .digest('hex');
 
-  return hashedCodes.findIndex((hashed) => hashed === hashedInput);
+  // SECURITY: Use timing-safe comparison to prevent timing attacks
+  return hashedCodes.findIndex((hashed) =>
+    hashed.length === hashedInput.length &&
+    crypto.timingSafeEqual(Buffer.from(hashed), Buffer.from(hashedInput))
+  );
 }
 
 // 2FA status interface

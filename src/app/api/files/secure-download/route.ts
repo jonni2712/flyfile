@@ -5,6 +5,7 @@ import { getDownloadUrl } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { decryptData } from '@/lib/encryption';
 import { recordDownload } from '@/lib/analytics';
+import { verifyPassword } from '@/lib/password';
 
 /**
  * Secure download endpoint that handles encrypted files
@@ -17,7 +18,8 @@ export async function POST(request: NextRequest) {
     if (rateLimitResponse) return rateLimitResponse;
 
     const body = await request.json();
-    const { transferId, fileId, path } = body;
+    // SECURITY FIX: Removed path - always use trusted path from Firestore
+    const { transferId, fileId, password } = body;
 
     if (!transferId || !fileId) {
       return NextResponse.json(
@@ -48,6 +50,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // SECURITY FIX: Server-side password verification
+    if (transferData.password) {
+      if (!password) {
+        return NextResponse.json(
+          { error: 'Password richiesta per questo transfer', requiresPassword: true },
+          { status: 401 }
+        );
+      }
+
+      const isValidPassword = await verifyPassword(password, transferData.password);
+      if (!isValidPassword) {
+        return NextResponse.json(
+          { error: 'Password non corretta' },
+          { status: 401 }
+        );
+      }
+    }
+
     // Get file document
     const fileDoc = await db.collection('transfers').doc(transferId).collection('files').doc(fileId).get();
     if (!fileDoc.exists) {
@@ -58,7 +78,8 @@ export async function POST(request: NextRequest) {
     }
 
     const fileData = fileDoc.data() || {};
-    const filePath = path || fileData.path || fileData.storedName;
+    // SECURITY: Always use trusted path from Firestore, never from client
+    const filePath = fileData.path || fileData.storedName;
     const fileName = fileData.originalName || 'download';
     const mimeType = fileData.mimeType || 'application/octet-stream';
 

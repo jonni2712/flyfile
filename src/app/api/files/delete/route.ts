@@ -20,9 +20,10 @@ export async function DELETE(request: NextRequest) {
     const [authResult, authError] = await requireAuth(request);
     if (authError) return authError;
 
-    const { fileId, r2Key } = await request.json();
+    // SECURITY FIX: Ignore r2Key from client, always use trusted value from Firestore
+    const { fileId } = await request.json();
 
-    if (!fileId || !r2Key) {
+    if (!fileId) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -51,9 +52,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete from R2
+    // SECURITY: Delete from R2 using trusted r2Key from Firestore
     try {
-      await deleteFile(r2Key);
+      if (fileData.r2Key) {
+        await deleteFile(fileData.r2Key);
+      }
     } catch (err) {
       console.error('Error deleting from R2:', err);
     }

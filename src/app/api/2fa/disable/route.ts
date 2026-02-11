@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { disable2FA } from '@/lib/two-factor';
+import { disable2FA, verify2FA } from '@/lib/two-factor';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 
@@ -14,11 +14,11 @@ export async function POST(request: NextRequest) {
     if (authError) return authError;
 
     const body = await request.json();
-    const { userId } = body;
+    const { userId, token } = body;
 
-    if (!userId) {
+    if (!userId || !token) {
       return NextResponse.json(
-        { error: 'userId richiesto' },
+        { error: 'userId e token richiesti' },
         { status: 400 }
       );
     }
@@ -28,6 +28,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Non autorizzato' },
         { status: 403 }
+      );
+    }
+
+    // SECURITY: Verify TOTP token before allowing 2FA disable
+    const verifyResult = await verify2FA(userId, token);
+    if (!verifyResult.valid) {
+      return NextResponse.json(
+        { error: 'Codice non valido. Inserisci il codice TOTP per disabilitare la 2FA.' },
+        { status: 401 }
       );
     }
 

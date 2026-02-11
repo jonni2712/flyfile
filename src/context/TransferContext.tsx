@@ -11,7 +11,8 @@ import {
   query,
   where,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  increment
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from './AuthContext';
@@ -491,6 +492,7 @@ export function TransferProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Increment download count
+  // SECURITY: Use atomic increment to prevent race conditions
   const incrementDownloadCount = useCallback(async (transferId: string): Promise<void> => {
     try {
       const transfersRef = collection(db, 'transfers');
@@ -500,10 +502,9 @@ export function TransferProvider({ children }: { children: ReactNode }) {
       if (snapshot.empty) return;
 
       const docRef = doc(db, 'transfers', snapshot.docs[0].id);
-      const currentCount = snapshot.docs[0].data().downloadCount || 0;
 
       await updateDoc(docRef, {
-        downloadCount: currentCount + 1,
+        downloadCount: increment(1),
         updatedAt: serverTimestamp(),
       });
     } catch (err) {

@@ -87,12 +87,8 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
     return null;
   }
 
-  // Skip CSRF check for API key authenticated requests
-  // These use bearer tokens which already prove authenticity
-  const apiKey = request.headers.get('x-api-key');
-  if (apiKey) {
-    return null; // API key auth is sufficient
-  }
+  // SECURITY: API key presence alone does NOT skip CSRF validation.
+  // API keys are validated separately in api-auth.ts; CSRF still applies here.
 
   if (!validateOrigin(request)) {
     console.warn('CSRF protection triggered:', {

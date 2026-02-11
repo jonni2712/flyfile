@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import {
   Cookie,
   Settings,
@@ -23,6 +24,9 @@ export default function CookieBanner() {
   const [showBanner, setShowBanner] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, showModal);
+
   const [preferences, setPreferences] = useState<CookiePreferences>({
     essential: true,
     functional: false,
@@ -178,7 +182,7 @@ export default function CookieBanner() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={closeSettings}></div>
 
           <div className="fixed inset-0 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div ref={modalRef} role="dialog" aria-modal="true" aria-label={t('preferencesTitle')} className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
               {/* Header */}
               <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white p-6">
                 <div className="flex items-center justify-between">

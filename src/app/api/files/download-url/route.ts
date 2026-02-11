@@ -106,7 +106,8 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     // SECURITY FIX: Removed passwordVerified - now verify password server-side
-    const { transferId, fileId, path, all, password, preview } = body;
+    // SECURITY FIX: Removed path - always use trusted path from Firestore
+    const { transferId, fileId, all, password, preview } = body;
 
     if (!transferId) {
       return NextResponse.json(
@@ -201,16 +202,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Single file download
-    if (fileId && path) {
-      // Get file info first to have the filename
+    if (fileId) {
+      // Get file info from Firestore (trusted source)
       const fileDocRef = await db.collection('transfers').doc(transferId).collection('files').doc(fileId).get();
       const fileData = fileDocRef.exists ? fileDocRef.data() : null;
-      const fileName = fileData?.originalName || 'download';
+
+      if (!fileData) {
+        return NextResponse.json(
+          { error: 'File not found in transfer' },
+          { status: 404 }
+        );
+      }
+
+      const fileName = fileData.originalName || 'download';
+      // SECURITY: Always use trusted path from Firestore, never from client
+      const filePath = fileData.path || fileData.storedName;
 
       // Use inline URL for previews, attachment URL for downloads
       const downloadUrl = preview
-        ? await getPreviewUrl(path, 3600, fileData?.mimeType)
-        : await getDownloadUrl(path, 3600, fileName);
+        ? await getPreviewUrl(filePath, 3600, fileData?.mimeType)
+        : await getDownloadUrl(filePath, 3600, fileName);
 
       // Record download analytics
       const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
