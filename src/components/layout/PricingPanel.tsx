@@ -275,8 +275,8 @@ export default function PricingPanel({ isOpen, onClose }: PricingPanelProps) {
             })}
           </div>
 
-          {/* Feature Comparison Table */}
-          <div className="mt-20 max-w-5xl mx-auto">
+          {/* Feature Comparison Table — hidden on mobile */}
+          <div className="hidden lg:block mt-20 max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
                 {tp('chooseTitle')}
