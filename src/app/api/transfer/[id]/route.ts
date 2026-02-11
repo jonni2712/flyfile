@@ -54,7 +54,7 @@ export async function GET(
       );
     }
 
-    // Fetch files - SECURITY: Only expose safe fields, never internal storage details
+    // Fetch files - expose safe fields + encryption metadata needed for client-side decryption
     const filesSnapshot = await db.collection('transfers').doc(docId).collection('files').get();
     const files = filesSnapshot.docs.map(fileDoc => {
       const fData = fileDoc.data();
@@ -63,6 +63,9 @@ export async function GET(
         originalName: fData.originalName,
         size: fData.size,
         mimeType: fData.mimeType,
+        isEncrypted: fData.isEncrypted || false,
+        encryptionKey: fData.encryptionKey || null,
+        encryptionIv: fData.encryptionIv || null,
         createdAt: fData.createdAt?.toDate()?.toISOString() || null,
       };
     });

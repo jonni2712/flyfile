@@ -764,19 +764,19 @@ export default function HomePageClient() {
     <MainLayout showFooter={false} transparentBg>
       {/* Verification Modal */}
       {showVerificationModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-white/20">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
             <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-cyan-500/20 rounded-full mb-4">
-                <Mail className="w-8 h-8 text-cyan-400" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full mb-4">
+                <Mail className="w-8 h-8 text-blue-500" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">{t('verification.title')}</h3>
-              <p className="text-blue-200/80">{t('verification.codeSent')}</p>
-              <p className="text-cyan-400 font-semibold mt-1">{senderEmail}</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('verification.title')}</h3>
+              <p className="text-gray-500">{t('verification.codeSent')}</p>
+              <p className="text-blue-500 font-semibold mt-1">{senderEmail}</p>
             </div>
 
             <div className="mb-6">
-              <label htmlFor="verificationCode" className="block text-sm font-semibold text-white mb-2">
+              <label htmlFor="verificationCode" className="block text-sm font-semibold text-gray-700 mb-2">
                 {t('verification.codeLabel')}
               </label>
               <input
@@ -787,10 +787,10 @@ export default function HomePageClient() {
                 onChange={handleCodeChange}
                 maxLength={6}
                 placeholder="000000"
-                className="w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white text-center text-2xl font-mono tracking-widest placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-center text-2xl font-mono tracking-widest placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
               {verificationError && (
-                <p className="text-red-400 text-sm mt-2">{verificationError}</p>
+                <p className="text-red-500 text-sm mt-2">{verificationError}</p>
               )}
             </div>
 
@@ -802,7 +802,7 @@ export default function HomePageClient() {
                   setVerificationCode('');
                   setVerificationError('');
                 }}
-                className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-all"
+                className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors"
               >
                 {t('verification.cancel')}
               </button>
@@ -810,7 +810,7 @@ export default function HomePageClient() {
                 type="button"
                 onClick={() => verifyCode(verificationCode)}
                 disabled={isVerifying || verificationCode.length !== 6}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isVerifying ? (
                   <>
@@ -828,7 +828,7 @@ export default function HomePageClient() {
                 type="button"
                 onClick={sendVerificationCode}
                 disabled={isSendingCode}
-                className="text-cyan-400 hover:text-cyan-300 text-sm font-medium disabled:opacity-50"
+                className="text-blue-500 hover:text-blue-600 text-sm font-medium disabled:opacity-50"
               >
                 {isSendingCode ? t('verification.resending') : t('verification.resendPrompt')}
               </button>
@@ -839,22 +839,22 @@ export default function HomePageClient() {
 
       {/* Success Modal */}
       {showSuccessModal && uploadResult && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-3xl shadow-2xl max-w-lg w-full p-8 border border-white/20 relative">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-8 relative">
             {/* Close Button */}
             <button
               onClick={resetForm}
-              className="absolute top-4 right-4 p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-all"
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
               aria-label={t('success.close')}
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
             <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-tr from-green-400 to-emerald-500 rounded-full mb-4 animate-bounce">
-                <CheckCircle className="w-10 h-10 text-white" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-50 rounded-full mb-4">
+                <CheckCircle className="w-8 h-8 text-green-500" />
               </div>
-              <h3 className="text-3xl font-bold text-white mb-2">{t('success.title')}</h3>
-              <p className="text-blue-200/80">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('success.title')}</h3>
+              <p className="text-gray-500">
                 {uploadResult.emailSent
                   ? t('success.emailSent')
                   : t('success.shareLinkPrompt')}
@@ -866,8 +866,8 @@ export default function HomePageClient() {
               {/* Custom Branded URL if available */}
               {uploadResult.customUrl && (
                 <div className="mb-4">
-                  <label className="flex items-center text-sm font-semibold text-white mb-2">
-                    <Crown className="w-4 h-4 text-yellow-400 mr-2" />
+                  <label className="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                    <Crown className="w-4 h-4 text-yellow-500 mr-2" />
                     {t('success.customLink')}
                   </label>
                   <div className="flex items-center gap-2">
@@ -875,11 +875,11 @@ export default function HomePageClient() {
                       type="text"
                       readOnly
                       value={uploadResult.customUrl}
-                      className="flex-1 px-4 py-3 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl text-white text-sm"
+                      className="flex-1 px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-xl text-gray-900 text-sm"
                     />
                     <button
                       onClick={copyToClipboard}
-                      className="px-4 py-3 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 rounded-xl text-yellow-400 transition-colors"
+                      className="px-4 py-3 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-xl text-yellow-600 transition-colors"
                     >
                       {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                     </button>
@@ -887,7 +887,7 @@ export default function HomePageClient() {
                 </div>
               )}
 
-              <label className="block text-sm font-semibold text-white mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 {uploadResult.customUrl ? t('success.standardLink') : t('success.downloadLink')}
               </label>
               <div className="flex items-center gap-2">
@@ -895,35 +895,35 @@ export default function HomePageClient() {
                   type="text"
                   readOnly
                   value={uploadResult.downloadUrl}
-                  className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-sm"
+                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm"
                 />
                 {!uploadResult.customUrl && (
                   <button
                     onClick={copyToClipboard}
-                    className="px-4 py-3 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-xl text-cyan-400 transition-colors"
+                    className="px-4 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-gray-600 transition-colors"
                   >
                     {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                   </button>
                 )}
               </div>
               {copied && (
-                <p className="text-green-400 text-sm mt-2">{t('success.linkCopied')}</p>
+                <p className="text-green-500 text-sm mt-2">{t('success.linkCopied')}</p>
               )}
             </div>
 
             {/* Transfer Info */}
-            <div className="bg-white/5 rounded-xl p-4 mb-6 space-y-2">
+            <div className="bg-gray-50 rounded-xl p-4 mb-6 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-blue-200/70">{t('success.filesUploaded')}</span>
-                <span className="text-white font-medium">{files.length}</span>
+                <span className="text-gray-500">{t('success.filesUploaded')}</span>
+                <span className="text-gray-900 font-medium">{files.length}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-blue-200/70">{t('success.totalSize')}</span>
-                <span className="text-white font-medium">{formatBytes(totalSize)}</span>
+                <span className="text-gray-500">{t('success.totalSize')}</span>
+                <span className="text-gray-900 font-medium">{formatBytes(totalSize)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-blue-200/70">{t('success.expiry')}</span>
-                <span className="text-white font-medium">{t('success.expiryDays', { days: expiryDays })}</span>
+                <span className="text-gray-500">{t('success.expiry')}</span>
+                <span className="text-gray-900 font-medium">{t('success.expiryDays', { days: expiryDays })}</span>
               </div>
             </div>
 
@@ -931,14 +931,14 @@ export default function HomePageClient() {
             <div className="flex gap-3">
               <button
                 onClick={() => window.open(uploadResult.customUrl || uploadResult.downloadUrl, '_blank')}
-                className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <ExternalLink className="w-4 h-4" />
                 {t('success.openLink')}
               </button>
               <button
                 onClick={resetForm}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition-colors"
+                className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors"
               >
                 {t('success.newUpload')}
               </button>

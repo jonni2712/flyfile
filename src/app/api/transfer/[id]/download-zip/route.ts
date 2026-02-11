@@ -8,6 +8,7 @@ import { recordDownload } from '@/lib/analytics';
 import { triggerWebhooks } from '@/lib/webhooks';
 import archiver from 'archiver';
 import { PassThrough } from 'stream';
+import crypto from 'crypto';
 
 // Stream wrapper for Response
 async function streamToResponse(archive: archiver.Archiver): Promise<ReadableStream<Uint8Array>> {
@@ -94,7 +95,7 @@ export async function GET(
       throw err;
     });
 
-    // Fetch and add each file to the archive
+    // Fetch, decrypt if needed, and add each file to the archive
     const filePromises = filesSnapshot.docs.map(async (fileDoc) => {
       const fileData = fileDoc.data();
       const filePath = fileData.path || fileData.storedName;
@@ -113,7 +114,28 @@ export async function GET(
 
         // Convert response to buffer
         const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
+        let buffer = Buffer.from(arrayBuffer);
+
+        // Decrypt if the file is encrypted (Web Crypto AES-GCM: ciphertext + 16-byte authTag)
+        const isEncrypted = fileData.isEncrypted;
+        const encryptionKey = fileData.encryptionKey;
+        const encryptionIv = fileData.encryptionIv;
+
+        if (isEncrypted && encryptionKey && encryptionIv) {
+          const AUTH_TAG_LENGTH = 16;
+          const authTag = buffer.subarray(buffer.length - AUTH_TAG_LENGTH);
+          const ciphertext = buffer.subarray(0, buffer.length - AUTH_TAG_LENGTH);
+
+          const keyBuffer = Buffer.from(encryptionKey, 'base64');
+          const ivBuffer = Buffer.from(encryptionIv, 'base64');
+
+          const decipher = crypto.createDecipheriv('aes-256-gcm', keyBuffer, ivBuffer, {
+            authTagLength: AUTH_TAG_LENGTH,
+          });
+          decipher.setAuthTag(authTag);
+
+          buffer = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+        }
 
         // Add to archive
         archive.append(buffer, { name: fileName });
