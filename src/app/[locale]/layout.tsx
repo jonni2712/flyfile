@@ -21,7 +21,6 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#3b82f6",
 };
 
 export async function generateMetadata({
@@ -167,7 +166,7 @@ export default async function LocaleLayout({
   };
 
   return (
-    <html lang={locale}>
+    <html lang={locale} style={{ backgroundColor: '#3b82f6' }}>
       <head>
         {/* JSON-LD Structured Data */}
         <script
