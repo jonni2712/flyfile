@@ -50,7 +50,7 @@ export default function ChiSiamoClient() {
   ];
 
   return (
-    <div className="overflow-x-hidden">
+    <>
       {/* Hero — gradient background matching home page */}
       <div className="relative min-h-[85vh] flex items-center -mt-[4.75rem] pt-[4.75rem] overflow-hidden bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
         {/* Decorative circles */}
@@ -230,6 +230,6 @@ export default function ChiSiamoClient() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
