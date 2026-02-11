@@ -38,6 +38,20 @@ export default function Navbar() {
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
+  // Update theme-color when mobile menu opens/closes
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) return;
+
+    if (isOpen) {
+      meta.dataset.prevColor = meta.getAttribute('content') || '#3b82f6';
+      meta.setAttribute('content', '#030712');
+    } else if (meta.dataset.prevColor) {
+      meta.setAttribute('content', meta.dataset.prevColor);
+      delete meta.dataset.prevColor;
+    }
+  }, [isOpen]);
+
   const getInitials = (name: string) => {
     const parts = name.split(' ');
     if (parts.length >= 2) {

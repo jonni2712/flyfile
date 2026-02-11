@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default function PrezziPage() {
   return (
-    <MainLayout>
+    <MainLayout pageThemeColor="#ffffff" pageBodyBg="#ffffff">
       <BreadcrumbJsonLd items={[
         { name: 'Home', url: 'https://flyfile.it' },
         { name: 'Prezzi', url: 'https://flyfile.it/prezzi' },
