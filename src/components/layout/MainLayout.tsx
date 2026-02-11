@@ -28,14 +28,14 @@ export default function MainLayout({
     document.documentElement.style.backgroundColor = bg;
     document.body.style.backgroundColor = bg;
 
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', tc);
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (meta) meta.content = tc;
 
     return () => {
       document.documentElement.style.backgroundColor = '';
       document.body.style.backgroundColor = '';
-      const metaEl = document.querySelector('meta[name="theme-color"]');
-      if (metaEl) metaEl.setAttribute('content', '#3b82f6');
+      const metaEl = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+      if (metaEl) metaEl.content = '#3b82f6';
     };
   }, [transparentBg, pageBodyBg, pageThemeColor]);
 

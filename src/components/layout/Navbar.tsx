@@ -40,14 +40,14 @@ export default function Navbar() {
 
   // Update theme-color when mobile menu opens/closes
   useEffect(() => {
-    const meta = document.querySelector('meta[name="theme-color"]');
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (!meta) return;
 
     if (isOpen) {
-      meta.dataset.prevColor = meta.getAttribute('content') || '#3b82f6';
-      meta.setAttribute('content', '#030712');
+      meta.dataset.prevColor = meta.content || '#3b82f6';
+      meta.content = '#030712';
     } else if (meta.dataset.prevColor) {
-      meta.setAttribute('content', meta.dataset.prevColor);
+      meta.content = meta.dataset.prevColor;
       delete meta.dataset.prevColor;
     }
   }, [isOpen]);
