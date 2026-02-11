@@ -174,6 +174,7 @@ export default async function LocaleLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
+        <meta name="theme-color" content="#3b82f6" />
       </head>
       <body
         className={`${inter.variable} font-sans antialiased bg-white min-h-screen`}
