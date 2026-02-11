@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -9,11 +8,8 @@ import { AuthProvider } from "@/context/AuthContext";
 import { TransferProvider } from "@/context/TransferContext";
 import { TeamProvider } from "@/context/TeamContext";
 import CookieBanner from "@/components/CookieBanner";
+import ConsentScripts from "@/components/ConsentScripts";
 import ToastContainer from "@/components/Toast";
-import { Analytics } from "@vercel/analytics/next";
-
-// Google Analytics ID
-const GA_MEASUREMENT_ID = "G-W4J7Q31Y7B";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -173,26 +169,6 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <head>
-        {/* Google Analytics */}
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${GA_MEASUREMENT_ID}');
-          `}
-        </Script>
-        {/* Google AdSense */}
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5065560716215945"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
         {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"
@@ -214,7 +190,7 @@ export default async function LocaleLayout({
             </TransferProvider>
           </AuthProvider>
         </NextIntlClientProvider>
-        <Analytics />
+        <ConsentScripts />
       </body>
     </html>
   );

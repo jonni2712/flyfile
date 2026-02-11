@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { routing } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
-import { Cookie, Shield, BarChart3, Settings, Check, AlertCircle } from 'lucide-react';
+import { Cookie, Shield, BarChart3, Settings, Check, AlertCircle, Megaphone, Globe } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -121,6 +121,14 @@ export default async function CookiesPage() {
                   <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
                   Preferenze cookie
                 </li>
+                <li className="flex items-center text-gray-600 text-sm">
+                  <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                  Sessione di autenticazione Firebase
+                </li>
+                <li className="flex items-center text-gray-600 text-sm">
+                  <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                  Protezione anti-spam e anti-bot (reCAPTCHA)
+                </li>
               </ul>
             </div>
 
@@ -176,6 +184,32 @@ export default async function CookiesPage() {
                 </li>
               </ul>
             </div>
+
+            {/* Marketing Cookies */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-8 border-l-4 border-l-orange-500">
+              <div className="flex items-center mb-3">
+                <Megaphone className="w-5 h-5 text-orange-500 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-900">Cookie di Marketing</h3>
+                <span className="ml-3 px-3 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">Opzionali</span>
+              </div>
+              <p className="text-gray-700 mb-4">
+                Utilizzati per mostrare annunci pubblicitari pertinenti e misurarne l&apos;efficacia.
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-center text-gray-600 text-sm">
+                  <Check className="w-4 h-4 text-orange-500 mr-2 flex-shrink-0" />
+                  Personalizzazione degli annunci pubblicitari
+                </li>
+                <li className="flex items-center text-gray-600 text-sm">
+                  <Check className="w-4 h-4 text-orange-500 mr-2 flex-shrink-0" />
+                  Misurazione delle performance pubblicitarie
+                </li>
+                <li className="flex items-center text-gray-600 text-sm">
+                  <Check className="w-4 h-4 text-orange-500 mr-2 flex-shrink-0" />
+                  Remarketing e retargeting
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -222,12 +256,52 @@ export default async function CookiesPage() {
                   <td className="py-4 px-5 text-gray-600">Memorizza le preferenze cookie</td>
                 </tr>
                 <tr className="hover:bg-gray-50/50 transition-colors">
+                  <td className="py-4 px-5 font-mono text-xs text-gray-800">__session</td>
+                  <td className="py-4 px-5">
+                    <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Essenziale</span>
+                  </td>
+                  <td className="py-4 px-5 text-gray-600">1 ora</td>
+                  <td className="py-4 px-5 text-gray-600">Mantiene la sessione di autenticazione dell&apos;utente (Firebase)</td>
+                </tr>
+                <tr className="hover:bg-gray-50/50 transition-colors">
+                  <td className="py-4 px-5 font-mono text-xs text-gray-800">_GRECAPTCHA</td>
+                  <td className="py-4 px-5">
+                    <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Essenziale</span>
+                  </td>
+                  <td className="py-4 px-5 text-gray-600">6 mesi</td>
+                  <td className="py-4 px-5 text-gray-600">Protezione anti-spam e anti-bot (Google reCAPTCHA)</td>
+                </tr>
+                <tr className="hover:bg-gray-50/50 transition-colors">
                   <td className="py-4 px-5 font-mono text-xs text-gray-800">_ga</td>
                   <td className="py-4 px-5">
                     <span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Analitico</span>
                   </td>
                   <td className="py-4 px-5 text-gray-600">2 anni</td>
-                  <td className="py-4 px-5 text-gray-600">Google Analytics - identificazione</td>
+                  <td className="py-4 px-5 text-gray-600">Google Analytics - identificazione utente</td>
+                </tr>
+                <tr className="hover:bg-gray-50/50 transition-colors">
+                  <td className="py-4 px-5 font-mono text-xs text-gray-800">_gid</td>
+                  <td className="py-4 px-5">
+                    <span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Analitico</span>
+                  </td>
+                  <td className="py-4 px-5 text-gray-600">24 ore</td>
+                  <td className="py-4 px-5 text-gray-600">Identificazione sessione utente per analisi statistiche</td>
+                </tr>
+                <tr className="hover:bg-gray-50/50 transition-colors">
+                  <td className="py-4 px-5 font-mono text-xs text-gray-800">_gat / _gat_gtag_*</td>
+                  <td className="py-4 px-5">
+                    <span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Analitico</span>
+                  </td>
+                  <td className="py-4 px-5 text-gray-600">1 minuto</td>
+                  <td className="py-4 px-5 text-gray-600">Limitazione della frequenza delle richieste ad Analytics</td>
+                </tr>
+                <tr className="hover:bg-gray-50/50 transition-colors">
+                  <td className="py-4 px-5 font-mono text-xs text-gray-800">_ga_W4J7Q31Y7B</td>
+                  <td className="py-4 px-5">
+                    <span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Analitico</span>
+                  </td>
+                  <td className="py-4 px-5 text-gray-600">2 anni</td>
+                  <td className="py-4 px-5 text-gray-600">Mantiene lo stato della sessione Google Analytics 4</td>
                 </tr>
                 <tr className="hover:bg-gray-50/50 transition-colors">
                   <td className="py-4 px-5 font-mono text-xs text-gray-800">preferences</td>
@@ -236,6 +310,14 @@ export default async function CookiesPage() {
                   </td>
                   <td className="py-4 px-5 text-gray-600">1 anno</td>
                   <td className="py-4 px-5 text-gray-600">Preferenze utente</td>
+                </tr>
+                <tr className="hover:bg-gray-50/50 transition-colors">
+                  <td className="py-4 px-5 font-mono text-xs text-gray-800">Google AdSense</td>
+                  <td className="py-4 px-5">
+                    <span className="px-2.5 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">Marketing</span>
+                  </td>
+                  <td className="py-4 px-5 text-gray-600">Variabile</td>
+                  <td className="py-4 px-5 text-gray-600">Personalizzazione e misurazione degli annunci pubblicitari</td>
                 </tr>
               </tbody>
             </table>
@@ -296,6 +378,40 @@ export default async function CookiesPage() {
 
             <div className="bg-white border border-gray-200 rounded-xl p-5">
               <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-xs text-gray-800">__session</span>
+                <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Essenziale</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Durata</span>
+                  <span className="text-gray-700">1 ora</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Scopo</span>
+                  <span className="text-gray-700 text-right ml-4">Sessione di autenticazione Firebase</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-xs text-gray-800">_GRECAPTCHA</span>
+                <span className="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Essenziale</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Durata</span>
+                  <span className="text-gray-700">6 mesi</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Scopo</span>
+                  <span className="text-gray-700 text-right ml-4">Protezione anti-spam e anti-bot (Google reCAPTCHA)</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
                 <span className="font-mono text-xs text-gray-800">_ga</span>
                 <span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Analitico</span>
               </div>
@@ -306,7 +422,58 @@ export default async function CookiesPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500 font-medium">Scopo</span>
-                  <span className="text-gray-700 text-right ml-4">Google Analytics - identificazione</span>
+                  <span className="text-gray-700 text-right ml-4">Google Analytics - identificazione utente</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-xs text-gray-800">_gid</span>
+                <span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Analitico</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Durata</span>
+                  <span className="text-gray-700">24 ore</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Scopo</span>
+                  <span className="text-gray-700 text-right ml-4">Identificazione sessione utente per analisi statistiche</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-xs text-gray-800">_gat / _gat_gtag_*</span>
+                <span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Analitico</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Durata</span>
+                  <span className="text-gray-700">1 minuto</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Scopo</span>
+                  <span className="text-gray-700 text-right ml-4">Limitazione della frequenza delle richieste ad Analytics</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-xs text-gray-800">_ga_W4J7Q31Y7B</span>
+                <span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Analitico</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Durata</span>
+                  <span className="text-gray-700">2 anni</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Scopo</span>
+                  <span className="text-gray-700 text-right ml-4">Stato della sessione Google Analytics 4</span>
                 </div>
               </div>
             </div>
@@ -324,6 +491,23 @@ export default async function CookiesPage() {
                 <div className="flex justify-between">
                   <span className="text-gray-500 font-medium">Scopo</span>
                   <span className="text-gray-700 text-right ml-4">Preferenze utente</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono text-xs text-gray-800">Google AdSense</span>
+                <span className="px-2.5 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">Marketing</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Durata</span>
+                  <span className="text-gray-700">Variabile</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Scopo</span>
+                  <span className="text-gray-700 text-right ml-4">Personalizzazione e misurazione degli annunci pubblicitari</span>
                 </div>
               </div>
             </div>
@@ -422,8 +606,56 @@ export default async function CookiesPage() {
         </div>
       </div>
 
-      {/* Section 6: Contact CTA */}
+      {/* Section 6: Servizi di Terze Parti */}
       <div className="py-16 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl border border-gray-100 p-8">
+            <div className="flex items-center mb-6">
+              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mr-4">
+                <Globe className="w-6 h-6 text-blue-600" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Servizi di terze parti e trasferimento dati</h2>
+            </div>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              I cookie analitici (Google Analytics), di marketing (Google AdSense) e i servizi di analisi (Vercel Analytics)
+              vengono caricati <strong>esclusivamente dopo il tuo consenso esplicito</strong>.
+            </p>
+            <p className="text-gray-700 leading-relaxed mb-6">
+              Alcuni dati possono essere trasferiti verso server situati negli Stati Uniti, gestiti dai seguenti fornitori:
+            </p>
+            <ul className="space-y-3 mb-6">
+              <li className="flex items-start">
+                <Check className="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700"><strong>Google</strong> (Analytics, AdSense, reCAPTCHA) — elaborazione dati di navigazione e protezione anti-spam</span>
+              </li>
+              <li className="flex items-start">
+                <Check className="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700"><strong>Vercel Analytics</strong> — analisi delle performance del sito senza utilizzo di cookie (cookie-less)</span>
+              </li>
+              <li className="flex items-start">
+                <Check className="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700"><strong>Stripe</strong> — può impostare cookie durante il flusso di pagamento per la prevenzione delle frodi</span>
+              </li>
+            </ul>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
+              <div className="flex items-start">
+                <AlertCircle className="w-5 h-5 text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-blue-800 mb-1">Nota sul consenso</h4>
+                  <p className="text-blue-700 text-sm leading-relaxed">
+                    Il cookie <code className="bg-blue-100 px-1 rounded">_GRECAPTCHA</code> è classificato come essenziale
+                    in quanto necessario per la protezione della sicurezza della piattaforma e la prevenzione di abusi.
+                    I trasferimenti di dati verso gli Stati Uniti avvengono nel rispetto delle garanzie previste dal GDPR.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 7: Contact CTA */}
+      <div className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{t('questionsTitle')}</h2>

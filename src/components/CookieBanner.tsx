@@ -63,23 +63,8 @@ export default function CookieBanner() {
     if (prefs.functional) {
       document.documentElement.setAttribute('data-functional-cookies', 'enabled');
     }
-
-    if (prefs.analytics) {
-      const win = window as unknown as { loadGoogleAnalytics?: () => void };
-      if (typeof window !== 'undefined' && win.loadGoogleAnalytics) {
-        win.loadGoogleAnalytics();
-      }
-    } else {
-      if (typeof window !== 'undefined') {
-        (window as unknown as { [key: string]: boolean })['ga-disable-G-W4J7Q31Y7B'] = true;
-      }
-
-      const gaCookies = ['_ga', '_gid', '_gat', '_ga_W4J7Q31Y7B'];
-      gaCookies.forEach(name => {
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-      });
-    }
+    // Analytics/AdSense script loading is handled by ConsentScripts
+    // via the 'cookie-consent-updated' event dispatched in saveConsent
   };
 
   const acceptAll = () => {
