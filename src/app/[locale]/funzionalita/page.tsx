@@ -52,13 +52,13 @@ export default async function FeaturesPage() {
 
   return (
     <MainLayout>
-      <div className="overflow-x-hidden">
+      <div className="overflow-x-clip">
       <BreadcrumbJsonLd items={[
         { name: 'Home', url: 'https://flyfile.it' },
         { name: t('hero.badge'), url: 'https://flyfile.it/funzionalita' },
       ]} />
       {/* Hero Section */}
-      <div className="relative min-h-[85vh] flex items-center -mt-16 pt-16 overflow-hidden bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
+      <div className="relative min-h-[85vh] flex items-center -mt-[4.75rem] pt-[4.75rem] overflow-hidden bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
         {/* Decorative circles */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute bottom-10 right-20 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" />
