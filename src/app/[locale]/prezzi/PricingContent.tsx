@@ -267,7 +267,7 @@ export default function PricingContent() {
       </div>
 
       {/* Feature Comparison Table */}
-      <div className="hidden md:block bg-gray-50 py-20">
+      <div className="hidden lg:block bg-gray-50 py-20">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-12">
             <span className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
