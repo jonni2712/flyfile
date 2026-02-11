@@ -3,6 +3,7 @@ import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 import { csrfProtection } from '@/lib/csrf';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // GET - Get team by ID
 export async function GET(
@@ -10,6 +11,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     // SECURITY: Require authentication
     const [authResult, authError] = await requireAuth(request);
     if (authError) return authError;
@@ -94,6 +98,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     // SECURITY: CSRF Protection
     const csrfError = csrfProtection(request);
     if (csrfError) return csrfError;
@@ -157,6 +164,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     // SECURITY: CSRF Protection
     const csrfError = csrfProtection(request);
     if (csrfError) return csrfError;

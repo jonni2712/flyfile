@@ -3,6 +3,7 @@ import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireAuth } from '@/lib/auth-utils';
 import { csrfProtection } from '@/lib/csrf';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // GET - Get invitation by token (public, no auth required)
 export async function GET(
@@ -10,6 +11,9 @@ export async function GET(
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { token } = await params;
 
     const db = getAdminFirestore();
@@ -88,6 +92,9 @@ export async function POST(
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     // SECURITY: CSRF Protection
     const csrfError = csrfProtection(request);
     if (csrfError) return csrfError;
@@ -213,6 +220,9 @@ export async function DELETE(
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     // SECURITY: CSRF Protection
     const csrfError = csrfProtection(request);
     if (csrfError) return csrfError;

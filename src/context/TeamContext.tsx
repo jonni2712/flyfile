@@ -1,17 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  deleteDoc,
-  updateDoc,
-  query,
-  where,
-  serverTimestamp,
-} from 'firebase/firestore';
+import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from './AuthContext';
 import { Team, TeamMember, TeamInvitation } from '@/types';
@@ -59,90 +49,61 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      // First check if user owns a team
-      const teamsRef = collection(db, 'teams');
-      let q = query(teamsRef, where('ownerId', '==', user.uid));
-      let snapshot = await getDocs(q);
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/team?userId=${user.uid}`, { headers });
+      const data = await response.json();
 
-      if (snapshot.empty) {
-        // Check if user is a member of a team
-        const membersRef = collection(db, 'teamMembers');
-        const memberQuery = query(membersRef, where('userId', '==', user.uid));
-        const memberSnapshot = await getDocs(memberQuery);
-
-        if (!memberSnapshot.empty) {
-          const memberData = memberSnapshot.docs[0].data();
-          const teamDoc = await getDoc(doc(db, 'teams', memberData.teamId));
-          if (teamDoc.exists()) {
-            snapshot = { docs: [teamDoc], empty: false } as typeof snapshot;
-          }
-        }
+      if (!response.ok) {
+        throw new Error(data.error || 'Impossibile caricare il team');
       }
 
-      if (snapshot.empty) {
+      if (!data.team) {
         setTeam(null);
         return;
       }
 
-      const teamDoc = snapshot.docs[0];
-      const teamData = teamDoc.data();
+      const t = data.team;
 
-      // Fetch members
-      const membersRef = collection(db, 'teamMembers');
-      const membersQuery = query(membersRef, where('teamId', '==', teamDoc.id));
-      const membersSnapshot = await getDocs(membersQuery);
+      const members: TeamMember[] = (t.members || []).map((m: Record<string, unknown>) => ({
+        id: m.id,
+        teamId: t.id,
+        userId: m.userId,
+        role: m.role,
+        storageUsed: m.storageUsed || 0,
+        joinedAt: m.joinedAt ? new Date(m.joinedAt as string) : new Date(),
+        user: m.user,
+      }));
 
-      const members: TeamMember[] = [];
-      for (const memberDoc of membersSnapshot.docs) {
-        const memberData = memberDoc.data();
-        // Fetch user info for each member
-        const userDoc = await getDoc(doc(db, 'users', memberData.userId));
-        const userData = userDoc.exists() ? userDoc.data() : {};
-
-        members.push({
-          id: memberDoc.id,
-          ...memberData,
-          joinedAt: memberData.joinedAt?.toDate() || new Date(),
-          user: {
-            id: memberData.userId,
-            name: userData.displayName || 'Utente',
-            email: userData.email || '',
-            photoURL: userData.photoURL,
-          },
-        } as TeamMember);
-      }
-
-      // Fetch pending invitations
-      const invitationsRef = collection(db, 'teamInvitations');
-      const invitationsQuery = query(
-        invitationsRef,
-        where('teamId', '==', teamDoc.id),
-        where('status', '==', 'pending')
-      );
-      const invitationsSnapshot = await getDocs(invitationsQuery);
-
-      const pendingInvitations: TeamInvitation[] = invitationsSnapshot.docs.map(invDoc => ({
-        id: invDoc.id,
-        ...invDoc.data(),
-        expiresAt: invDoc.data().expiresAt?.toDate() || new Date(),
-        createdAt: invDoc.data().createdAt?.toDate() || new Date(),
-      })) as TeamInvitation[];
+      const pendingInvitations: TeamInvitation[] = (t.pendingInvitations || []).map((inv: Record<string, unknown>) => ({
+        id: inv.id,
+        teamId: t.id,
+        email: inv.email,
+        status: inv.status,
+        token: inv.token || '',
+        expiresAt: inv.expiresAt ? new Date(inv.expiresAt as string) : new Date(),
+        createdAt: inv.createdAt ? new Date(inv.createdAt as string) : new Date(),
+      }));
 
       setTeam({
-        id: teamDoc.id,
-        ...teamData,
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        ownerId: t.ownerId,
+        memberCount: t.memberCount,
+        maxMembers: t.maxMembers,
+        storageUsed: t.storageUsed || 0,
         members,
         pendingInvitations,
-        createdAt: teamData.createdAt?.toDate() || new Date(),
-        updatedAt: teamData.updatedAt?.toDate() || new Date(),
-      } as Team);
+        createdAt: t.createdAt ? new Date(t.createdAt) : new Date(),
+        updatedAt: t.updatedAt ? new Date(t.updatedAt) : new Date(),
+      });
     } catch (err) {
       console.error('Error fetching team:', err);
       setError('Impossibile caricare il team');
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, getAuthHeaders]);
 
   // Create a new team via API (server-side with Admin SDK)
   const createTeam = useCallback(async (name: string, description?: string): Promise<Team> => {
@@ -178,62 +139,50 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const updateTeam = useCallback(async (data: Partial<Team>): Promise<void> => {
     if (!user || !team) throw new Error('Non autorizzato');
 
-    // Check if user is owner
-    if (team.ownerId !== user.uid) {
-      throw new Error('Solo il proprietario può modificare il team');
-    }
-
     try {
-      const teamRef = doc(db, 'teams', team.id);
-      await updateDoc(teamRef, {
-        ...data,
-        updatedAt: serverTimestamp(),
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/team/${team.id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(data),
       });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Impossibile aggiornare il team');
+      }
 
       await fetchTeam();
     } catch (err) {
       console.error('Error updating team:', err);
-      throw new Error('Impossibile aggiornare il team');
+      throw err instanceof Error ? err : new Error('Impossibile aggiornare il team');
     }
-  }, [user, team, fetchTeam]);
+  }, [user, team, fetchTeam, getAuthHeaders]);
 
   // Delete team
   const deleteTeam = useCallback(async (): Promise<void> => {
     if (!user || !team) throw new Error('Non autorizzato');
 
-    // Check if user is owner
-    if (team.ownerId !== user.uid) {
-      throw new Error('Solo il proprietario può eliminare il team');
-    }
-
     try {
-      // Delete all members
-      const membersRef = collection(db, 'teamMembers');
-      const membersQuery = query(membersRef, where('teamId', '==', team.id));
-      const membersSnapshot = await getDocs(membersQuery);
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/team/${team.id}`, {
+        method: 'DELETE',
+        headers,
+      });
 
-      for (const memberDoc of membersSnapshot.docs) {
-        await deleteDoc(doc(db, 'teamMembers', memberDoc.id));
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Impossibile eliminare il team');
       }
-
-      // Delete all invitations
-      const invitationsRef = collection(db, 'teamInvitations');
-      const invitationsQuery = query(invitationsRef, where('teamId', '==', team.id));
-      const invitationsSnapshot = await getDocs(invitationsQuery);
-
-      for (const invDoc of invitationsSnapshot.docs) {
-        await deleteDoc(doc(db, 'teamInvitations', invDoc.id));
-      }
-
-      // Delete team
-      await deleteDoc(doc(db, 'teams', team.id));
 
       setTeam(null);
     } catch (err) {
       console.error('Error deleting team:', err);
-      throw new Error('Impossibile eliminare il team');
+      throw err instanceof Error ? err : new Error('Impossibile eliminare il team');
     }
-  }, [user, team]);
+  }, [user, team, getAuthHeaders]);
 
   // Invite member via API (server-side with Admin SDK)
   const inviteMember = useCallback(async (email: string): Promise<void> => {
@@ -268,39 +217,25 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const removeMember = useCallback(async (memberId: string): Promise<void> => {
     if (!user || !team) throw new Error('Non autorizzato');
 
-    // Check if user is owner
-    if (team.ownerId !== user.uid) {
-      throw new Error('Solo il proprietario può rimuovere membri');
-    }
-
     try {
-      // Get member document
-      const memberDoc = await getDoc(doc(db, 'teamMembers', memberId));
-      if (!memberDoc.exists()) {
-        throw new Error('Membro non trovato');
+      const headers = await getAuthHeaders();
+      const response = await fetch(
+        `/api/team/${team.id}/members/${memberId}?userId=${user.uid}`,
+        { method: 'DELETE', headers }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Impossibile rimuovere il membro');
       }
-
-      const memberData = memberDoc.data();
-
-      // Cannot remove owner
-      if (memberData.role === 'owner') {
-        throw new Error('Non puoi rimuovere il proprietario');
-      }
-
-      await deleteDoc(doc(db, 'teamMembers', memberId));
-
-      // Update member count
-      await updateDoc(doc(db, 'teams', team.id), {
-        memberCount: (team.memberCount || 1) - 1,
-        updatedAt: serverTimestamp(),
-      });
 
       await fetchTeam();
     } catch (err) {
       console.error('Error removing member:', err);
-      throw err;
+      throw err instanceof Error ? err : new Error('Impossibile rimuovere il membro');
     }
-  }, [user, team, fetchTeam]);
+  }, [user, team, fetchTeam, getAuthHeaders]);
 
   // Cancel invitation
   const cancelInvitation = useCallback(async (invitationId: string): Promise<void> => {

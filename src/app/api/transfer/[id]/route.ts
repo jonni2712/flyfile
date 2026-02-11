@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { deleteFile } from '@/lib/r2';
-import { hashPassword, verifyPassword, needsHashUpgrade } from '@/lib/password';
+import { hashPassword, verifyPassword, needsHashUpgrade, validatePasswordStrength } from '@/lib/password';
 import { requireAuth } from '@/lib/auth-utils';
 import { csrfProtection } from '@/lib/csrf';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -138,6 +138,15 @@ export async function PATCH(
     }
 
     if (password !== undefined) {
+      if (password) {
+        const passwordCheck = validatePasswordStrength(password);
+        if (!passwordCheck.valid) {
+          return NextResponse.json(
+            { error: passwordCheck.error },
+            { status: 400 }
+          );
+        }
+      }
       updateData.password = password ? await hashPassword(password) : null;
     }
 

@@ -3,7 +3,7 @@ import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { authenticateApiRequest, hasPermission, unauthorizedResponse, forbiddenResponse } from '@/lib/api-auth';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { hashPassword } from '@/lib/password';
+import { hashPassword, validatePasswordStrength } from '@/lib/password';
 import { v4 as uuidv4 } from 'uuid';
 
 // GET /api/v1/transfers - List user's transfers
@@ -125,7 +125,16 @@ export async function POST(request: NextRequest) {
     const expiry = Math.min(Math.max(1, expiryDays || 7), 365);
     const expiresAt = new Date(Date.now() + expiry * 24 * 60 * 60 * 1000);
 
-    // Hash password if provided (SECURITY: never store plaintext)
+    // Validate and hash password if provided (SECURITY: never store plaintext)
+    if (password) {
+      const passwordCheck = validatePasswordStrength(password);
+      if (!passwordCheck.valid) {
+        return NextResponse.json(
+          { success: false, error: passwordCheck.error, code: 'VALIDATION_ERROR' },
+          { status: 400 }
+        );
+      }
+    }
     const hashedPassword = password ? await hashPassword(password) : null;
 
     // Create transfer document using Admin SDK

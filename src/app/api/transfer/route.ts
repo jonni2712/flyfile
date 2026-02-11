@@ -6,7 +6,7 @@ import { sendEmail, getTransferNotificationEmail, getUploadConfirmationEmail, fo
 import { v4 as uuidv4 } from 'uuid';
 import { getPlanLimits } from '@/types';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { hashPassword } from '@/lib/password';
+import { hashPassword, validatePasswordStrength } from '@/lib/password';
 import { validateFiles, sanitizeFilename } from '@/lib/file-validation';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 import { csrfProtection } from '@/lib/csrf';
@@ -237,7 +237,16 @@ export async function POST(request: NextRequest) {
     // Generate unique transfer ID (UUID for public URL)
     const transferId = uuidv4();
 
-    // Hash password if provided
+    // Validate and hash password if provided
+    if (password) {
+      const passwordCheck = validatePasswordStrength(password);
+      if (!passwordCheck.valid) {
+        return NextResponse.json(
+          { error: passwordCheck.error },
+          { status: 400 }
+        );
+      }
+    }
     const hashedPassword = password ? await hashPassword(password) : null;
 
     // Create transfer document
@@ -439,15 +448,23 @@ export async function GET(request: NextRequest) {
 
       // Fetch files for this transfer
       const filesSnapshot = await db.collection('transfers').doc(docSnap.id).collection('files').get();
-      const files = filesSnapshot.docs.map(fileDoc => ({
-        id: fileDoc.id,
-        ...fileDoc.data(),
-        createdAt: fileDoc.data().createdAt?.toDate()?.toISOString() || null,
-      }));
+      // SECURITY: Only expose safe fields, never internal storage details
+      const files = filesSnapshot.docs.map(fileDoc => {
+        const fData = fileDoc.data();
+        return {
+          id: fileDoc.id,
+          originalName: fData.originalName,
+          size: fData.size,
+          mimeType: fData.mimeType,
+          createdAt: fData.createdAt?.toDate()?.toISOString() || null,
+        };
+      });
 
+      const { password, ...safeData } = data;
       transfers.push({
         id: docSnap.id,
-        ...data,
+        ...safeData,
+        hasPassword: !!password,
         files,
         expiresAt: data.expiresAt?.toDate()?.toISOString() || null,
         createdAt: data.createdAt?.toDate()?.toISOString() || null,

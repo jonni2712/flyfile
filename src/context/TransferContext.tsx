@@ -1,22 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  serverTimestamp,
-  increment
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useAuth } from './AuthContext';
-import { Transfer, TransferFile, TransferUploadData, UploadResponse } from '@/types';
+import { Transfer, TransferUploadData, UploadResponse } from '@/types';
 import { encryptFile, isEncryptionSupported } from '@/lib/client-encryption';
 
 interface TransferContextType {
@@ -84,6 +70,22 @@ export const getFileIcon = (mimeType: string): string => {
   return 'file';
 };
 
+// Helper to convert API date strings to Date objects
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const parseTransferDates = (data: Record<string, any>): Transfer => ({
+  ...data,
+  // Map hasPassword to password for UI compatibility (UI checks `data.password` truthiness)
+  password: data.hasPassword ? 'protected' : undefined,
+  expiresAt: data.expiresAt ? new Date(data.expiresAt) : new Date(),
+  createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
+  updatedAt: data.updatedAt ? new Date(data.updatedAt) : new Date(),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  files: data.files?.map((f: Record<string, any>) => ({
+    ...f,
+    createdAt: f.createdAt ? new Date(f.createdAt) : new Date(),
+  })),
+} as Transfer);
+
 export function TransferProvider({ children }: { children: ReactNode }) {
   const { user, userProfile, refreshUserProfile } = useAuth();
   const [transfers, setTransfers] = useState<Transfer[]>([]);
@@ -101,39 +103,17 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const transfersRef = collection(db, 'transfers');
-      const q = query(
-        transfersRef,
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc')
-      );
+      const token = await user.getIdToken();
+      const response = await fetch(`/api/transfer?userId=${user.uid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      const snapshot = await getDocs(q);
-      const transfersData: Transfer[] = [];
-
-      for (const docSnap of snapshot.docs) {
-        const data = docSnap.data();
-
-        // Fetch files for this transfer
-        const filesRef = collection(db, 'transfers', docSnap.id, 'files');
-        const filesSnapshot = await getDocs(filesRef);
-        const files: TransferFile[] = filesSnapshot.docs.map(fileDoc => ({
-          id: fileDoc.id,
-          ...fileDoc.data(),
-          createdAt: fileDoc.data().createdAt?.toDate() || new Date(),
-        })) as TransferFile[];
-
-        transfersData.push({
-          id: docSnap.id,
-          ...data,
-          files,
-          expiresAt: data.expiresAt?.toDate() || new Date(),
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-        } as Transfer);
+      if (!response.ok) {
+        throw new Error('Impossibile caricare i trasferimenti');
       }
 
-      setTransfers(transfersData);
+      const { transfers: transfersData } = await response.json();
+      setTransfers(transfersData.map(parseTransferDates));
     } catch (err) {
       console.error('Error fetching transfers:', err);
       setError('Impossibile caricare i trasferimenti');
@@ -147,38 +127,15 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     if (!user) return null;
 
     try {
-      // Try to find by transferId field
-      const transfersRef = collection(db, 'transfers');
-      const q = query(
-        transfersRef,
-        where('transferId', '==', transferId),
-        where('userId', '==', user.uid)
-      );
+      const token = await user.getIdToken();
+      const response = await fetch(`/api/transfer/${transferId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      const snapshot = await getDocs(q);
+      if (!response.ok) return null;
 
-      if (snapshot.empty) return null;
-
-      const docSnap = snapshot.docs[0];
-      const data = docSnap.data();
-
-      // Fetch files
-      const filesRef = collection(db, 'transfers', docSnap.id, 'files');
-      const filesSnapshot = await getDocs(filesRef);
-      const files: TransferFile[] = filesSnapshot.docs.map(fileDoc => ({
-        id: fileDoc.id,
-        ...fileDoc.data(),
-        createdAt: fileDoc.data().createdAt?.toDate() || new Date(),
-      })) as TransferFile[];
-
-      return {
-        id: docSnap.id,
-        ...data,
-        files,
-        expiresAt: data.expiresAt?.toDate() || new Date(),
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-      } as Transfer;
+      const data = await response.json();
+      return parseTransferDates(data);
     } catch (err) {
       console.error('Error getting transfer:', err);
       return null;
@@ -188,49 +145,17 @@ export function TransferProvider({ children }: { children: ReactNode }) {
   // Get public transfer (for download page - no auth required)
   const getPublicTransfer = useCallback(async (transferId: string): Promise<Transfer | null> => {
     try {
-      const transfersRef = collection(db, 'transfers');
-      const q = query(
-        transfersRef,
-        where('transferId', '==', transferId)
-      );
+      const response = await fetch(`/api/transfer/${transferId}`);
 
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) return null;
-
-      const docSnap = snapshot.docs[0];
-      const data = docSnap.data();
-
-      // Check if expired
-      const expiresAt = data.expiresAt?.toDate() || new Date();
-      if (expiresAt < new Date()) {
-        return {
-          id: docSnap.id,
-          ...data,
-          status: 'expired',
-          expiresAt,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-        } as Transfer;
+      if (response.status === 410) {
+        // Expired transfer - return with status 'expired' for UI compatibility
+        return { status: 'expired' } as Transfer;
       }
 
-      // Fetch files
-      const filesRef = collection(db, 'transfers', docSnap.id, 'files');
-      const filesSnapshot = await getDocs(filesRef);
-      const files: TransferFile[] = filesSnapshot.docs.map(fileDoc => ({
-        id: fileDoc.id,
-        ...fileDoc.data(),
-        createdAt: fileDoc.data().createdAt?.toDate() || new Date(),
-      })) as TransferFile[];
+      if (!response.ok) return null;
 
-      return {
-        id: docSnap.id,
-        ...data,
-        files,
-        expiresAt,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-      } as Transfer;
+      const data = await response.json();
+      return parseTransferDates(data);
     } catch (err) {
       console.error('Error getting public transfer:', err);
       return null;
@@ -395,23 +320,20 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('Non autorizzato');
 
     try {
-      // Find transfer document
-      const transfersRef = collection(db, 'transfers');
-      const q = query(
-        transfersRef,
-        where('transferId', '==', transferId),
-        where('userId', '==', user.uid)
-      );
-
-      const snapshot = await getDocs(q);
-      if (snapshot.empty) throw new Error('Transfer non trovato');
-
-      const docRef = doc(db, 'transfers', snapshot.docs[0].id);
-
-      await updateDoc(docRef, {
-        ...data,
-        updatedAt: serverTimestamp(),
+      const token = await user.getIdToken();
+      const response = await fetch(`/api/transfer/${transferId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
       });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Impossibile aggiornare il trasferimento');
+      }
 
       await fetchTransfers();
     } catch (err) {
@@ -425,42 +347,18 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('Non autorizzato');
 
     try {
-      // Find transfer document
-      const transfersRef = collection(db, 'transfers');
-      const q = query(
-        transfersRef,
-        where('transferId', '==', transferId),
-        where('userId', '==', user.uid)
-      );
-
-      const snapshot = await getDocs(q);
-      if (snapshot.empty) throw new Error('Transfer non trovato');
-
-      const docId = snapshot.docs[0].id;
-
-      // Get auth token for API calls
       const token = await user.getIdToken();
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      };
-
-      // Delete files from R2
-      await fetch('/api/files/delete', {
+      const response = await fetch(`/api/transfer/${transferId}`, {
         method: 'DELETE',
-        headers,
-        body: JSON.stringify({ transferId: docId }),
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      // Delete file documents
-      const filesRef = collection(db, 'transfers', docId, 'files');
-      const filesSnapshot = await getDocs(filesRef);
-      for (const fileDoc of filesSnapshot.docs) {
-        await deleteDoc(doc(db, 'transfers', docId, 'files', fileDoc.id));
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Impossibile eliminare il trasferimento');
       }
-
-      // Delete transfer document
-      await deleteDoc(doc(db, 'transfers', docId));
 
       await fetchTransfers();
     } catch (err) {
@@ -491,21 +389,13 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Increment download count
-  // SECURITY: Use atomic increment to prevent race conditions
+  // Increment download count (using server-side API for atomic increment)
   const incrementDownloadCount = useCallback(async (transferId: string): Promise<void> => {
     try {
-      const transfersRef = collection(db, 'transfers');
-      const q = query(transfersRef, where('transferId', '==', transferId));
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) return;
-
-      const docRef = doc(db, 'transfers', snapshot.docs[0].id);
-
-      await updateDoc(docRef, {
-        downloadCount: increment(1),
-        updatedAt: serverTimestamp(),
+      await fetch(`/api/transfer/${transferId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'increment-download' }),
       });
     } catch (err) {
       console.error('Error incrementing download count:', err);

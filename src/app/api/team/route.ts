@@ -3,10 +3,15 @@ import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { csrfProtection } from '@/lib/csrf';
 
 // POST - Create team
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 

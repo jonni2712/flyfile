@@ -4,6 +4,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { sendEmail, getTeamInviteEmail } from '@/lib/email';
 import { requireAuth } from '@/lib/auth-utils';
 import { csrfProtection } from '@/lib/csrf';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // POST - Invite member to team
 export async function POST(
@@ -11,6 +12,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rateLimitResponse = await checkRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     // SECURITY: CSRF Protection
     const csrfError = csrfProtection(request);
     if (csrfError) return csrfError;

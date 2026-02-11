@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 import { ensureStripeCustomer } from '@/lib/stripe';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { csrfProtection } from '@/lib/csrf';
 
 /**
  * POST /api/auth/ensure-customer
@@ -12,6 +13,10 @@ import { checkRateLimit } from '@/lib/rate-limit';
  */
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF Protection
+    const csrfError = csrfProtection(request);
+    if (csrfError) return csrfError;
+
     const rateLimitResponse = await checkRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
