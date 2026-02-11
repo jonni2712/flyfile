@@ -5,6 +5,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 import { csrfProtection } from '@/lib/csrf';
+import { ensureStripeCustomer } from '@/lib/stripe';
 import { PLANS } from '@/types';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -114,35 +115,8 @@ export async function POST(request: NextRequest) {
     if (!userData.subscriptionId || userData.subscriptionStatus === 'canceled') {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-      // Ensure user has a valid Stripe customer ID
-      let stripeCustomerId = userData.stripeCustomerId;
-
-      // Verify customer exists in Stripe
-      if (stripeCustomerId) {
-        try {
-          const existing = await stripe.customers.retrieve(stripeCustomerId);
-          if (existing.deleted) {
-            stripeCustomerId = null;
-          }
-        } catch {
-          stripeCustomerId = null;
-        }
-      }
-
-      if (!stripeCustomerId) {
-        const customer = await stripe.customers.create({
-          email: userData.email,
-          metadata: {
-            userId,
-            source: 'flyfile_change_plan',
-          },
-        });
-        stripeCustomerId = customer.id;
-
-        await db.collection('users').doc(userId).update({
-          stripeCustomerId: customer.id,
-        });
-      }
+      // Ensure Stripe customer exists (searches by email to prevent duplicates)
+      const stripeCustomerId = await ensureStripeCustomer(userId, userData.email, 'flyfile_change_plan');
 
       const sessionParams: Stripe.Checkout.SessionCreateParams = {
         mode: 'subscription',

@@ -4,6 +4,7 @@ import { getAdminFirestore } from '@/lib/firebase-admin';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireAuth, isAuthorizedForUser } from '@/lib/auth-utils';
 import { csrfProtection } from '@/lib/csrf';
+import { ensureStripeCustomer } from '@/lib/stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -82,36 +83,8 @@ export async function POST(request: NextRequest) {
     const userData = userDoc.data();
     const billing = userData?.billing;
 
-    // Check if user already has a Stripe customer ID
-    let stripeCustomerId = userData?.stripeCustomerId;
-
-    // Verify customer exists in Stripe, create if missing or deleted
-    if (stripeCustomerId) {
-      try {
-        const existing = await stripe.customers.retrieve(stripeCustomerId);
-        if (existing.deleted) {
-          stripeCustomerId = null;
-        }
-      } catch {
-        stripeCustomerId = null;
-      }
-    }
-
-    if (!stripeCustomerId) {
-      const customer = await stripe.customers.create({
-        email: userEmail,
-        metadata: {
-          userId,
-          source: 'flyfile_checkout',
-        },
-      });
-      stripeCustomerId = customer.id;
-
-      // Save customer ID to user record
-      await db.collection('users').doc(userId).update({
-        stripeCustomerId: customer.id,
-      });
-    }
+    // Ensure Stripe customer exists (searches by email to prevent duplicates)
+    const stripeCustomerId = await ensureStripeCustomer(userId, userEmail, 'flyfile_checkout');
 
     // Build session parameters
     const sessionParams: Stripe.Checkout.SessionCreateParams = {

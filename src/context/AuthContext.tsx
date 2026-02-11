@@ -89,7 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const docRef = doc(db, 'users', result.user.uid);
           const docSnap = await getDoc(docRef);
 
-          if (!docSnap.exists()) {
+          const isNewUser = !docSnap.exists();
+          if (isNewUser) {
             await createUserProfile(result.user);
           } else {
             await fetchUserProfile(result.user.uid);
@@ -97,6 +98,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // Set session cookie BEFORE redirect
           const token = await result.user.getIdToken();
+
+          // Ensure Stripe customer exists (for new and existing users)
+          if (result.user.email) {
+            try {
+              await fetch('/api/auth/ensure-customer', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  userId: result.user.uid,
+                  email: result.user.email,
+                }),
+              });
+            } catch (e) {
+              console.error('Failed to ensure Stripe customer:', e);
+            }
+          }
           document.cookie = `__session=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
 
           // Small delay to ensure cookie is set

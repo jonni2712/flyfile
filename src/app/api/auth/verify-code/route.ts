@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore, getAdminAuth } from '@/lib/firebase-admin';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { ensureStripeCustomer } from '@/lib/stripe';
 import { FieldValue } from 'firebase-admin/firestore';
 import crypto from 'crypto';
 
@@ -122,6 +123,14 @@ export async function POST(request: NextRequest) {
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       });
+
+      // Create Stripe customer immediately at registration
+      try {
+        await ensureStripeCustomer(uid, normalizedEmail, 'flyfile_registration');
+      } catch (stripeError) {
+        // Non-blocking: log but don't fail registration
+        console.error('Failed to create Stripe customer at registration:', stripeError);
+      }
     }
 
     // Generate custom token for client sign-in
