@@ -95,6 +95,10 @@
       "viewOptionsLabel": "View options",
       "setPassword": "Set password",
       "proPlanRequired": "Pro plan required",
+      "cookieRequired": {
+        "title": "Accept cookies to continue",
+        "description": "To use the file transfer service, you must accept at least the essential cookies."
+      },
       "addFiles": "Add files",
       "addFolder": "Add folder",
       "addMore": "+ Add",

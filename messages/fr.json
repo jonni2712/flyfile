@@ -95,6 +95,10 @@
       "viewOptionsLabel": "Options d'affichage",
       "setPassword": "Définir le mot de passe",
       "proPlanRequired": "Plan Pro requis",
+      "cookieRequired": {
+        "title": "Acceptez les cookies pour continuer",
+        "description": "Pour utiliser le service de transfert de fichiers, vous devez accepter au moins les cookies essentiels."
+      },
       "addFiles": "Ajouter des fichiers",
       "addFolder": "Ajouter un dossier",
       "addMore": "+ Ajouter",

@@ -95,6 +95,10 @@
       "viewOptionsLabel": "Ansichtsoptionen",
       "setPassword": "Passwort festlegen",
       "proPlanRequired": "Pro-Plan erforderlich",
+      "cookieRequired": {
+        "title": "Cookies akzeptieren, um fortzufahren",
+        "description": "Um den Dateiübertragungsdienst nutzen zu können, müssen Sie mindestens die wesentlichen Cookies akzeptieren."
+      },
       "addFiles": "Dateien hinzufügen",
       "addFolder": "Ordner hinzufügen",
       "addMore": "+ Hinzufügen",

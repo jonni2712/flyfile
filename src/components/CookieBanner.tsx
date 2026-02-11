@@ -51,6 +51,8 @@ export default function CookieBanner() {
     localStorage.setItem('cookie-preferences', JSON.stringify(prefs));
     localStorage.setItem('cookie-consent-date', new Date().toISOString());
     applyCookies(prefs);
+    // Notify other components that consent was given
+    window.dispatchEvent(new Event('cookie-consent-updated'));
   };
 
   const applyCookies = (prefs: CookiePreferences) => {

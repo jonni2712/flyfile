@@ -95,6 +95,10 @@
       "viewOptionsLabel": "Opzioni di visualizzazione",
       "setPassword": "Imposta password",
       "proPlanRequired": "Piano Pro richiesto",
+      "cookieRequired": {
+        "title": "Accetta i cookie per continuare",
+        "description": "Per utilizzare il servizio di trasferimento file è necessario accettare almeno i cookie essenziali."
+      },
       "addFiles": "Aggiungi file",
       "addFolder": "Aggiungi cartella",
       "addMore": "+ Aggiungi",

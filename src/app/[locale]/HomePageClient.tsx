@@ -8,7 +8,7 @@ import { useTransfer } from '@/context/TransferContext';
 import {
   Upload, X, File, Check, AlertCircle, Lock, Mail, Clock, Shield, Plus,
   Image, Video, FileText, Crown, Copy, CheckCircle, ExternalLink, Loader2, FolderOpen, MoreHorizontal,
-  ChevronRight, ChevronLeft
+  ChevronRight, ChevronLeft, Cookie
 } from 'lucide-react';
 import { getPlanLimits } from '@/types';
 import MainLayout from '@/components/layout/MainLayout';
@@ -354,6 +354,15 @@ export default function HomePageClient() {
   const [copied, setCopied] = useState(false);
 
   const isAnonymous = !user;
+
+  // Cookie consent state
+  const [cookieConsent, setCookieConsent] = useState(true); // default true to avoid flash
+  useEffect(() => {
+    setCookieConsent(localStorage.getItem('cookie-consent') === 'true');
+    const handleConsentUpdate = () => setCookieConsent(true);
+    window.addEventListener('cookie-consent-updated', handleConsentUpdate);
+    return () => window.removeEventListener('cookie-consent-updated', handleConsentUpdate);
+  }, []);
 
   // Get current user's plan and limits
   const currentPlan = useMemo(() => {
@@ -954,7 +963,17 @@ export default function HomePageClient() {
           >
             {/* Upload Card + Side Panel wrapper */}
             <div className="relative w-full max-w-[420px]">
-            <div className={`bg-white rounded-2xl shadow-lg p-6 w-full transition-all ${isDragOver ? 'ring-2 ring-[#409cff] ring-offset-2 ring-offset-transparent' : ''}`} style={showAdvancedOptions && sidePanelHeight > 0 ? { minHeight: sidePanelHeight } : undefined}>
+            <div className={`bg-white rounded-2xl shadow-lg p-6 w-full transition-all relative ${isDragOver ? 'ring-2 ring-[#409cff] ring-offset-2 ring-offset-transparent' : ''}`} style={showAdvancedOptions && sidePanelHeight > 0 ? { minHeight: sidePanelHeight } : undefined}>
+              {/* Cookie consent overlay */}
+              {!cookieConsent && (
+                <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-6 text-center">
+                  <div className="w-14 h-14 bg-purple-50 rounded-full flex items-center justify-center mb-4">
+                    <Cookie className="w-7 h-7 text-purple-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('upload.cookieRequired.title')}</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{t('upload.cookieRequired.description')}</p>
+                </div>
+              )}
               {/* Error Alert */}
               {uploadError && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
