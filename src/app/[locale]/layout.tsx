@@ -176,7 +176,7 @@ export default async function LocaleLayout({
         <meta name="theme-color" content="#3b82f6" />
       </head>
       <body
-        className={`${inter.variable} font-sans antialiased bg-white min-h-screen`}
+        className={`${inter.variable} font-sans antialiased min-h-screen`}
       >
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>

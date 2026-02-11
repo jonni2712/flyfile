@@ -16,7 +16,7 @@ html {
 }
 
 body {
-  background: var(--background);
+  background: var(--color-blue-500);
   color: var(--foreground);
   overscroll-behavior-y: none;
 }
