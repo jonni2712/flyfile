@@ -948,10 +948,10 @@ export default function HomePageClient() {
       )}
 
       {/* Full-page gradient background with card overlay */}
-      <div className={`${showAdvancedOptions ? 'min-h-dvh overflow-y-auto' : 'h-dvh overflow-hidden'} lg:h-auto lg:min-h-screen lg:overflow-x-hidden lg:overflow-y-visible -mt-16 pt-16 relative bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500`}>
-        {/* Decorative circles */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 right-20 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" />
+      <div className={`${showAdvancedOptions ? 'min-h-dvh overflow-y-auto' : 'h-dvh overflow-hidden'} lg:h-auto lg:min-h-screen lg:overflow-x-hidden lg:overflow-y-visible -mt-16 pt-16 relative bg-blue-500 lg:bg-gradient-to-br lg:from-blue-500 lg:via-purple-500 lg:to-pink-500`}>
+        {/* Decorative circles — hidden on mobile for solid color */}
+        <div className="hidden lg:block absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="hidden lg:block absolute bottom-10 right-20 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" />
 
         <div className="relative z-10 flex flex-col lg:flex-row h-full lg:min-h-[calc(100vh-4rem)]">
           {/* Left Panel — Upload Card */}
