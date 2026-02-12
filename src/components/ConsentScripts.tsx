@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next';
 
 const GA_MEASUREMENT_ID = 'G-W4J7Q31Y7B';
 const ADSENSE_CLIENT_ID = 'ca-pub-5065560716215945';
+const CLARITY_PROJECT_ID = 'vg65y6p5wf';
 
 interface CookiePreferences {
   essential: boolean;
@@ -88,6 +89,18 @@ export default function ConsentScripts() {
         `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`,
         { crossorigin: 'anonymous' }
       );
+
+      // Load Microsoft Clarity
+      if (!w.__clarityInitialized) {
+        w.clarity = w.clarity || function (...args: unknown[]) {
+          ((w.clarity as { q?: unknown[] }).q = (w.clarity as { q?: unknown[] }).q || []).push(args);
+        };
+        w.__clarityInitialized = true;
+      }
+      loadScript(
+        'ms-clarity',
+        `https://www.clarity.ms/tag/${CLARITY_PROJECT_ID}`
+      );
     } else {
       // Disable GA tracking
       w[`ga-disable-${GA_MEASUREMENT_ID}`] = true;
@@ -98,6 +111,7 @@ export default function ConsentScripts() {
       // Remove injected scripts
       removeScript('ga-gtag');
       removeScript('google-adsense');
+      removeScript('ms-clarity');
     }
   }, []);
 
