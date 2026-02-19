@@ -20,20 +20,18 @@ import {
   CheckSquare,
   Loader2
 } from 'lucide-react';
-import { collection, query, where, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 interface Transfer {
   id: string;
+  transferId: string;
   title: string;
-  originalName: string;
-  size: number;
+  totalSize: number;
+  fileCount: number;
   downloadCount: number;
   createdAt: Date;
   expiresAt?: Date;
   hasPassword: boolean;
   isExpired: boolean;
-  r2Key: string;
 }
 
 export default function FilesPage() {
@@ -75,44 +73,45 @@ export default function FilesPage() {
     if (!user) return;
 
     try {
-      const filesRef = collection(db, 'files');
-      const q = query(
-        filesRef,
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc')
-      );
+      const token = await user.getIdToken();
+      const response = await fetch(`/api/transfer?userId=${user.uid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      const snapshot = await getDocs(q);
+      if (!response.ok) {
+        throw new Error('Impossibile caricare i trasferimenti');
+      }
+
+      const { transfers: transfersData } = await response.json();
       const transfersList: Transfer[] = [];
       let activeCount = 0;
       let expiredCount = 0;
       let totalDownloads = 0;
 
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const expiresAt = data.expiresAt?.toDate();
+      for (const item of transfersData) {
+        const expiresAt = item.expiresAt ? new Date(item.expiresAt) : undefined;
         const isExpired = expiresAt ? expiresAt < new Date() : false;
 
         transfersList.push({
-          id: docSnap.id,
-          title: data.title || data.originalName || t('untitledTransfer'),
-          originalName: data.originalName,
-          size: data.size,
-          downloadCount: data.downloadCount || 0,
-          createdAt: data.createdAt?.toDate() || new Date(),
+          id: item.id,
+          transferId: item.transferId,
+          title: item.title || t('untitledTransfer'),
+          totalSize: item.totalSize || 0,
+          fileCount: item.fileCount || 0,
+          downloadCount: item.downloadCount || 0,
+          createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
           expiresAt,
-          hasPassword: !!data.password,
+          hasPassword: !!item.hasPassword,
           isExpired,
-          r2Key: data.r2Key,
         });
 
-        totalDownloads += data.downloadCount || 0;
+        totalDownloads += item.downloadCount || 0;
         if (isExpired) {
           expiredCount++;
         } else {
           activeCount++;
         }
-      });
+      }
 
       setTransfers(transfersList);
       setStats({
@@ -141,9 +140,7 @@ export default function FilesPage() {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        (t) =>
-          t.title.toLowerCase().includes(q) ||
-          t.originalName.toLowerCase().includes(q)
+        (t) => t.title.toLowerCase().includes(q)
       );
     }
 
@@ -163,19 +160,22 @@ export default function FilesPage() {
     });
   };
 
-  const handleDelete = async (transferId: string, r2Key: string) => {
+  const handleDelete = async (transferId: string) => {
     if (!confirm(t('confirmDelete'))) {
       return;
     }
 
     try {
-      await fetch('/api/files/delete', {
+      const token = await user!.getIdToken();
+      const response = await fetch(`/api/transfer/${transferId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileId: transferId, r2Key }),
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      await deleteDoc(doc(db, 'files', transferId));
+      if (!response.ok) {
+        throw new Error('Errore eliminazione');
+      }
+
       setTransfers((prev) => prev.filter((t) => t.id !== transferId));
       setSelectedIds((prev) => {
         const next = new Set(prev);
@@ -212,7 +212,6 @@ export default function FilesPage() {
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
 
-    const count = selectedIds.size;
     if (!confirm(t('confirmDelete'))) {
       return;
     }
@@ -220,19 +219,21 @@ export default function FilesPage() {
     setBulkDeleting(true);
 
     try {
-      const response = await fetch('/api/files/bulk-delete', {
+      const token = await user!.getIdToken();
+      const response = await fetch('/api/transfer/bulk-delete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
-          userId: user?.uid,
-          fileIds: Array.from(selectedIds),
+          transferIds: Array.from(selectedIds),
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        // Remove deleted files from state
         setTransfers((prev) => prev.filter((t) => !data.results.deleted.includes(t.id)));
         setSelectedIds(new Set());
 
@@ -502,11 +503,11 @@ export default function FilesPage() {
                       <div className="flex items-center text-sm text-gray-600 gap-4 mb-3 flex-wrap">
                         <span className="flex items-center">
                           <FileText className="w-4 h-4 mr-1" />
-                          {t('fileCount')}
+                          {transfer.fileCount} file
                         </span>
                         <span className="flex items-center">
                           <Download className="w-4 h-4 mr-1" />
-                          {formatBytes(transfer.size)}
+                          {formatBytes(transfer.totalSize)}
                         </span>
                         <span className="flex items-center">
                           <Download className="w-4 h-4 mr-1" />
@@ -521,12 +522,6 @@ export default function FilesPage() {
                             {t('expiresIn', { time: getTimeRemaining(transfer.expiresAt) })}
                           </span>
                         )}
-                      </div>
-
-                      {/* File name */}
-                      <div className="text-sm text-gray-500">
-                        <FileText className="w-4 h-4 inline mr-1" />
-                        {transfer.originalName}
                       </div>
                     </div>
                   </div>
@@ -552,7 +547,7 @@ export default function FilesPage() {
 
                     {canDelete && (
                       <button
-                        onClick={() => handleDelete(transfer.id, transfer.r2Key)}
+                        onClick={() => handleDelete(transfer.id)}
                         className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors min-h-[44px]"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />

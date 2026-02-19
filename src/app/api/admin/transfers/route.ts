@@ -27,9 +27,36 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     let transfers: Array<Record<string, unknown>> = [];
 
+    // Build a map of userId -> email for resolving authenticated users
+    const userIdsToResolve = new Set<string>();
+    const transferDocs: Array<{ docSnap: FirebaseFirestore.QueryDocumentSnapshot; data: FirebaseFirestore.DocumentData }> = [];
+
     transfersSnapshot.forEach((docSnap) => {
       const data = docSnap.data();
+      transferDocs.push({ docSnap, data });
+      if (data.userId && !data.senderEmail) {
+        userIdsToResolve.add(data.userId);
+      }
+    });
 
+    // Batch resolve user emails
+    const userEmailMap = new Map<string, string>();
+    if (userIdsToResolve.size > 0) {
+      const userIds = Array.from(userIdsToResolve);
+      // Firestore 'in' queries support max 30 items
+      for (let i = 0; i < userIds.length; i += 30) {
+        const batch = userIds.slice(i, i + 30);
+        const usersSnap = await db.collection('users').where('__name__', 'in', batch).get();
+        usersSnap.forEach((userDoc) => {
+          const userData = userDoc.data();
+          if (userData.email) {
+            userEmailMap.set(userDoc.id, userData.email);
+          }
+        });
+      }
+    }
+
+    for (const { docSnap, data } of transferDocs) {
       // Calculate status
       const expiresAt = data.expiresAt?.toDate?.();
       let transferStatus = data.status || 'active';
@@ -39,15 +66,18 @@ export async function GET(request: NextRequest) {
 
       // Apply status filter
       if (status && transferStatus !== status) {
-        return;
+        continue;
       }
+
+      // Resolve user email: senderEmail (anonymous) → userId lookup → fallback
+      const resolvedEmail = data.senderEmail || userEmailMap.get(data.userId) || null;
 
       transfers.push({
         id: docSnap.id,
         transferId: data.transferId,
         title: data.title,
         userId: data.userId,
-        userEmail: data.senderEmail || data.userEmail,
+        userEmail: resolvedEmail,
         senderEmail: data.senderEmail,
         recipientEmail: data.recipientEmail,
         status: transferStatus,
@@ -58,7 +88,7 @@ export async function GET(request: NextRequest) {
         expiresAt: expiresAt?.toISOString() || null,
         createdAt: data.createdAt?.toDate()?.toISOString() || null,
       });
-    });
+    }
 
     // Sort by creation date (newest first)
     transfers.sort((a, b) => {

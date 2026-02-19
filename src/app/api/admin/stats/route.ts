@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       totalStorageUsed += data.storageUsed || 0;
 
       // Count subscriptions
-      if (data.stripeSubscriptionId && data.subscriptionStatus === 'active') {
+      if ((data.subscriptionId || data.stripeSubscriptionId) && data.subscriptionStatus === 'active') {
         activeSubscriptions++;
       }
 
