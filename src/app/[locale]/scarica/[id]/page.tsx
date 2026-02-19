@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useTransfer, formatBytes, getTimeRemaining, getFileIcon } from '@/context/TransferContext';
 import { Transfer, TransferFile, BrandSettings } from '@/types';
+import SponsorVideoBackground from '@/components/SponsorVideoBackground';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { decryptFile, isEncryptionSupported } from '@/lib/client-encryption';
 import { useToast } from '@/components/Toast';
@@ -87,6 +88,9 @@ export default function DownloadPage() {
 
   // Brand customization state
   const [brand, setBrand] = useState<BrandSettings | null>(null);
+
+  // Sponsor video state
+  const [hasSponsorVideo, setHasSponsorVideo] = useState(false);
 
   const fetchBrandSettings = async (userId: string) => {
     try {
@@ -390,8 +394,13 @@ export default function DownloadPage() {
       {/* Overlay for branded backgrounds */}
       {hasBrandBg && <div className="absolute inset-0 bg-black/40" />}
 
-      {/* Decorative circles (default only) */}
+      {/* Sponsor video background (when no brand customization) */}
       {!hasBrandBg && (
+        <SponsorVideoBackground onLoad={() => setHasSponsorVideo(true)} />
+      )}
+
+      {/* Decorative circles (default only, no brand and no sponsor) */}
+      {!hasBrandBg && !hasSponsorVideo && (
         <>
           <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute bottom-10 right-20 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" />

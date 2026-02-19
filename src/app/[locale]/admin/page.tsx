@@ -57,6 +57,28 @@ interface ContactMessage {
   createdAt: string;
 }
 
+interface SponsorshipVideo {
+  id: string;
+  r2Key: string;
+  videoUrl: string;
+  linkUrl: string;
+  status: string;
+  uploadedAt: string | null;
+}
+
+interface AdminSponsorship {
+  id: string;
+  userId: string;
+  userEmail: string;
+  companyName: string;
+  status: 'pending' | 'active' | 'rejected' | 'deactivated';
+  videos: SponsorshipVideo[];
+  impressionCount: number;
+  clickCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
   const k = 1024;
@@ -72,9 +94,11 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
+  const [sponsorships, setSponsorships] = useState<AdminSponsorship[]>([]);
+  const [sponsorshipFilter, setSponsorshipFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'transfers' | 'messages'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'transfers' | 'messages' | 'sponsorships'>('stats');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [viewingMessage, setViewingMessage] = useState<ContactMessage | null>(null);
@@ -110,11 +134,12 @@ export default function AdminDashboard() {
       };
 
       // Fetch all data in parallel for better performance
-      const [statsRes, usersRes, transfersRes, messagesRes] = await Promise.all([
+      const [statsRes, usersRes, transfersRes, messagesRes, sponsorshipsRes] = await Promise.all([
         fetch('/api/admin/stats', { headers }),
         fetch('/api/admin/users', { headers }),
         fetch('/api/admin/transfers?limit=100', { headers }),
         fetch('/api/admin/messages', { headers }),
+        fetch('/api/admin/sponsorships', { headers }),
       ]);
 
       const statsData = await statsRes.json();
@@ -142,6 +167,11 @@ export default function AdminDashboard() {
       const messagesData = await messagesRes.json();
       if (messagesRes.ok) {
         setContactMessages(messagesData.messages || []);
+      }
+
+      const sponsorshipsData = await sponsorshipsRes.json();
+      if (sponsorshipsRes.ok) {
+        setSponsorships(sponsorshipsData.sponsorships || []);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore nel caricamento dei dati');
@@ -266,6 +296,17 @@ export default function AdminDashboard() {
               {contactMessages.filter(m => m.status === 'new').length > 0 && (
                 <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {contactMessages.filter(m => m.status === 'new').length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('sponsorships')}
+              className={`pb-2 px-1 relative ${activeTab === 'sponsorships' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+            >
+              Sponsorizzazioni
+              {sponsorships.filter(s => s.status === 'pending').length > 0 && (
+                <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {sponsorships.filter(s => s.status === 'pending').length}
                 </span>
               )}
             </button>
@@ -583,6 +624,172 @@ export default function AdminDashboard() {
                 ))
               )}
             </div>
+          </div>
+        )}
+        {activeTab === 'sponsorships' && (
+          <div className="space-y-4">
+            {/* Filter buttons */}
+            <div className="flex gap-2 flex-wrap">
+              {['all', 'pending', 'active', 'rejected', 'deactivated'].map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setSponsorshipFilter(filter)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    sponsorshipFilter === filter
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {filter === 'all' ? 'Tutti' : filter === 'pending' ? 'In attesa' : filter === 'active' ? 'Attivi' : filter === 'rejected' ? 'Rifiutati' : 'Disattivati'}
+                  {filter !== 'all' && (
+                    <span className="ml-1">({sponsorships.filter(s => s.status === filter).length})</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Sponsorships list */}
+            {sponsorships
+              .filter(s => sponsorshipFilter === 'all' || s.status === sponsorshipFilter)
+              .length === 0 ? (
+              <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+                Nessuna sponsorizzazione trovata
+              </div>
+            ) : (
+              sponsorships
+                .filter(s => sponsorshipFilter === 'all' || s.status === sponsorshipFilter)
+                .map((sp) => (
+                  <div key={sp.id} className="bg-white rounded-lg shadow p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="font-semibold text-gray-900 text-lg">{sp.companyName || 'Senza nome'}</h3>
+                        <p className="text-sm text-gray-500">{sp.userEmail}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Creata: {sp.createdAt ? new Date(sp.createdAt).toLocaleDateString('it-IT') : 'N/A'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                          sp.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          sp.status === 'active' ? 'bg-green-100 text-green-800' :
+                          sp.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {sp.status === 'pending' ? 'In attesa' : sp.status === 'active' ? 'Attiva' : sp.status === 'rejected' ? 'Rifiutata' : 'Disattivata'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="flex gap-4 mb-4 text-sm text-gray-500">
+                      <span>{sp.impressionCount} impressioni</span>
+                      <span>{sp.clickCount} click</span>
+                      <span>{sp.videos.length} video</span>
+                    </div>
+
+                    {/* Video previews */}
+                    {sp.videos.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                        {sp.videos.map((video) => (
+                          <div key={video.id} className="relative rounded-lg overflow-hidden bg-black aspect-video">
+                            <video
+                              src={video.videoUrl}
+                              className="w-full h-full object-cover"
+                              muted
+                              playsInline
+                              onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
+                              onMouseLeave={(e) => { (e.target as HTMLVideoElement).pause(); (e.target as HTMLVideoElement).currentTime = 0; }}
+                            />
+                            {video.linkUrl && (
+                              <a
+                                href={video.linkUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="absolute bottom-1 left-1 right-1 text-xs text-white/80 bg-black/60 rounded px-2 py-1 truncate hover:text-white"
+                              >
+                                {video.linkUrl}
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-3 border-t border-gray-100">
+                      {sp.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={async () => {
+                              if (!user) return;
+                              const idToken = await user.getIdToken();
+                              const res = await fetch('/api/admin/sponsorships', {
+                                method: 'PATCH',
+                                headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ sponsorshipId: sp.id, action: 'approve' }),
+                              });
+                              if (res.ok) fetchData(true);
+                              else alert('Errore nell\'approvazione');
+                            }}
+                            className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+                          >
+                            Approva
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!user) return;
+                              const idToken = await user.getIdToken();
+                              const res = await fetch('/api/admin/sponsorships', {
+                                method: 'PATCH',
+                                headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ sponsorshipId: sp.id, action: 'reject' }),
+                              });
+                              if (res.ok) fetchData(true);
+                              else alert('Errore nel rifiuto');
+                            }}
+                            className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
+                          >
+                            Rifiuta
+                          </button>
+                        </>
+                      )}
+                      {sp.status === 'active' && (
+                        <button
+                          onClick={async () => {
+                            if (!user) return;
+                            const idToken = await user.getIdToken();
+                            const res = await fetch('/api/admin/sponsorships', {
+                              method: 'PATCH',
+                              headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ sponsorshipId: sp.id, action: 'deactivate' }),
+                            });
+                            if (res.ok) fetchData(true);
+                            else alert('Errore nella disattivazione');
+                          }}
+                          className="px-3 py-1.5 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 transition-colors"
+                        >
+                          Disattiva
+                        </button>
+                      )}
+                      <button
+                        onClick={async () => {
+                          if (!user || !confirm('Eliminare questa sponsorizzazione?')) return;
+                          const idToken = await user.getIdToken();
+                          const res = await fetch(`/api/admin/sponsorships?sponsorshipId=${sp.id}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${idToken}` },
+                          });
+                          if (res.ok) fetchData(true);
+                          else alert('Errore nell\'eliminazione');
+                        }}
+                        className="px-3 py-1.5 text-red-600 text-sm border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                      >
+                        Elimina
+                      </button>
+                    </div>
+                  </div>
+                ))
+            )}
           </div>
         )}
       </main>

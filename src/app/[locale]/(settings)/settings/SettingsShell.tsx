@@ -13,6 +13,7 @@ const TITLE_MAP: Record<string, string> = {
   '/settings/brand': 'Brand',
   '/settings/billing': 'Piano e pagamento',
   '/settings/members': 'Membri',
+  '/settings/sponsorships': 'Sponsorizzazioni',
 };
 
 const SIDEBAR_SECTIONS = [
@@ -27,6 +28,7 @@ const SIDEBAR_SECTIONS = [
     title: 'Spazio Di Lavoro',
     links: [
       { href: '/settings/brand', label: 'Brand' },
+      { href: '/settings/sponsorships', label: 'Sponsorizzazioni' },
       { href: '/settings/billing', label: 'Piano e pagamento' },
       { href: '/settings/members', label: 'Membri' },
     ],

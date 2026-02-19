@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, X, Check, Zap, Settings, HelpCircle, FileText, LogOut } from 'lucide-react';
+import { Menu, X, Check, Zap, Settings, HelpCircle, FileText, LogOut, Building2 } from 'lucide-react';
 import { PLANS } from '@/types';
 import { formatBytes } from '@/lib/format';
 
@@ -280,6 +280,14 @@ export default function Navbar() {
                           {t('accountSettings')}
                         </Link>
                         <Link
+                          href="/settings/sponsorships"
+                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <Building2 className="w-4 h-4 mr-3 text-gray-400" />
+                          {t('sponsorships')}
+                        </Link>
+                        <Link
                           href="/supporto"
                           className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                           onClick={() => setIsDropdownOpen(false)}
@@ -424,6 +432,14 @@ export default function Navbar() {
                   onClick={() => setIsOpen(false)}
                 >
                   {t('accountSettings')}
+                </Link>
+                <div className="w-full h-px bg-white/20" />
+                <Link
+                  href="/settings/sponsorships"
+                  className="block w-full py-5 text-2xl font-medium text-white text-center hover:text-white/80 transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {t('sponsorships')}
                 </Link>
                 <div className="w-full h-px bg-white/20" />
                 <button

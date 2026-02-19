@@ -1,3 +1,6 @@
+// Sponsorship types
+export type { SponsorVideo, Sponsorship, ActiveSponsorVideo } from './sponsorship';
+
 // User types
 export interface User {
   uid: string;

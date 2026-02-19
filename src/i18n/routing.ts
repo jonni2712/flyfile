@@ -107,6 +107,7 @@ export const routing = defineRouting({
     '/settings/billing': '/settings/billing',
     '/settings/members': '/settings/members',
     '/settings/notifications': '/settings/notifications',
+    '/settings/sponsorships': '/settings/sponsorships',
     '/team': '/team',
     '/team/analytics': '/team/analytics',
     '/team/storage': '/team/storage',
