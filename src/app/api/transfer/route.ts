@@ -436,14 +436,53 @@ export async function GET(request: NextRequest) {
     }
 
     const db = getAdminFirestore();
-    const snapshot = await db.collection('transfers')
+
+    // Query 1: transfers created while logged in (userId match)
+    const byUserIdSnap = await db.collection('transfers')
       .where('userId', '==', userId)
       .orderBy('createdAt', 'desc')
       .get();
 
+    // Query 2: transfers created anonymously but with same email (senderEmail match)
+    // This allows users to see transfers they made before logging in
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userEmail = userDoc.data()?.email?.toLowerCase()?.trim();
+
+    let byEmailSnap: FirebaseFirestore.QuerySnapshot | null = null;
+    if (userEmail) {
+      byEmailSnap = await db.collection('transfers')
+        .where('senderEmail', '==', userEmail)
+        .where('userId', '==', null)
+        .orderBy('createdAt', 'desc')
+        .get();
+    }
+
+    // Merge results (deduplicate by doc id)
+    const seenIds = new Set<string>();
+    const allDocs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+
+    for (const doc of byUserIdSnap.docs) {
+      seenIds.add(doc.id);
+      allDocs.push(doc);
+    }
+    if (byEmailSnap) {
+      for (const doc of byEmailSnap.docs) {
+        if (!seenIds.has(doc.id)) {
+          allDocs.push(doc);
+        }
+      }
+    }
+
+    // Sort merged results by createdAt descending
+    allDocs.sort((a, b) => {
+      const aTime = a.data().createdAt?.toMillis?.() || 0;
+      const bTime = b.data().createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
     const transfers = [];
 
-    for (const docSnap of snapshot.docs) {
+    for (const docSnap of allDocs) {
       const data = docSnap.data();
 
       // Fetch files for this transfer
