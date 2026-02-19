@@ -10,6 +10,7 @@ import { TeamProvider } from "@/context/TeamContext";
 import CookieBanner from "@/components/CookieBanner";
 import ConsentScripts from "@/components/ConsentScripts";
 import ToastContainer from "@/components/Toast";
+import SettingsRedirectHandler from "@/components/SettingsRedirectHandler";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -182,6 +183,7 @@ export default async function LocaleLayout({
           <AuthProvider>
             <TransferProvider>
               <TeamProvider>
+                <SettingsRedirectHandler />
                 {children}
                 {settings}
                 <CookieBanner />

@@ -20,16 +20,13 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
     }
 
     // This layout only renders on hard refresh / direct URL access.
-    // Redirect to /upload, then immediately push back to this settings path
-    // so that Next.js triggers the intercepting route @settings/(.)settings/*
-    // which renders the slide-in panel.
+    // Store the target settings path in sessionStorage, then redirect
+    // to /upload. The global SettingsRedirectHandler (in locale layout)
+    // will pick up the flag and do router.push from /upload, which
+    // triggers the @settings/(.)settings/* intercepting route panel.
     redirected.current = true;
-    const target = pathname;
+    sessionStorage.setItem('settings-redirect', pathname);
     router.replace('/upload');
-    // setTimeout without cleanup — fires even after this component unmounts
-    setTimeout(() => {
-      router.push(target as any);
-    }, 150);
   }, [loading, user, pathname, router]);
 
   // Full-screen white overlay with spinner while the redirect happens
