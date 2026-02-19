@@ -87,6 +87,7 @@
 | ⏰ **Scadenza Automatica** | I file vengono eliminati dopo X giorni |
 | 🔒 **Protezione Password** | Proteggi i trasferimenti con password |
 | 📧 **Notifiche Email** | Ricevi notifiche quando i file vengono scaricati |
+| 🌍 **Multilingua** | Interfaccia in 5 lingue: IT, EN, DE, FR, ES |
 
 ### Sicurezza
 
@@ -107,6 +108,16 @@
 | 📊 **Dashboard Analytics** | Statistiche su upload e download |
 | 🎨 **Custom Branding** | Logo e colori personalizzati |
 | 🔗 **Custom URL** | Link personalizzati (es. tuodominio.flyfile.it) |
+
+### Sponsorizzazioni
+
+| Funzionalità | Descrizione |
+|-------------|-------------|
+| 🏢 **Video Promozionali** | Carica fino a 3 video MP4 (15-30s) come sfondo nelle pagine download |
+| 🎲 **Rotazione Casuale** | I video degli sponsor ruotano casualmente sulle pagine pubbliche |
+| 📊 **Tracking** | Conteggio impressioni e click per ogni sponsorizzazione |
+| ✅ **Approvazione Admin** | Workflow di approvazione/rifiuto/disattivazione |
+| 🔗 **Link Sponsor** | Badge cliccabile con link all'azienda sponsor |
 
 ### Integrazioni
 
@@ -243,10 +254,10 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 │                              FRONTEND                                    │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
 │  │                     Next.js 16 (React 19)                        │   │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────┐ │   │
-│  │  │  Upload  │  │ Download │  │Dashboard │  │   Admin Panel    │ │   │
-│  │  │   Page   │  │   Page   │  │   Page   │  │                  │ │   │
-│  │  └──────────┘  └──────────┘  └──────────┘  └──────────────────┘ │   │
+│  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────────────┐  │   │
+│  │  │ Upload │ │Download│ │Dashbrd │ │Sponsor │ │  Admin Panel   │  │   │
+│  │  │  Page  │ │  Page  │ │  Page  │ │  Page  │ │                │  │   │
+│  │  └────────┘ └────────┘ └────────┘ └────────┘ └────────────────┘  │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
@@ -255,10 +266,10 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 │                              BACKEND                                     │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
 │  │                    Next.js API Routes                            │   │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────┐ │   │
-│  │  │/api/     │  │/api/     │  │/api/     │  │    /api/         │ │   │
-│  │  │transfer  │  │ profile  │  │  2fa     │  │    stripe        │ │   │
-│  │  └──────────┘  └──────────┘  └──────────┘  └──────────────────┘ │   │
+│  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────────────┐  │   │
+│  │  │/api/   │ │/api/   │ │/api/   │ │/api/   │ │   /api/        │  │   │
+│  │  │transfer│ │profile │ │  2fa   │ │sponsor │ │   stripe       │  │   │
+│  │  └────────┘ └────────┘ └────────┘ └────────┘ └────────────────┘  │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────┘
           │                    │                    │
@@ -381,6 +392,26 @@ curl -X GET https://flyfile.it/api/transfer/abc123 \
 | `GET` | `/api/profile` | Ottieni profilo utente |
 | `POST` | `/api/profile` | Aggiorna profilo |
 | `GET` | `/api/profile/billing` | Ottieni dati fatturazione |
+
+#### Sponsorizzazioni
+
+| Metodo | Endpoint | Descrizione |
+|--------|----------|-------------|
+| `GET` | `/api/sponsorships` | Ottieni sponsorizzazione dell'utente |
+| `POST` | `/api/sponsorships` | Crea/aggiorna sponsorizzazione |
+| `DELETE` | `/api/sponsorships` | Elimina sponsorizzazione |
+| `POST` | `/api/sponsorships/upload` | Genera URL presigned per upload video |
+| `PUT` | `/api/sponsorships/upload` | Conferma upload completato |
+| `GET` | `/api/sponsorships/active` | Video sponsor casuale (pubblico) |
+| `POST` | `/api/sponsorships/click` | Traccia click su sponsor |
+
+#### Admin Sponsorizzazioni
+
+| Metodo | Endpoint | Descrizione |
+|--------|----------|-------------|
+| `GET` | `/api/admin/sponsorships` | Lista tutte le sponsorizzazioni |
+| `PATCH` | `/api/admin/sponsorships` | Approva/rifiuta/disattiva |
+| `DELETE` | `/api/admin/sponsorships` | Elimina sponsorizzazione |
 
 #### 2FA
 
@@ -526,6 +557,9 @@ Permissions-Policy: camera=(), microphone=(), geolocation=()
 - [x] Rate limiting
 - [x] Docker support
 - [x] Self-hosting documentation
+- [x] Sistema sponsorizzazioni con video promozionali
+- [x] Admin panel per gestione sponsorizzazioni
+- [x] Microsoft Clarity analytics con consenso GDPR
 
 ### 🚧 In Sviluppo
 
