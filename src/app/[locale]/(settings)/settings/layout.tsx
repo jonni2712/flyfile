@@ -56,7 +56,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-white z-[70] overflow-y-auto">
+    <div className="min-h-screen bg-white">
       {/* Sticky close bar */}
       <div className="sticky top-0 bg-white/80 backdrop-blur-sm z-10 px-6 py-4 flex items-center justify-between border-b border-gray-100">
         <Link
