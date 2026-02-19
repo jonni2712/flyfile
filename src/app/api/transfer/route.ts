@@ -450,11 +450,16 @@ export async function GET(request: NextRequest) {
 
     let byEmailSnap: FirebaseFirestore.QuerySnapshot | null = null;
     if (userEmail) {
-      byEmailSnap = await db.collection('transfers')
-        .where('senderEmail', '==', userEmail)
-        .where('userId', '==', null)
-        .orderBy('createdAt', 'desc')
-        .get();
+      try {
+        byEmailSnap = await db.collection('transfers')
+          .where('senderEmail', '==', userEmail)
+          .where('userId', '==', null)
+          .orderBy('createdAt', 'desc')
+          .get();
+      } catch {
+        // Index may not be ready yet — silently skip this query
+        // The primary query by userId still works
+      }
     }
 
     // Merge results (deduplicate by doc id)
