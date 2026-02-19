@@ -4,22 +4,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/context/AuthContext';
-import { X, Search, ChevronDown, Copy, ExternalLink, Trash2, Calendar, Download, Lock } from 'lucide-react';
+import { X, Search, ChevronDown, Copy, ExternalLink, Trash2, Calendar, Download, Lock, FileText } from 'lucide-react';
 import { formatBytes } from '@/lib/format';
-import { collection, query, where, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 interface TransferItem {
   id: string;
+  transferId: string;
   title: string;
-  originalName: string;
-  size: number;
+  totalSize: number;
+  fileCount: number;
   downloadCount: number;
   createdAt: Date;
   expiresAt?: Date;
   hasPassword: boolean;
   isExpired: boolean;
-  r2Key: string;
   recipientEmail?: string;
 }
 
@@ -46,30 +44,28 @@ export default function TransfersPanel({ isOpen, onClose, onOpenPricing }: Trans
     if (!user) return;
     setTransfersLoading(true);
     try {
-      const filesRef = collection(db, 'files');
-      const q = query(
-        filesRef,
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      const list: TransferItem[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const expiresAt = data.expiresAt?.toDate();
-        list.push({
-          id: docSnap.id,
-          title: data.title || data.originalName || 'Untitled',
-          originalName: data.originalName,
-          size: data.size,
-          downloadCount: data.downloadCount || 0,
-          createdAt: data.createdAt?.toDate() || new Date(),
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/transfer?userId=${user.uid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch transfers');
+      const data = await res.json();
+      const now = new Date();
+      const list: TransferItem[] = (data.transfers || []).map((t: Record<string, unknown>) => {
+        const expiresAt = t.expiresAt ? new Date(t.expiresAt as string) : undefined;
+        return {
+          id: t.id as string,
+          transferId: (t.transferId || t.id) as string,
+          title: (t.title as string) || 'Untitled',
+          totalSize: (t.totalSize as number) || 0,
+          fileCount: (t.fileCount as number) || 0,
+          downloadCount: (t.downloadCount as number) || 0,
+          createdAt: t.createdAt ? new Date(t.createdAt as string) : now,
           expiresAt,
-          hasPassword: !!data.password,
-          isExpired: expiresAt ? expiresAt < new Date() : false,
-          r2Key: data.r2Key,
-          recipientEmail: data.recipientEmail,
-        });
+          hasPassword: !!t.hasPassword,
+          isExpired: expiresAt ? expiresAt < now : false,
+          recipientEmail: t.recipientEmail as string | undefined,
+        };
       });
       setTransfersList(list);
     } catch (error) {
@@ -89,35 +85,38 @@ export default function TransfersPanel({ isOpen, onClose, onOpenPricing }: Trans
     .filter((item) => {
       if (transfersSearch.trim()) {
         const q = transfersSearch.toLowerCase();
-        return item.title.toLowerCase().includes(q) || item.originalName.toLowerCase().includes(q) || (item.recipientEmail && item.recipientEmail.toLowerCase().includes(q));
+        return item.title.toLowerCase().includes(q) || (item.recipientEmail && item.recipientEmail.toLowerCase().includes(q));
       }
       return true;
     })
     .sort((a, b) => {
       switch (transfersSortBy) {
-        case 'size': return b.size - a.size;
+        case 'size': return b.totalSize - a.totalSize;
         case 'title': return a.title.localeCompare(b.title);
         case 'expiry': return (b.expiresAt?.getTime() || 0) - (a.expiresAt?.getTime() || 0);
         default: return b.createdAt.getTime() - a.createdAt.getTime();
       }
     });
 
-  const handleCopyLink = (id: string) => {
-    navigator.clipboard.writeText(`${window.location.origin}/s/${id}`);
+  const handleCopyLink = (transferId: string) => {
+    navigator.clipboard.writeText(`${window.location.origin}/s/${transferId}`);
     setTransferToast(t('transfersPanel.linkCopied'));
     setTimeout(() => setTransferToast(null), 2000);
   };
 
-  const handleDeleteTransfer = async (id: string, r2Key: string) => {
-    if (!confirm(t('transfersPanel.confirmDelete'))) return;
+  const handleDeleteTransfer = async (transferId: string) => {
+    if (!user || !confirm(t('transfersPanel.confirmDelete'))) return;
     try {
-      await fetch('/api/files/delete', {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/transfer/${transferId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileId: id, r2Key }),
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'x-csrf-token': '1',
+        },
       });
-      await deleteDoc(doc(db, 'files', id));
-      setTransfersList((prev) => prev.filter((item) => item.id !== id));
+      if (!res.ok) throw new Error('Failed to delete transfer');
+      setTransfersList((prev) => prev.filter((item) => item.transferId !== transferId));
     } catch {
       console.error('Error deleting transfer');
     }
@@ -363,7 +362,11 @@ export default function TransfersPanel({ isOpen, onClose, onOpenPricing }: Trans
                               <Calendar className="w-3 h-3" />
                               {formatTransferDate(transfer.createdAt)}
                             </span>
-                            <span>{formatBytes(transfer.size)}</span>
+                            <span className="flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              {transfer.fileCount}
+                            </span>
+                            <span>{formatBytes(transfer.totalSize)}</span>
                             <span className="flex items-center gap-1">
                               <Download className="w-3 h-3" />
                               {transfer.downloadCount}
@@ -373,14 +376,14 @@ export default function TransfersPanel({ isOpen, onClose, onOpenPricing }: Trans
 
                         <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                           <button
-                            onClick={() => handleCopyLink(transfer.id)}
+                            onClick={() => handleCopyLink(transfer.transferId)}
                             className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                             title={t('transfersPanel.copyLink')}
                           >
                             <Copy className="w-4 h-4" />
                           </button>
                           <Link
-                            href={{ pathname: '/s/[id]', params: { id: transfer.id } }}
+                            href={{ pathname: '/s/[id]', params: { id: transfer.transferId } }}
                             target="_blank"
                             className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                             title={t('transfersPanel.open')}
@@ -389,7 +392,7 @@ export default function TransfersPanel({ isOpen, onClose, onOpenPricing }: Trans
                           </Link>
                           {userProfile?.plan !== 'free' && (
                             <button
-                              onClick={() => handleDeleteTransfer(transfer.id, transfer.r2Key)}
+                              onClick={() => handleDeleteTransfer(transfer.transferId)}
                               className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                               title={t('transfersPanel.delete')}
                             >
