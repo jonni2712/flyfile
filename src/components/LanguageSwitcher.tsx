@@ -20,8 +20,15 @@ export default function LanguageSwitcher() {
         setOpen(false);
       }
     }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpen(false);
+    }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const switchLocale = (newLocale: Locale) => {
@@ -35,6 +42,8 @@ export default function LanguageSwitcher() {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors"
         aria-label={t('label')}
+        aria-expanded={open}
+        aria-haspopup="listbox"
       >
         <Globe className="w-4 h-4" />
         <span>{localeNames[locale]}</span>

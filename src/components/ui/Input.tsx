@@ -28,7 +28,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           aria-label={!label ? (props.placeholder as string) : undefined}
           className={`
             w-full px-4 py-2 min-h-[44px] border rounded-lg transition-colors
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:border-transparent
             ${error ? 'border-red-500' : 'border-gray-300'}
             ${className}
           `}

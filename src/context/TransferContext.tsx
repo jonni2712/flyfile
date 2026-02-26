@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { Transfer, TransferUploadData, UploadResponse } from '@/types';
 import { encryptFile, isEncryptionSupported } from '@/lib/client-encryption';
@@ -402,7 +402,7 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     transfers,
     loading,
     error,
@@ -414,7 +414,7 @@ export function TransferProvider({ children }: { children: ReactNode }) {
     deleteTransfer,
     verifyPassword,
     incrementDownloadCount,
-  };
+  }), [transfers, loading, error, fetchTransfers, getTransfer, getPublicTransfer, createTransfer, updateTransfer, deleteTransfer, verifyPassword, incrementDownloadCount]);
 
   return (
     <TransferContext.Provider value={value}>

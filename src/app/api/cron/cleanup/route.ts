@@ -133,8 +133,6 @@ export async function GET(request: NextRequest) {
 
     const totalSizeFreedMB = (totalSizeFreed / (1024 * 1024)).toFixed(2);
 
-    console.log(`Cleanup completed: ${deletedCount} transfers deleted, ${totalSizeFreedMB} MB freed`);
-
     return NextResponse.json({
       success: true,
       message: `Cleanup completed`,

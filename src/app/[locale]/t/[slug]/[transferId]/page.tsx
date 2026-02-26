@@ -8,11 +8,6 @@ import {
   Cloud,
   Download,
   File,
-  FileImage,
-  FileVideo,
-  FileAudio,
-  FileText,
-  FileArchive,
   Clock,
   Lock,
   User,
@@ -25,35 +20,11 @@ import {
   Search,
   Shield
 } from 'lucide-react';
-import { useTransfer, formatBytes, getTimeRemaining, getFileIcon } from '@/context/TransferContext';
+import { useTransfer, formatBytes, getTimeRemaining } from '@/context/TransferContext';
 import { Transfer, TransferFile, BrandSettings } from '@/types';
 import FilePreviewModal from '@/components/FilePreviewModal';
+import FileIcon from '@/components/FileIcon';
 import { decryptFile, isEncryptionSupported } from '@/lib/client-encryption';
-
-// File icon component
-const FileIcon = ({ mimeType, className }: { mimeType: string; className?: string }) => {
-  const iconType = getFileIcon(mimeType);
-  const iconClass = className || 'w-6 h-6';
-
-  switch (iconType) {
-    case 'image':
-      return <FileImage className={`${iconClass} text-pink-400`} />;
-    case 'video':
-      return <FileVideo className={`${iconClass} text-purple-400`} />;
-    case 'audio':
-      return <FileAudio className={`${iconClass} text-green-400`} />;
-    case 'pdf':
-      return <FileText className={`${iconClass} text-red-400`} />;
-    case 'doc':
-      return <FileText className={`${iconClass} text-blue-400`} />;
-    case 'spreadsheet':
-      return <FileText className={`${iconClass} text-emerald-400`} />;
-    case 'archive':
-      return <FileArchive className={`${iconClass} text-yellow-400`} />;
-    default:
-      return <File className={`${iconClass} text-gray-400`} />;
-  }
-};
 
 export default function CustomLinkDownloadPage() {
   const params = useParams();
@@ -425,7 +396,7 @@ export default function CustomLinkDownloadPage() {
                     id="transfer-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 pr-12 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:border-transparent transition-all"
                     placeholder="Inserisci la password"
                     required
                   />
@@ -564,7 +535,7 @@ export default function CustomLinkDownloadPage() {
                   className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all"
                 >
                   <div className="flex items-center min-w-0 flex-1">
-                    <FileIcon mimeType={file.mimeType} className="w-8 h-8 flex-shrink-0" />
+                    <FileIcon mimeType={file.mimeType} className="w-8 h-8 flex-shrink-0" variant="muted" />
                     <div className="ml-4 min-w-0">
                       <p className="text-white font-medium truncate">{file.originalName}</p>
                       <p className="text-sm text-blue-200/60">{formatBytes(file.size)}</p>

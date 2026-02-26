@@ -764,6 +764,7 @@
     "help": "Hilfe",
     "legalPrivacy": "Rechtliches und Datenschutz",
     "signOut": "Abmelden",
+    "storage": "Speicher",
     "transfersPanel": {
       "title": "Übertragungen",
       "usedOf": "verwendet von",
@@ -793,7 +794,9 @@
       "transfersUsage": "Sie haben {used}/{total} Übertragungen in den letzten 30 Tagen verwendet. Jede Übertragung wird 30 Tage nach dem Upload nicht mehr auf Ihr Limit angerechnet.",
       "storageUsage": "Sie haben {used}/{total} in den letzten 30 Tagen hochgeladen. Jede Übertragung wird 30 Tage nach dem Upload nicht mehr auf Ihr Limit angerechnet.",
       "increaseLimit": "Limit erhöhen",
-      "unlimited": "Unbegrenzt"
+      "unlimited": "Unbegrenzt",
+      "storage": "Speicher",
+      "untitled": "Ohne Titel"
     }
   },
   "cookieBanner": {

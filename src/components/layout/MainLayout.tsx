@@ -41,10 +41,13 @@ export default function MainLayout({
 
   return (
     <div className={`min-h-screen flex flex-col ${transparentBg ? '' : 'bg-white'}`}>
+      <a href="#main-content" className="skip-to-content">
+        Skip to main content
+      </a>
       <Navbar />
       {/* Spacer for fixed navigation */}
       <div className="h-16"></div>
-      <main role="main" className="flex-1">{children}</main>
+      <main id="main-content" role="main" className="flex-1">{children}</main>
       {showFooter && <Footer />}
     </div>
   );

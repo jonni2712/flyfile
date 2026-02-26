@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from 'react';
 import {
   User,
   signInWithCustomToken,
@@ -155,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Send auth code to email
-  async function sendAuthCode(email: string) {
+  const sendAuthCode = useCallback(async (email: string) => {
     const response = await fetch('/api/auth/send-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -167,10 +167,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!response.ok) {
       throw new Error(data.error || 'Errore nell\'invio del codice');
     }
-  }
+  }, []);
 
   // Verify auth code and sign in
-  async function verifyAuthCode(email: string, code: string): Promise<{ isNewUser: boolean }> {
+  const verifyAuthCode = useCallback(async (email: string, code: string): Promise<{ isNewUser: boolean }> => {
     const response = await fetch('/api/auth/verify-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -187,27 +187,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signInWithCustomToken(auth, data.customToken);
 
     return { isNewUser: data.isNewUser };
-  }
+  }, []);
 
-  async function signInWithPassword(email: string, password: string) {
+  const signInWithPassword = useCallback(async (email: string, password: string) => {
     await signInWithEmailAndPassword(auth, email, password);
-  }
+  }, []);
 
-  async function signInWithGoogle() {
+  const signInWithGoogle = useCallback(async () => {
     // Use redirect flow instead of popup for better compatibility
     await signInWithRedirect(auth, googleProvider);
     // User will be redirected to Google, then back to the app
     // The redirect result is handled in useEffect
-  }
+  }, []);
 
-  async function signOut() {
+  const signOut = useCallback(async () => {
     // Clear session cookie before signing out
     document.cookie = '__session=; path=/; max-age=0';
     await firebaseSignOut(auth);
     setUserProfile(null);
-  }
+  }, []);
 
-  async function updateUserProfile(data: Partial<UserProfile>) {
+  const updateUserProfile = useCallback(async (data: Partial<UserProfile>) => {
     if (!user) return;
 
     const docRef = doc(db, 'users', user.uid);
@@ -222,10 +222,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     await fetchUserProfile(user.uid);
-  }
+  }, [user]);
 
   // Delete account (no password needed - uses Bearer token server-side)
-  async function deleteAccount() {
+  const deleteAccount = useCallback(async () => {
     if (!user) throw new Error('Non autorizzato');
 
     // Get fresh ID token for API authentication
@@ -247,16 +247,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await deleteUser(user);
 
     setUserProfile(null);
-  }
+  }, [user]);
 
   // Refresh user profile (to get updated storage, etc.)
-  async function refreshUserProfile() {
+  const refreshUserProfile = useCallback(async () => {
     if (user) {
       await fetchUserProfile(user.uid);
     }
-  }
+  }, [user]);
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     userProfile,
     loading,
@@ -269,7 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updateUserProfile,
     deleteAccount,
     refreshUserProfile,
-  };
+  }), [user, userProfile, loading, isProcessingRedirect, sendAuthCode, verifyAuthCode, signInWithGoogle, signInWithPassword, signOut, updateUserProfile, deleteAccount, refreshUserProfile]);
 
   return (
     <AuthContext.Provider value={value}>

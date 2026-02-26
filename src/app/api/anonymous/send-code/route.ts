@@ -125,8 +125,6 @@ export async function POST(request: NextRequest) {
         text,
       });
 
-      // SECURITY: Don't log PII (email addresses)
-      console.log('Verification code sent successfully');
     } catch (emailError) {
       console.error('Error sending verification email:', emailError);
       return NextResponse.json(

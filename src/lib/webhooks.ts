@@ -389,7 +389,6 @@ async function sendWebhook(
       await updateDoc(webhookRef, {
         isActive: false,
       });
-      console.log(`Webhook ${webhookId} disabled after ${failureCount} failures`);
     }
   } catch (error) {
     console.error(`Webhook delivery failed for ${webhookId}:`, error);

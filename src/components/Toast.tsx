@@ -49,7 +49,6 @@ const ToastItem = ({ toast, onRemove }: ToastItemProps) => {
         flex items-start gap-3 p-4 rounded-xl backdrop-blur-lg border shadow-lg
         ${getToastStyles(toast.type)}
         ${isExiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}
-        transition-all duration-200
       `}
     >
       <ToastIcon type={toast.type} />
@@ -61,9 +60,10 @@ const ToastItem = ({ toast, onRemove }: ToastItemProps) => {
       </div>
       <button
         onClick={handleRemove}
-        className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+        aria-label="Dismiss notification"
+        className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
       >
-        <X className="w-4 h-4" />
+        <X className="w-4 h-4" aria-hidden="true" />
       </button>
     </div>
   );
@@ -80,7 +80,12 @@ export default function ToastContainer() {
   if (!mounted) return null;
 
   return (
-    <div className="fixed top-4 right-4 left-4 sm:left-auto z-[100] flex flex-col gap-3 sm:max-w-sm w-auto pointer-events-none">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className="fixed top-4 right-4 left-4 sm:left-auto z-[100] flex flex-col gap-3 sm:max-w-sm w-auto pointer-events-none"
+    >
       {toasts.map((toast) => (
         <div key={toast.id} className="pointer-events-auto">
           <ToastItem toast={toast} onRemove={() => removeToast(toast.id)} />

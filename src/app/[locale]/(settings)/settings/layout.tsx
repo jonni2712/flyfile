@@ -32,7 +32,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
   // Full-screen white overlay with spinner while the redirect happens
   return (
     <div className="fixed inset-0 bg-white z-[70] flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+      <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }

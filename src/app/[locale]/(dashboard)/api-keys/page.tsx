@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import {
   Key,
   Plus,
@@ -48,7 +49,7 @@ export default function ApiKeysPage() {
 
   // New key display
   const [newFullKey, setNewFullKey] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
 
   // Toast
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -166,11 +167,6 @@ export default function ApiKeysPage() {
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const togglePermission = (perm: string) => {
     setNewKeyPermissions((prev) =>
@@ -266,7 +262,7 @@ export default function ApiKeysPage() {
                     {newFullKey}
                   </code>
                   <button
-                    onClick={() => copyToClipboard(newFullKey)}
+                    onClick={() => copy(newFullKey)}
                     className="p-2 text-yellow-700 hover:bg-yellow-100 rounded-lg transition-colors"
                   >
                     {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}

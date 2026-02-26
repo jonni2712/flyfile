@@ -764,6 +764,7 @@
     "help": "Aide",
     "legalPrivacy": "Informations légales et Confidentialité",
     "signOut": "Déconnexion",
+    "storage": "Stockage",
     "transfersPanel": {
       "title": "Transferts",
       "usedOf": "utilisés sur",
@@ -793,7 +794,9 @@
       "transfersUsage": "Vous avez utilisé {used}/{total} transferts au cours des 30 derniers jours. Chaque transfert cesse de compter dans votre limite 30 jours après avoir été téléchargé.",
       "storageUsage": "Vous avez téléchargé {used}/{total} au cours des 30 derniers jours. Chaque transfert cesse de compter dans votre limite 30 jours après avoir été téléchargé.",
       "increaseLimit": "Augmenter la limite",
-      "unlimited": "Illimité"
+      "unlimited": "Illimité",
+      "storage": "Stockage",
+      "untitled": "Sans titre"
     }
   },
   "cookieBanner": {

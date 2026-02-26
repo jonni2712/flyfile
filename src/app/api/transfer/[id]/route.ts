@@ -313,7 +313,6 @@ export async function POST(
             password: newHash,
             updatedAt: FieldValue.serverTimestamp(),
           });
-          console.log('Password hash upgraded to bcrypt for transfer:', transferId);
         } catch (upgradeError) {
           console.error('Failed to upgrade password hash:', upgradeError);
         }

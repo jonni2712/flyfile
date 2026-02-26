@@ -43,7 +43,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-2 border-gray-900 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">{t('loggingIn')}</p>
         </div>
       </div>
@@ -206,7 +206,7 @@ export default function LoginPage() {
               </p>
 
               {error && (
-                <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">
+                <div role="alert" className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3" id="email-error">
                   {error}
                 </div>
               )}
@@ -220,6 +220,10 @@ export default function LoginPage() {
                     type="email"
                     autoComplete="email"
                     required
+                    maxLength={254}
+                    aria-required="true"
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'email-error' : undefined}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors min-h-[44px]"
@@ -294,7 +298,7 @@ export default function LoginPage() {
               </p>
 
               {error && (
-                <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">
+                <div role="alert" className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3" id="password-error">
                   {error}
                 </div>
               )}
@@ -309,6 +313,9 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     required
+                    aria-required="true"
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'password-error' : undefined}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full px-4 py-3 pr-12 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors min-h-[44px]"
@@ -317,9 +324,10 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label={showPassword ? t('hidePassword') || 'Hide password' : t('showPassword') || 'Show password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
                   </button>
                 </div>
 
@@ -370,7 +378,7 @@ export default function LoginPage() {
               </p>
 
               {error && (
-                <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">
+                <div role="alert" className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3" id="code-error">
                   {error}
                 </div>
               )}
@@ -386,6 +394,9 @@ export default function LoginPage() {
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     required
+                    aria-required="true"
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'code-error' : undefined}
                     maxLength={6}
                     value={code}
                     onChange={(e) => {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import {
   Upload,
@@ -37,6 +37,7 @@ interface Transfer {
 export default function FilesPage() {
   const { user, userProfile, loading } = useAuth();
   const t = useTranslations('files');
+  const locale = useLocale();
   const router = useRouter();
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [filteredTransfers, setFilteredTransfers] = useState<Transfer[]>([]);
@@ -265,7 +266,7 @@ export default function FilesPage() {
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('it-IT', {
+    return date.toLocaleDateString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -482,7 +483,7 @@ export default function FilesPage() {
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <h3 className="text-lg font-semibold text-gray-900">{transfer.title}</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 truncate">{transfer.title}</h3>
                         {transfer.isExpired ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                             {t('expiredBadge')}

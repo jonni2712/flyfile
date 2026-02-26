@@ -764,6 +764,7 @@
     "help": "Ayuda",
     "legalPrivacy": "Información legal y Privacidad",
     "signOut": "Cerrar sesión",
+    "storage": "Almacenamiento",
     "transfersPanel": {
       "title": "Transferencias",
       "usedOf": "utilizados de",
@@ -793,7 +794,9 @@
       "transfersUsage": "Has utilizado {used}/{total} transferencias en los últimos 30 días. Cada transferencia deja de contar para tu límite 30 días después de haber sido subida.",
       "storageUsage": "Has subido {used}/{total} en los últimos 30 días. Cada transferencia deja de contar para tu límite 30 días después de haber sido subida.",
       "increaseLimit": "Aumentar el límite",
-      "unlimited": "Ilimitado"
+      "unlimited": "Ilimitado",
+      "storage": "Almacenamiento",
+      "untitled": "Sin título"
     }
   },
   "cookieBanner": {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import {
   Book,
   Key,
@@ -167,14 +168,8 @@ const methodColors = {
 };
 
 export default function ApiDocumentationPage() {
-  const [copied, setCopied] = useState<string | null>(null);
+  const { copied, copy } = useCopyToClipboard();
   const [expandedEndpoints, setExpandedEndpoints] = useState<Set<string>>(new Set());
-
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(id);
-    setTimeout(() => setCopied(null), 2000);
-  };
 
   const toggleEndpoint = (id: string) => {
     const newExpanded = new Set(expandedEndpoints);
@@ -208,7 +203,7 @@ export default function ApiDocumentationPage() {
                 https://flyfile.it/api/v1
               </code>
               <button
-                onClick={() => copyToClipboard('https://flyfile.it/api/v1', 'baseurl')}
+                onClick={() => copy('https://flyfile.it/api/v1', 'baseurl')}
                 className="p-2 text-gray-600 hover:bg-gray-200 rounded transition-colors"
               >
                 {copied === 'baseurl' ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
@@ -345,7 +340,7 @@ export default function ApiDocumentationPage() {
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="font-semibold text-sm text-gray-900">Response</h4>
                             <button
-                              onClick={() => copyToClipboard(endpoint.response, endpointId)}
+                              onClick={() => copy(endpoint.response, endpointId)}
                               className="p-1 text-gray-500 hover:text-gray-700"
                             >
                               {copied === endpointId ? (

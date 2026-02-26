@@ -39,7 +39,7 @@ export default function RegisterPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-2 border-gray-900 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">{t('registering')}</p>
         </div>
       </div>
@@ -127,7 +127,7 @@ export default function RegisterPage() {
               </p>
 
               {error && (
-                <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">
+                <div role="alert" className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3" id="register-email-error">
                   {error}
                 </div>
               )}
@@ -141,6 +141,10 @@ export default function RegisterPage() {
                     type="email"
                     autoComplete="email"
                     required
+                    maxLength={254}
+                    aria-required="true"
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'register-email-error' : undefined}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-900 transition-colors min-h-[44px]"
@@ -224,7 +228,7 @@ export default function RegisterPage() {
               </p>
 
               {error && (
-                <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">
+                <div role="alert" className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3" id="register-code-error">
                   {error}
                 </div>
               )}
@@ -240,6 +244,9 @@ export default function RegisterPage() {
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     required
+                    aria-required="true"
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'register-code-error' : undefined}
                     maxLength={6}
                     value={code}
                     onChange={(e) => {

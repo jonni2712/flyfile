@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { X, ChevronLeft, Menu } from 'lucide-react';
+import SlidePanel from '@/components/SlidePanel';
 
 const TITLE_MAP: Record<string, string> = {
   '/settings/profile': 'Profilo e sicurezza',
@@ -58,21 +59,7 @@ export default function SettingsPanelLayout({ children }: { children: ReactNode 
   };
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className={`fixed inset-0 bg-black/40 z-[60] transition-opacity duration-300 ${
-          isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={handleClose}
-      />
-
-      {/* Panel — slides in from right */}
-      <div
-        className={`fixed top-0 right-0 h-full w-full max-w-[1100px] bg-white z-[70] transform transition-transform duration-300 ease-in-out overflow-y-auto ${
-          isVisible ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
+    <SlidePanel isOpen={isVisible} onClose={handleClose}>
         {/* Sticky close bar */}
         <div className="sticky top-0 bg-white/80 backdrop-blur-sm z-10 px-6 py-4 flex items-center justify-between">
           <button
@@ -126,8 +113,7 @@ export default function SettingsPanelLayout({ children }: { children: ReactNode 
             </aside>
           </div>
         </div>
-      </div>
-    </>
+    </SlidePanel>
   );
 }
 

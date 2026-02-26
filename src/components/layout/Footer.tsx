@@ -136,22 +136,22 @@ export default function Footer() {
           </div>
 
           {/* Right — payment methods */}
-          <div className="flex items-center gap-2">
-            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-bold text-gray-300 tracking-wide border border-gray-700">VISA</span>
-            <span className="bg-gray-800 rounded px-2.5 py-1 border border-gray-700 flex items-center gap-0.5">
+          <div className="flex items-center gap-2" aria-label="Accepted payment methods" role="img">
+            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-bold text-gray-300 tracking-wide border border-gray-700" aria-hidden="true">VISA</span>
+            <span className="bg-gray-800 rounded px-2.5 py-1 border border-gray-700 flex items-center gap-0.5" aria-hidden="true">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 -mr-1" />
               <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 opacity-90" />
             </span>
-            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-bold text-gray-300 tracking-wide border border-gray-700">AMEX</span>
-            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-medium text-gray-300 border border-gray-700 flex items-center gap-1">
+            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-bold text-gray-300 tracking-wide border border-gray-700" aria-hidden="true">AMEX</span>
+            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-medium text-gray-300 border border-gray-700 flex items-center gap-1" aria-hidden="true">
               <svg className="w-3 h-3" viewBox="0 0 14 17" fill="currentColor"><path d="M10.3 4.3c.5-.6.8-1.4.7-2.3-.7 0-1.6.5-2.1 1.1-.4.5-.8 1.4-.7 2.2.8.1 1.6-.4 2.1-1zM11 5.4c-1.2-.1-2.2.7-2.7.7-.6 0-1.4-.6-2.3-.6-1.2 0-2.3.7-2.9 1.8-1.3 2.2-.3 5.4.9 7.2.6.9 1.3 1.8 2.3 1.8.9 0 1.3-.6 2.4-.6 1.1 0 1.4.6 2.4.6.9 0 1.6-.9 2.2-1.8.7-1 1-2 1-2 0 0-1.9-.8-2-2.7 0-1.6 1.3-2.3 1.4-2.4-.8-1.1-2-1.3-2.4-1.3l-.3.3z"/></svg>
               Pay
             </span>
-            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-medium text-gray-300 border border-gray-700 flex items-center gap-1">
+            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-medium text-gray-300 border border-gray-700 flex items-center gap-1" aria-hidden="true">
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none"><path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z" fill="currentColor"/></svg>
               Pay
             </span>
-            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-bold text-gray-300 italic border border-gray-700">stripe</span>
+            <span className="bg-gray-800 rounded px-2.5 py-1 text-[11px] font-bold text-gray-300 italic border border-gray-700" aria-hidden="true">stripe</span>
           </div>
         </div>
       </div>

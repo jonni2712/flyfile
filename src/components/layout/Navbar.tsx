@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, X, Check, Zap, Settings, HelpCircle, FileText, LogOut, Building2 } from 'lucide-react';
+import { Menu, X, Check, Zap, Settings, LogOut, Building2 } from 'lucide-react';
 import { PLANS } from '@/types';
 import { formatBytes } from '@/lib/format';
 
@@ -20,6 +20,18 @@ export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isTransfersOpen, setIsTransfersOpen] = useState(false);
+
+  // Close dropdown on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isDropdownOpen) setIsDropdownOpen(false);
+        if (isOpen) setIsOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isDropdownOpen, isOpen]);
 
   // Listen for openPricing custom event (from Footer or /pricing redirect)
   useEffect(() => {
@@ -100,9 +112,9 @@ export default function Navbar() {
                   className="min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                   {userProfile?.photoURL ? (
-                    <img src={userProfile.photoURL} alt="Avatar" className="w-9 h-9 rounded-full object-cover" />
+                    <img src={userProfile.photoURL} alt="" className="w-9 h-9 rounded-full object-cover" />
                   ) : (
-                    <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold" aria-hidden="true">
                       {getInitials(userProfile?.displayName || user.email || 'U')}
                     </div>
                   )}
@@ -116,26 +128,26 @@ export default function Navbar() {
               {user && (
                 <button
                   onClick={() => setIsTransfersOpen(true)}
-                  className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors min-h-[44px]"
+                  className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
                 >
                   {t('transfers')}
                 </button>
               )}
               <button
                 onClick={() => setIsPricingOpen(true)}
-                className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors min-h-[44px]"
+                className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
               >
                 {t('pricing')}
               </button>
               <Link
                 href="/chi-siamo"
-                className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors min-h-[44px] flex items-center"
+                className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors min-h-[44px] flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
               >
                 {t('aboutUs')}
               </Link>
               <Link
                 href="/supporto"
-                className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors min-h-[44px] flex items-center"
+                className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors min-h-[44px] flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
               >
                 {t('support')}
               </Link>
@@ -174,11 +186,11 @@ export default function Navbar() {
                       {userProfile?.photoURL ? (
                         <img
                           src={userProfile.photoURL}
-                          alt="Avatar"
+                          alt=""
                           className="w-8 h-8 rounded-lg object-cover"
                         />
                       ) : (
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-xs font-bold">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-xs font-bold" aria-hidden="true">
                           {getInitials(userProfile?.displayName || user.email || 'U')}
                         </div>
                       )}
@@ -190,9 +202,9 @@ export default function Navbar() {
                       {/* Top: Avatar + Email */}
                       <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100">
                         {userProfile?.photoURL ? (
-                          <img src={userProfile.photoURL} alt="Avatar" className="w-8 h-8 rounded-full object-cover" />
+                          <img src={userProfile.photoURL} alt="" className="w-8 h-8 rounded-full object-cover" />
                         ) : (
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold" aria-hidden="true">
                             {getInitials(userProfile?.displayName || user.email || 'U')}
                           </div>
                         )}
@@ -222,7 +234,7 @@ export default function Navbar() {
                           </div>
                           <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gray-900 rounded-full transition-all"
+                              className="h-full bg-brand-500 rounded-full transition-all"
                               style={{
                                 width: userProfile?.maxMonthlyTransfers === -1
                                   ? '100%'
@@ -235,7 +247,7 @@ export default function Navbar() {
                         {/* Storage bar */}
                         <div className="mb-3">
                           <div className="flex justify-between text-xs text-gray-500 mb-1">
-                            <span>Storage</span>
+                            <span>{t('storage')}</span>
                             <span>
                               {userProfile?.storageLimit === -1
                                 ? t('transfersPanel.unlimited')
@@ -244,7 +256,7 @@ export default function Navbar() {
                           </div>
                           <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gray-900 rounded-full transition-all"
+                              className="h-full bg-brand-500 rounded-full transition-all"
                               style={{
                                 width: userProfile?.storageLimit === -1
                                   ? '100%'
@@ -254,19 +266,6 @@ export default function Navbar() {
                           </div>
                         </div>
 
-                        {/* Upgrade link - only for free users */}
-                        {(!userProfile?.plan || userProfile.plan === 'free') && (
-                          <button
-                            onClick={() => {
-                              setIsDropdownOpen(false);
-                              setIsPricingOpen(true);
-                            }}
-                            className="flex items-center gap-1.5 text-xs font-medium text-purple-600 hover:text-purple-800 transition-colors mt-1"
-                          >
-                            <Zap className="w-3.5 h-3.5" />
-                            {t('removeLimits')}
-                          </button>
-                        )}
                       </div>
 
                       {/* Menu links */}
@@ -286,22 +285,6 @@ export default function Navbar() {
                         >
                           <Building2 className="w-4 h-4 mr-3 text-gray-400" />
                           {t('sponsorships')}
-                        </Link>
-                        <Link
-                          href="/supporto"
-                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          <HelpCircle className="w-4 h-4 mr-3 text-gray-400" />
-                          {t('help')}
-                        </Link>
-                        <Link
-                          href="/privacy"
-                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          <FileText className="w-4 h-4 mr-3 text-gray-400" />
-                          {t('legalPrivacy')}
                         </Link>
                       </div>
 
@@ -325,7 +308,7 @@ export default function Navbar() {
                 <div className="flex items-center gap-1">
                   <Link
                     href="/accedi"
-                    className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors min-h-[44px] flex items-center"
+                    className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-black rounded-full hover:bg-gray-100 transition-colors min-h-[44px] flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
                   >
                     {t('login')}
                   </Link>
@@ -346,7 +329,7 @@ export default function Navbar() {
 
       {/* Mobile Full-Screen Overlay Menu */}
       <div
-        className={`fixed inset-0 z-[60] bg-gray-950 sm:hidden flex flex-col transition-all duration-300 ${
+        className={`fixed inset-0 z-[60] bg-gray-950 sm:hidden flex flex-col transition-all duration-300 panel-slide ${
           isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
         }`}
       >
@@ -375,9 +358,9 @@ export default function Navbar() {
             ) : (
               <div className="min-h-[44px] min-w-[44px] flex items-center justify-center">
                 {userProfile?.photoURL ? (
-                  <img src={userProfile.photoURL} alt="Avatar" className="w-9 h-9 rounded-full object-cover" />
+                  <img src={userProfile.photoURL} alt="" className="w-9 h-9 rounded-full object-cover" />
                 ) : (
-                  <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold" aria-hidden="true">
                     {getInitials(userProfile?.displayName || user.email || 'U')}
                   </div>
                 )}

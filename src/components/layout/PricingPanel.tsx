@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/context/AuthContext';
 import { X, Check } from 'lucide-react';
 import { PRICING_PLANS } from '@/data/pricing';
+import SlidePanel from '@/components/SlidePanel';
 
 interface PricingPanelProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ export default function PricingPanel({ isOpen, onClose }: PricingPanelProps) {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
-  const comparisonSections = [
+  const comparisonSections = useMemo(() => [
     {
       title: tp('comparison.transfers'),
       features: [
@@ -50,14 +51,14 @@ export default function PricingPanel({ isOpen, onClose }: PricingPanelProps) {
         [tp('comparison.prioritySupport'), false, false, false, true],
       ],
     },
-  ];
+  ], [tp]);
 
-  const faqItems = Array.from({ length: 8 }, (_, i) => ({
+  const faqItems = useMemo(() => Array.from({ length: 8 }, (_, i) => ({
     question: tp(`faq.items.${i}.question`),
     answer: tp(`faq.items.${i}.answer`),
-  }));
+  })), [tp]);
 
-  const handleSubscribe = async (plan: typeof PRICING_PLANS[number]) => {
+  const handleSubscribe = useCallback(async (plan: typeof PRICING_PLANS[number]) => {
     if (plan.id === 'free') {
       onClose();
       window.location.href = '/registrati';
@@ -105,27 +106,10 @@ export default function PricingPanel({ isOpen, onClose }: PricingPanelProps) {
     } finally {
       setCheckoutLoading(null);
     }
-  };
+  }, [user, isAnnual, onClose]);
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className={`fixed inset-0 bg-black/40 z-[60] transition-opacity duration-300 ${
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={onClose}
-      />
-
-      {/* Panel */}
-      <div
-        className={`fixed top-0 right-0 h-full w-full max-w-[1100px] bg-white z-[70] transform transition-transform duration-300 ease-in-out overflow-y-auto ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-        role="dialog"
-        aria-modal="true"
-        aria-label={tp('title')}
-      >
+    <SlidePanel isOpen={isOpen} onClose={onClose} ariaLabel={tp('title')}>
         {/* Close button */}
         <div className="sticky top-0 bg-white/80 backdrop-blur-sm z-10 px-6 py-4 flex items-center gap-3">
           <button
@@ -378,7 +362,10 @@ export default function PricingPanel({ isOpen, onClose }: PricingPanelProps) {
                   className="border-b border-gray-200 first:border-t"
                 >
                   <button
+                    id={`faq-question-${idx}`}
                     onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                    aria-expanded={openFaq === idx}
+                    aria-controls={`faq-answer-${idx}`}
                     className="w-full flex items-center justify-between py-6 text-left group min-h-[44px]"
                   >
                     <span className="text-lg font-semibold text-gray-900 pr-6 group-hover:text-blue-600 transition-colors">
@@ -395,9 +382,13 @@ export default function PricingPanel({ isOpen, onClose }: PricingPanelProps) {
                     </span>
                   </button>
                   <div
+                    id={`faq-answer-${idx}`}
+                    role="region"
+                    aria-labelledby={`faq-question-${idx}`}
                     className={`grid transition-all duration-300 ease-in-out ${
                       openFaq === idx ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
                     }`}
+                    aria-hidden={openFaq !== idx}
                   >
                     <div className="overflow-hidden">
                       <p className="pb-6 pr-16 text-base text-gray-600 leading-relaxed">
@@ -410,7 +401,6 @@ export default function PricingPanel({ isOpen, onClose }: PricingPanelProps) {
             </div>
           </div>
         </div>
-      </div>
-    </>
+    </SlidePanel>
   );
 }

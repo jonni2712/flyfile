@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
     const existingEvent = await processedEventsRef.doc(event.id).get();
 
     if (existingEvent.exists) {
-      console.log(`Duplicate Stripe event ignored: ${event.id}`);
       return NextResponse.json({ received: true, duplicate: true });
     }
 

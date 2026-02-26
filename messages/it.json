@@ -101,7 +101,7 @@
       },
       "addFiles": "Aggiungi file",
       "addFolder": "Aggiungi cartella",
-      "addMore": "+ Aggiungi",
+      "addMore": "+ Aggiungi file",
       "fileCount": "File ({count}) — {size}",
       "maxFiles": "Max {max} file — Trascina qui o usa i pulsanti sopra",
       "maxFilesUnlimited": "Max illimitati file — Trascina qui o usa i pulsanti sopra",
@@ -123,9 +123,9 @@
       "selectFileError": "Seleziona almeno un file da caricare.",
       "enterTitleError": "Inserisci un titolo per il trasferimento.",
       "enterRecipientEmail": "Inserisci l'email del destinatario.",
-      "uploadError": "Errore durante il caricamento",
+      "uploadError": "Caricamento non riuscito. Controlla la connessione e riprova.",
       "connectionError": "Errore di connessione. Riprova.",
-      "codeSendError": "Errore nell'invio del codice"
+      "codeSendError": "Impossibile inviare il codice. Controlla l'email e riprova."
     },
     "verification": {
       "title": "Verifica la tua Email",
@@ -142,7 +142,7 @@
     },
     "success": {
       "title": "Upload Completato!",
-      "emailSent": "Il link è stato inviato al destinatario via email.",
+      "emailSent": "Abbiamo inviato il link di download al destinatario.",
       "shareLinkPrompt": "Condividi il link qui sotto con il destinatario.",
       "customLink": "Link Personalizzato",
       "standardLink": "Link Standard",
@@ -152,8 +152,8 @@
       "totalSize": "Dimensione totale:",
       "expiry": "Scadenza:",
       "expiryDays": "{days} giorni",
-      "openLink": "Apri Link",
-      "newUpload": "Nuovo Upload",
+      "openLink": "Apri pagina download",
+      "newUpload": "Invia un altro",
       "close": "Chiudi"
     }
   },
@@ -859,7 +859,7 @@
       "resend": "Invia di nuovo",
       "invalidPassword": "Password non valida",
       "invalidCode": "Codice non valido",
-      "codeSendError": "Errore nell'invio del codice",
+      "codeSendError": "Impossibile inviare il codice. Controlla l'email e riprova.",
       "googleFailed": "Accesso con Google fallito"
     },
     "register": {
@@ -880,7 +880,7 @@
       "verifying": "Verifica in corso...",
       "createAccount": "Crea account",
       "registering": "Registrazione in corso...",
-      "codeSendError": "Errore nell'invio del codice",
+      "codeSendError": "Impossibile inviare il codice. Controlla l'email e riprova.",
       "invalidCode": "Codice non valido",
       "googleFailed": "Registrazione con Google fallita",
       "resendIn": "Invia di nuovo tra {seconds}s",
@@ -903,6 +903,7 @@
     "help": "Assistenza",
     "legalPrivacy": "Informazioni legali e Privacy",
     "signOut": "Esci",
+    "storage": "Archiviazione",
     "transfersPanel": {
       "title": "Trasferimenti",
       "usedOf": "utilizzati su",
@@ -922,9 +923,9 @@
       "copyLink": "Copia link",
       "open": "Apri",
       "delete": "Elimina",
-      "confirmDelete": "Sei sicuro di voler eliminare questo trasferimento?",
-      "emptyTitle": "Tutti i trasferimenti che invii saranno visualizzati qui",
-      "emptyDesc": "Controlla lo stato del download oppure modifica, inoltra o elimina il trasferimento",
+      "confirmDelete": "Eliminare questo trasferimento? Il link di download smetterà di funzionare immediatamente. Non è possibile annullare.",
+      "emptyTitle": "Nessun trasferimento",
+      "emptyDesc": "Invia il tuo primo trasferimento e monitora chi lo scarica.",
       "requestedTitle": "Le richieste di file saranno visualizzate qui",
       "requestedDesc": "Quando richiedi file a qualcuno, troverai i risultati in questa sezione",
       "receivedTitle": "I trasferimenti ricevuti saranno visualizzati qui",
@@ -932,7 +933,9 @@
       "transfersUsage": "Hai utilizzato {used}/{total} trasferimenti negli ultimi 30 giorni. Ogni trasferimento smette di contare verso il tuo limite 30 giorni dopo essere stato caricato.",
       "storageUsage": "Hai caricato {used}/{total} negli ultimi 30 giorni. Ogni trasferimento smette di contare verso il tuo limite 30 giorni dopo essere stato caricato.",
       "increaseLimit": "Aumenta il limite",
-      "unlimited": "Illimitato"
+      "unlimited": "Illimitato",
+      "storage": "Archiviazione",
+      "untitled": "Senza titolo"
     }
   },
   "cookieBanner": {
@@ -1083,7 +1086,7 @@
   "files": {
     "myUploads": "I miei Upload",
     "manageFiles": "Gestisci tutti i tuoi file caricati",
-    "newUpload": "Nuovo Upload",
+    "newUpload": "Nuovo trasferimento",
     "active": "Attivi",
     "expired": "Scaduti",
     "all": "Tutti",
@@ -1103,7 +1106,7 @@
     "delete": "Elimina",
     "linkCopied": "Link copiato negli appunti!",
     "copyError": "Errore durante la copia",
-    "confirmDelete": "Sei sicuro di voler eliminare questo transfer? Questa azione non può essere annullata.",
+    "confirmDelete": "Eliminare questo trasferimento? I destinatari perderanno l'accesso e il link di download smetterà di funzionare. Non è possibile annullare.",
     "deleteSuccess": "Transfer eliminato con successo",
     "deleteError": "Errore durante l'eliminazione",
     "loadError": "Errore nel caricamento dei file",

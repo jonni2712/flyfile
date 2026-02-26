@@ -51,7 +51,6 @@ export async function POST(request: NextRequest) {
       try {
         const newHash = await hashPassword(password);
         await db.collection('transfers').doc(snapshot.docs[0].id).update({ password: newHash });
-        console.log('Password hash upgraded to bcrypt for transfer:', transferId);
       } catch (upgradeError) {
         console.error('Failed to upgrade password hash:', upgradeError);
         // Don't fail the verification if upgrade fails

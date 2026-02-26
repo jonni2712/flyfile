@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
         text,
       });
 
-      console.log('Auth code sent successfully');
     } catch (emailError) {
       console.error('Error sending auth code email:', emailError);
       return NextResponse.json(

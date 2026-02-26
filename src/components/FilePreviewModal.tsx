@@ -156,8 +156,8 @@ export default function FilePreviewModal({
   const renderPreview = () => {
     if (loading) {
       return (
-        <div className="flex flex-col items-center justify-center h-full">
-          <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+        <div className="flex flex-col items-center justify-center h-full" role="status" aria-busy="true">
+          <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" aria-hidden="true" />
           <p className="text-gray-500">{t('loading')}</p>
         </div>
       );
@@ -170,7 +170,7 @@ export default function FilePreviewModal({
           <p className="text-gray-500 mb-4">{error || t('unavailable')}</p>
           <button
             onClick={() => onDownload(file)}
-            className="px-5 py-2.5 bg-[#409cff] hover:bg-[#3085e0] text-white rounded-full transition-colors flex items-center text-sm font-medium"
+            className="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-full transition-colors flex items-center text-sm font-medium"
           >
             <Download className="w-4 h-4 mr-2" />
             {t('downloadToView')}
@@ -239,7 +239,7 @@ export default function FilePreviewModal({
             <p className="text-gray-500 mb-4">{t('unsupportedType')}</p>
             <button
               onClick={() => onDownload(file)}
-              className="px-5 py-2.5 bg-[#409cff] hover:bg-[#3085e0] text-white rounded-full transition-colors flex items-center text-sm font-medium"
+              className="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-full transition-colors flex items-center text-sm font-medium"
             >
               <Download className="w-4 h-4 mr-2" />
               {t('downloadToView')}
@@ -274,35 +274,38 @@ export default function FilePreviewModal({
 
         {/* Actions */}
         <div className="flex items-center gap-1.5 ml-4">
-          {/* Image zoom controls */}
+          {/* Image zoom controls — hidden on mobile (use pinch-to-zoom) */}
           {fileType === 'image' && previewUrl && (
-            <>
+            <div className="hidden sm:flex items-center gap-1.5">
               <button
                 onClick={() => setImageZoom(z => Math.max(0.5, z - 0.25))}
-                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label={t('zoomOut')}
                 title={t('zoomOut')}
               >
-                <ZoomOut className="w-5 h-5" />
+                <ZoomOut className="w-5 h-5" aria-hidden="true" />
               </button>
-              <span className="text-gray-500 text-sm min-w-[3rem] text-center">
+              <span className="text-gray-500 text-sm min-w-[3rem] text-center" aria-live="polite">
                 {Math.round(imageZoom * 100)}%
               </span>
               <button
                 onClick={() => setImageZoom(z => Math.min(3, z + 0.25))}
-                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label={t('zoomIn')}
                 title={t('zoomIn')}
               >
-                <ZoomIn className="w-5 h-5" />
+                <ZoomIn className="w-5 h-5" aria-hidden="true" />
               </button>
               <button
                 onClick={() => setImageRotation(r => (r + 90) % 360)}
-                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label={t('rotate')}
                 title={t('rotate')}
               >
-                <RotateCw className="w-5 h-5" />
+                <RotateCw className="w-5 h-5" aria-hidden="true" />
               </button>
               <div className="w-px h-6 bg-gray-200 mx-1" />
-            </>
+            </div>
           )}
 
           {previewUrl && !previewUrl.startsWith('blob:') && (
@@ -310,17 +313,18 @@ export default function FilePreviewModal({
               href={previewUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label={t('openInNewTab')}
               title={t('openInNewTab')}
             >
-              <ExternalLink className="w-5 h-5" />
+              <ExternalLink className="w-5 h-5" aria-hidden="true" />
             </a>
           )}
 
           <button
             onClick={() => onDownload(file)}
             disabled={isDownloading}
-            className="px-4 py-2 bg-[#409cff] hover:bg-[#3085e0] text-white rounded-full transition-colors flex items-center text-sm font-medium disabled:opacity-50"
+            className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-full transition-colors flex items-center text-sm font-medium disabled:opacity-50"
           >
             {isDownloading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -334,9 +338,10 @@ export default function FilePreviewModal({
 
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label={t('close') || 'Close preview'}
+            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
       </div>

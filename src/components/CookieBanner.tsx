@@ -104,7 +104,7 @@ export default function CookieBanner() {
       {/* Cookie Banner */}
       {showBanner && (
         <div
-          className={`fixed bottom-0 left-0 right-0 z-50 transform transition-transform duration-500 ease-in-out ${
+          className={`fixed bottom-0 left-0 right-0 z-50 transform transition-transform duration-300 panel-slide ${
             isVisible ? 'translate-y-0' : 'translate-y-full'
           }`}
         >
@@ -164,7 +164,7 @@ export default function CookieBanner() {
       {/* Cookie Settings Modal */}
       {showModal && (
         <div className="fixed inset-0 z-[60]">
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={closeSettings}></div>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={closeSettings} aria-hidden="true"></div>
 
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <div ref={modalRef} role="dialog" aria-modal="true" aria-label={t('preferencesTitle')} className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
@@ -179,9 +179,10 @@ export default function CookieBanner() {
                   </div>
                   <button
                     onClick={closeSettings}
+                    aria-label={t('cancel')}
                     className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -226,6 +227,7 @@ export default function CookieBanner() {
                           className="sr-only peer"
                           checked={preferences.functional}
                           onChange={(e) => setPreferences({ ...preferences, functional: e.target.checked })}
+                          aria-label={t('functional.title')}
                         />
                         <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                       </label>
@@ -250,6 +252,7 @@ export default function CookieBanner() {
                           className="sr-only peer"
                           checked={preferences.analytics}
                           onChange={(e) => setPreferences({ ...preferences, analytics: e.target.checked })}
+                          aria-label={t('analytics.title')}
                         />
                         <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-purple-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                       </label>

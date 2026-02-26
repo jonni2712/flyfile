@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, memo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useTransfer } from '@/context/TransferContext';
+import { useTransfer, formatBytes } from '@/context/TransferContext';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import {
   Upload, X, File, Check, AlertCircle, Lock, Mail, Clock, Shield, Plus,
   Image, Video, FileText, Crown, Copy, CheckCircle, ExternalLink, Loader2, FolderOpen, MoreHorizontal,
@@ -60,7 +61,7 @@ const VIEW_OPTIONS = [
   { value: 'preview_only' as const, labelKey: 'previewOnly', descKey: 'previewOnlyDesc' },
 ];
 
-function SidePanelContent({
+const SidePanelContent = memo(function SidePanelContent({
   deliveryMethod, setDeliveryMethod,
   password, setPassword, canUsePassword,
   senderName, setSenderName,
@@ -113,7 +114,7 @@ function SidePanelContent({
               >
                 <div className="flex items-start gap-3">
                   <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                    isSelected ? 'border-[#409cff] bg-[#409cff]' : 'border-gray-300 group-hover:border-gray-400'
+                    isSelected ? 'border-brand-500 bg-brand-500' : 'border-gray-300 group-hover:border-gray-400'
                   }`}>
                     {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
                   </div>
@@ -151,7 +152,7 @@ function SidePanelContent({
           className="flex items-center gap-3 w-full py-2"
         >
           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-            deliveryMethod === 'email' ? 'border-[#409cff] bg-[#409cff]' : 'border-gray-300'
+            deliveryMethod === 'email' ? 'border-brand-500 bg-brand-500' : 'border-gray-300'
           }`}>
             {deliveryMethod === 'email' && <div className="w-2 h-2 bg-white rounded-full" />}
           </div>
@@ -166,7 +167,7 @@ function SidePanelContent({
           className="flex items-center gap-3 w-full py-2"
         >
           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-            deliveryMethod === 'link' ? 'border-[#409cff] bg-[#409cff]' : 'border-gray-300'
+            deliveryMethod === 'link' ? 'border-brand-500 bg-brand-500' : 'border-gray-300'
           }`}>
             {deliveryMethod === 'link' && <div className="w-2 h-2 bg-white rounded-full" />}
           </div>
@@ -291,7 +292,7 @@ function SidePanelContent({
       </div>
     </div>
   );
-}
+});
 
 export default function HomePageClient() {
   const t = useTranslations('home');
@@ -351,7 +352,7 @@ export default function HomePageClient() {
     expiresAt: string;
     emailSent?: boolean;
   } | null>(null);
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
 
   const isAnonymous = !user;
 
@@ -398,14 +399,6 @@ export default function HomePageClient() {
       verificationInputRef.current.focus();
     }
   }, [showVerificationModal]);
-
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
 
   const getFileIcon = (type: string) => {
     if (type.startsWith('image/')) {
@@ -721,14 +714,9 @@ export default function HomePageClient() {
     await performUpload();
   };
 
-  const copyToClipboard = async () => {
-    // Prefer custom URL if available, otherwise use standard download URL
+  const copyToClipboard = () => {
     const urlToCopy = uploadResult?.customUrl || uploadResult?.downloadUrl;
-    if (urlToCopy) {
-      await navigator.clipboard.writeText(urlToCopy);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    if (urlToCopy) copy(urlToCopy);
   };
 
   const resetForm = () => {
@@ -753,8 +741,8 @@ export default function HomePageClient() {
   if (loading) {
     return (
       <MainLayout showFooter={false} transparentBg>
-        <div className="min-h-screen bg-[#f0edfa] flex items-center justify-center -mt-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#409cff]"></div>
+        <div className="min-h-screen bg-surface-subtle flex items-center justify-center -mt-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
         </div>
       </MainLayout>
     );
@@ -787,7 +775,7 @@ export default function HomePageClient() {
                 onChange={handleCodeChange}
                 maxLength={6}
                 placeholder="000000"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-center text-2xl font-mono tracking-widest placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-center text-2xl font-mono tracking-widest placeholder-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:border-transparent transition-all"
               />
               {verificationError && (
                 <p className="text-red-500 text-sm mt-2">{verificationError}</p>
@@ -840,7 +828,7 @@ export default function HomePageClient() {
       {/* Success Modal */}
       {showSuccessModal && uploadResult && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-8 relative">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-8 relative animate-scale-fade-in">
             {/* Close Button */}
             <button
               onClick={resetForm}
@@ -851,7 +839,10 @@ export default function HomePageClient() {
             </button>
             <div className="text-center mb-6">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-green-50 rounded-full mb-4">
-                <CheckCircle className="w-8 h-8 text-green-500" />
+                <svg className="w-8 h-8" viewBox="0 0 52 52" fill="none" aria-hidden="true">
+                  <circle className="animate-check-circle" cx="26" cy="26" r="25" stroke="#22c55e" strokeWidth="2" fill="none" />
+                  <path className="animate-check-mark" d="M14.1 27.2l7.1 7.2 16.7-16.8" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('success.title')}</h3>
               <p className="text-gray-500">
@@ -963,7 +954,7 @@ export default function HomePageClient() {
           >
             {/* Upload Card + Side Panel wrapper */}
             <div className="relative w-full max-w-[420px]">
-            <div className={`bg-white rounded-2xl shadow-lg p-6 w-full transition-all relative ${isDragOver ? 'ring-2 ring-[#409cff] ring-offset-2 ring-offset-transparent' : ''}`} style={showAdvancedOptions && sidePanelHeight > 0 ? { minHeight: sidePanelHeight } : undefined}>
+            <div className={`bg-white rounded-2xl shadow-lg p-6 w-full transition-all duration-200 relative ${isDragOver ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-transparent scale-[1.01] shadow-xl' : ''}`} style={showAdvancedOptions && sidePanelHeight > 0 ? { minHeight: sidePanelHeight } : undefined}>
               {/* Cookie consent overlay */}
               {!cookieConsent && (
                 <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-6 text-center">
@@ -1011,7 +1002,7 @@ export default function HomePageClient() {
                   type="button"
                   onClick={() => document.getElementById('fileInput')?.click()}
                   disabled={isUploading}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#409cff] hover:bg-[#2d8ae8] text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50"
                 >
                   <Plus className="w-4 h-4" />
                   {t('upload.addFiles')}
@@ -1020,7 +1011,7 @@ export default function HomePageClient() {
                   type="button"
                   onClick={() => document.getElementById('folderInput')?.click()}
                   disabled={isUploading}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#7c5cfc] hover:bg-[#6a4be0] text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-accent-500 hover:bg-accent-600 text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50"
                 >
                   <FolderOpen className="w-4 h-4" />
                   {t('upload.addFolder')}
@@ -1038,7 +1029,7 @@ export default function HomePageClient() {
                       type="button"
                       onClick={() => document.getElementById('fileInput')?.click()}
                       disabled={isUploading}
-                      className="text-[#409cff] hover:text-[#2d8ae8] text-xs font-medium disabled:opacity-50"
+                      className="text-brand-500 hover:text-brand-600 text-xs font-medium disabled:opacity-50"
                     >
                       {t('upload.addMore')}
                     </button>
@@ -1057,7 +1048,7 @@ export default function HomePageClient() {
                           <span className="text-sm text-gray-800 truncate flex-1">{fileItem.file.name}</span>
                           <span className="text-xs text-gray-400 flex-shrink-0">{formatBytes(fileItem.file.size)}</span>
                           {fileItem.status === 'uploading' && (
-                            <Loader2 className="w-4 h-4 text-[#409cff] animate-spin flex-shrink-0" />
+                            <Loader2 className="w-4 h-4 text-brand-500 animate-spin flex-shrink-0" />
                           )}
                           {fileItem.status === 'completed' && (
                             <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
@@ -1194,7 +1185,7 @@ export default function HomePageClient() {
                 type="button"
                 onClick={handleUpload}
                 disabled={files.length === 0 || isUploading || isSendingCode}
-                className="w-full bg-[#409cff] hover:bg-[#2d8ae8] text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isUploading ? (
                   <>

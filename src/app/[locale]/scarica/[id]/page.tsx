@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { Link } from '@/i18n/navigation';
@@ -9,14 +9,8 @@ import {
   Cloud,
   Download,
   File,
-  FileImage,
-  FileVideo,
-  FileAudio,
-  FileText,
-  FileArchive,
   Clock,
   Lock,
-  User,
   HardDrive,
   CheckCircle,
   AlertTriangle,
@@ -26,38 +20,14 @@ import {
   Search,
   Shield
 } from 'lucide-react';
-import { useTransfer, formatBytes, getTimeRemaining, getFileIcon } from '@/context/TransferContext';
+import { useTransfer, formatBytes, getTimeRemaining } from '@/context/TransferContext';
 import { Transfer, TransferFile, BrandSettings } from '@/types';
 import SponsorVideoBackground from '@/components/SponsorVideoBackground';
 import FilePreviewModal from '@/components/FilePreviewModal';
+import FileIcon from '@/components/FileIcon';
 import { decryptFile, isEncryptionSupported } from '@/lib/client-encryption';
 import { useToast } from '@/components/Toast';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-
-// File icon component
-const FileIcon = ({ mimeType, className }: { mimeType: string; className?: string }) => {
-  const iconType = getFileIcon(mimeType);
-  const iconClass = className || 'w-6 h-6';
-
-  switch (iconType) {
-    case 'image':
-      return <FileImage className={`${iconClass} text-pink-500`} />;
-    case 'video':
-      return <FileVideo className={`${iconClass} text-purple-500`} />;
-    case 'audio':
-      return <FileAudio className={`${iconClass} text-green-500`} />;
-    case 'pdf':
-      return <FileText className={`${iconClass} text-red-500`} />;
-    case 'doc':
-      return <FileText className={`${iconClass} text-blue-500`} />;
-    case 'spreadsheet':
-      return <FileText className={`${iconClass} text-emerald-500`} />;
-    case 'archive':
-      return <FileArchive className={`${iconClass} text-yellow-500`} />;
-    default:
-      return <File className={`${iconClass} text-gray-400`} />;
-  }
-};
 
 export default function DownloadPage() {
   const t = useTranslations('download');
@@ -92,7 +62,7 @@ export default function DownloadPage() {
   // Sponsor video state
   const [hasSponsorVideo, setHasSponsorVideo] = useState(false);
 
-  const fetchBrandSettings = async (userId: string) => {
+  const fetchBrandSettings = useCallback(async (userId: string) => {
     try {
       const response = await fetch(`/api/brand?userId=${userId}&public=true`);
       if (response.ok) {
@@ -104,7 +74,7 @@ export default function DownloadPage() {
     } catch (err) {
       console.error('Error fetching brand settings:', err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const fetchTransfer = async () => {
@@ -142,7 +112,8 @@ export default function DownloadPage() {
     };
 
     fetchTransfer();
-  }, [transferId, getPublicTransfer, passwordVerified]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transferId, getPublicTransfer]);
 
   const handleVerifyPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -315,7 +286,7 @@ export default function DownloadPage() {
             </p>
             <Link
               href="/"
-              className="inline-flex items-center px-6 py-2.5 bg-[#409cff] hover:bg-[#2d8ae8] text-white font-medium rounded-full text-sm transition-colors"
+              className="inline-flex items-center px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-medium rounded-full text-sm transition-colors"
             >
               {t('backToHome')}
             </Link>
@@ -342,7 +313,7 @@ export default function DownloadPage() {
             </p>
             <Link
               href="/"
-              className="inline-flex items-center px-6 py-2.5 bg-[#409cff] hover:bg-[#2d8ae8] text-white font-medium rounded-full text-sm transition-colors"
+              className="inline-flex items-center px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-medium rounded-full text-sm transition-colors"
             >
               {t('backToHome')}
             </Link>
@@ -427,19 +398,20 @@ export default function DownloadPage() {
                     id="transfer-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 bg-transparent border-b border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#409cff] transition-all text-sm"
+                    className="w-full px-4 py-3 pr-12 bg-transparent border-b border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-brand-500 transition-all text-sm"
                     placeholder={t('passwordPlaceholder')}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                      <EyeOff className="h-4 w-4" aria-hidden="true" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                      <Eye className="h-4 w-4" aria-hidden="true" />
                     )}
                   </button>
                 </div>
@@ -451,7 +423,7 @@ export default function DownloadPage() {
               <button
                 type="submit"
                 disabled={verifyingPassword}
-                className="w-full py-3 bg-[#409cff] hover:bg-[#2d8ae8] text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {verifyingPassword ? (
                   <>
@@ -506,7 +478,7 @@ export default function DownloadPage() {
 
                 {/* Message */}
                 {transfer.message && (
-                  <p className="text-sm text-gray-600 italic border-l-2 border-gray-200 pl-3 mb-1">
+                  <p className="text-sm text-gray-600 italic border-l-2 border-brand-500 pl-3 mb-1">
                     {transfer.message}
                   </p>
                 )}
@@ -520,7 +492,7 @@ export default function DownloadPage() {
               </div>
 
               {/* Stats row */}
-              <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
+              <div className="px-6 py-3 flex items-center justify-between gap-2 flex-wrap border-b border-gray-100">
                 <div className="flex items-center gap-1.5 text-gray-500">
                   <File className="w-4 h-4" />
                   <span className="text-sm">{t('fileCount', { count: transfer.fileCount })}</span>
@@ -543,7 +515,7 @@ export default function DownloadPage() {
                       key={file.id}
                       className="flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-gray-50 group transition-colors"
                     >
-                      <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 bg-surface-subtle rounded-lg flex items-center justify-center flex-shrink-0">
                         <FileIcon mimeType={file.mimeType} className="w-5 h-5" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -554,7 +526,7 @@ export default function DownloadPage() {
                         {isPreviewable(file.mimeType) && (
                           <button
                             onClick={() => setPreviewFile(file)}
-                            className="p-1.5 text-gray-300 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+                            className="p-2 text-gray-300 hover:text-brand-500 hover:bg-blue-50 rounded-full transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
                             title={t('preview')}
                           >
                             <Search className="w-4 h-4" />
@@ -563,11 +535,11 @@ export default function DownloadPage() {
                         <button
                           onClick={() => handleDownloadFile(file)}
                           disabled={downloadingFileId === file.id}
-                          className="p-1.5 text-gray-300 hover:text-[#409cff] hover:bg-blue-50 rounded-full transition-all disabled:opacity-50"
+                          className="p-2 text-gray-300 hover:text-brand-500 hover:bg-blue-50 rounded-full transition-all disabled:opacity-50 min-h-[44px] min-w-[44px] flex items-center justify-center"
                           title={t('download')}
                         >
                           {downloadingFileId === file.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-[#409cff]" />
+                            <Loader2 className="w-4 h-4 animate-spin text-brand-500" />
                           ) : (
                             <Download className="w-4 h-4" />
                           )}
@@ -598,7 +570,7 @@ export default function DownloadPage() {
                 <button
                   onClick={handleDownloadAll}
                   disabled={downloading || (!!transfer.password && !passwordVerified)}
-                  className="w-full bg-[#409cff] hover:bg-[#2d8ae8] text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {downloading ? (
                     <>

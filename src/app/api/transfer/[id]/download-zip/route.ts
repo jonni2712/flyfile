@@ -203,7 +203,6 @@ export async function GET(
 
             // Only send notification if user has email notifications enabled
             if (userData.emailNotifications?.downloads === false) {
-              console.log('Download notifications disabled for user');
             } else {
               const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
               const { html, text } = getDownloadNotificationEmail({
