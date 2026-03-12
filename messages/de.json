@@ -99,6 +99,8 @@
         "title": "Cookies akzeptieren, um fortzufahren",
         "description": "Um den Dateiübertragungsdienst nutzen zu können, müssen Sie mindestens die wesentlichen Cookies akzeptieren."
       },
+      "dropHere": "Dateien hier ablegen",
+      "dropHereSubtitle": "Dateien oder Ordner überall auf der Seite ablegen",
       "addFiles": "Dateien hinzufügen",
       "addFolder": "Ordner hinzufügen",
       "addMore": "+ Hinzufügen",

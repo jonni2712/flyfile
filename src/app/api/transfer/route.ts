@@ -15,7 +15,7 @@ import { csrfProtection } from '@/lib/csrf';
 const ANONYMOUS_LIMITS = {
   storageLimit: 15 * 1024 * 1024 * 1024, // 15 GB
   maxTransfers: 20,
-  maxFilesPerTransfer: 15,
+  maxFilesPerTransfer: -1, // Unlimited — limited by storage GB instead
   retentionDays: 7,
   passwordProtection: true, // Now available for free!
   customExpiry: false,
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate files for security (blocked extensions, size limits) with correct plan
-    const fileValidation = validateFiles(files, actualPlan, 10);
+    const fileValidation = validateFiles(files, actualPlan);
     if (!fileValidation.valid) {
       return NextResponse.json(
         { success: false, error: fileValidation.error, code: fileValidation.errorCode },

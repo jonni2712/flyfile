@@ -99,6 +99,8 @@
         "title": "Accetta i cookie per continuare",
         "description": "Per utilizzare il servizio di trasferimento file è necessario accettare almeno i cookie essenziali."
       },
+      "dropHere": "Rilascia i file qui",
+      "dropHereSubtitle": "Rilascia file o cartelle in qualsiasi punto della pagina",
       "addFiles": "Aggiungi file",
       "addFolder": "Aggiungi cartella",
       "addMore": "+ Aggiungi file",

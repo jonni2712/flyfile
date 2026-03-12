@@ -301,7 +301,7 @@ export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
       storageLimit: 15 * 1024 * 1024 * 1024, // 15 GB
       maxTransfers: 20,
       retentionDays: 7,
-      maxFilesPerTransfer: 15,
+      maxFilesPerTransfer: -1, // Unlimited — limited by storage GB instead
       passwordProtection: true, // Now available for free!
       customExpiry: false,
       teamAccess: false,
@@ -316,7 +316,7 @@ export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
       storageLimit: 500 * 1024 * 1024 * 1024, // 500 GB (was 300)
       maxTransfers: 50,
       retentionDays: 14, // 2 weeks (was 7)
-      maxFilesPerTransfer: 25,
+      maxFilesPerTransfer: -1, // Unlimited — limited by storage GB instead
       passwordProtection: true,
       customExpiry: false,
       teamAccess: false,
@@ -331,7 +331,7 @@ export const getPlanLimits = (plan: Plan['id']): PlanLimits => {
       storageLimit: 1024 * 1024 * 1024 * 1024, // 1 TB
       maxTransfers: 100,
       retentionDays: 30,
-      maxFilesPerTransfer: 50,
+      maxFilesPerTransfer: -1, // Unlimited — limited by storage GB instead
       passwordProtection: true,
       customExpiry: true,
       teamAccess: false,

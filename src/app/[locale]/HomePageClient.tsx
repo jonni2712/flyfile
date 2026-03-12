@@ -418,7 +418,10 @@ export default function HomePageClient() {
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragOver(false);
+    // Only hide overlay when leaving the actual container, not its children
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
   }, []);
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
@@ -490,15 +493,6 @@ export default function HomePageClient() {
   };
 
   const addFiles = (newFiles: File[]) => {
-    // Check max files limit
-    const currentCount = files.length;
-    const maxFiles = planLimits.maxFilesPerTransfer === -1 ? Infinity : planLimits.maxFilesPerTransfer;
-
-    if (currentCount + newFiles.length > maxFiles) {
-      setUploadError(t('upload.maxFilesError', { max: maxFiles }));
-      return;
-    }
-
     // Check storage limit for registered users
     if (user && userProfile) {
       const storageLimit = userProfile.storageLimit || planLimits.storageLimit;
@@ -750,6 +744,23 @@ export default function HomePageClient() {
 
   return (
     <MainLayout showFooter={false} transparentBg>
+      {/* Full-page drop zone */}
+      <div
+        className="contents"
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+      {/* Full-page drag overlay */}
+      {isDragOver && (
+        <div className="fixed inset-0 z-50 bg-brand-500/10 backdrop-blur-sm border-4 border-dashed border-brand-500 rounded-2xl flex items-center justify-center pointer-events-none">
+          <div className="bg-white/90 rounded-2xl shadow-xl px-10 py-8 text-center">
+            <Upload className="w-12 h-12 text-brand-500 mx-auto mb-3" />
+            <p className="text-xl font-semibold text-gray-900">{t('upload.dropHere')}</p>
+            <p className="text-sm text-gray-500 mt-1">{t('upload.dropHereSubtitle')}</p>
+          </div>
+        </div>
+      )}
       {/* Verification Modal */}
       {showVerificationModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -948,13 +959,10 @@ export default function HomePageClient() {
           {/* Left Panel — Upload Card */}
           <div
             className="w-full lg:w-[480px] lg:min-w-[480px] flex flex-col items-center justify-center px-4 lg:px-6 py-4 lg:py-8 flex-1 lg:flex-none"
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
           >
             {/* Upload Card + Side Panel wrapper */}
             <div className="relative w-full max-w-[420px]">
-            <div className={`bg-white rounded-2xl shadow-lg p-6 w-full transition-all duration-200 relative ${isDragOver ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-transparent scale-[1.01] shadow-xl' : ''}`} style={showAdvancedOptions && sidePanelHeight > 0 ? { minHeight: sidePanelHeight } : undefined}>
+            <div className="bg-white rounded-2xl shadow-lg p-6 w-full transition-all duration-200 relative" style={showAdvancedOptions && sidePanelHeight > 0 ? { minHeight: sidePanelHeight } : undefined}>
               {/* Cookie consent overlay */}
               {!cookieConsent && (
                 <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-6 text-center">
@@ -1305,6 +1313,7 @@ export default function HomePageClient() {
         <div id="ad-container-mobile" className="hidden relative z-10 flex-1 min-h-[250px] flex flex-col items-center justify-center px-6 pb-8">
           {/* Inserire qui il contenuto pubblicitario mobile */}
         </div>
+      </div>
       </div>
     </MainLayout>
   );

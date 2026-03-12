@@ -30,7 +30,7 @@ const BLOCKED_MIME_TYPES = new Set([
 const ANONYMOUS_LIMITS = {
   storageLimit: 5 * 1024 * 1024 * 1024, // 5 GB
   maxTransfers: 10,
-  maxFilesPerTransfer: 10,
+  maxFilesPerTransfer: -1, // Unlimited — limited by storage GB instead
 };
 
 export async function POST(request: NextRequest) {

@@ -99,6 +99,8 @@
         "title": "Accept cookies to continue",
         "description": "To use the file transfer service, you must accept at least the essential cookies."
       },
+      "dropHere": "Drop files here",
+      "dropHereSubtitle": "Drop files or folders anywhere on the page",
       "addFiles": "Add files",
       "addFolder": "Add folder",
       "addMore": "+ Add files",

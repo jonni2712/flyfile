@@ -185,7 +185,6 @@ export function validateFile(
 export function validateFiles(
   files: Array<{ name: string; type: string; size: number }>,
   plan: 'anonymous' | 'free' | 'starter' | 'pro' | 'business' = 'free',
-  maxFilesPerTransfer: number = 10
 ): FileValidationResult {
   // Check file count
   if (files.length === 0) {
@@ -193,14 +192,6 @@ export function validateFiles(
       valid: false,
       error: 'Nessun file selezionato.',
       errorCode: 'NO_FILES',
-    };
-  }
-
-  if (files.length > maxFilesPerTransfer) {
-    return {
-      valid: false,
-      error: `Puoi caricare massimo ${maxFilesPerTransfer} file per trasferimento.`,
-      errorCode: 'TOO_MANY_FILES',
     };
   }
 
