@@ -12,7 +12,7 @@ import {
   updateProfile,
   deleteUser,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '@/lib/firebase';
 import { UserProfile } from '@/types';
 
@@ -39,7 +39,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isProcessingRedirect, setIsProcessingRedirect] = useState(true);
 
-  // Fetch user profile from Firestore
+  // Real-time Firestore listener unsubscribe ref
+  const [profileUnsub, setProfileUnsub] = useState<(() => void) | null>(null);
+
+  // Subscribe to real-time user profile updates from Firestore
+  function subscribeToUserProfile(uid: string) {
+    // Clean up any existing listener
+    if (profileUnsub) profileUnsub();
+
+    const docRef = doc(db, 'users', uid);
+    const unsub = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setUserProfile({
+          ...data,
+          createdAt: data.createdAt?.toDate(),
+          updatedAt: data.updatedAt?.toDate(),
+        } as UserProfile);
+      }
+    });
+    setProfileUnsub(() => unsub);
+    return unsub;
+  }
+
+  // One-shot fetch (used during creation flows where we need to await)
   async function fetchUserProfile(uid: string) {
     const docRef = doc(db, 'users', uid);
     const docSnap = await getDoc(docRef);
@@ -134,15 +157,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     handleRedirectResult();
 
+    let profileCleanup: (() => void) | null = null;
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
 
       if (user) {
-        await fetchUserProfile(user.uid);
+        // Subscribe to real-time profile updates
+        profileCleanup = subscribeToUserProfile(user.uid);
         // Set session cookie for middleware authentication
         const token = await user.getIdToken();
         document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax; Secure`;
       } else {
+        // Clean up profile listener on logout
+        if (profileCleanup) {
+          profileCleanup();
+          profileCleanup = null;
+        }
         setUserProfile(null);
         // Clear session cookie on logout
         document.cookie = '__session=; path=/; max-age=0';
@@ -151,7 +182,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (profileCleanup) profileCleanup();
+    };
   }, []);
 
   // Send auth code to email
@@ -201,11 +235,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    // Clean up profile listener
+    if (profileUnsub) profileUnsub();
+    setProfileUnsub(null);
     // Clear session cookie before signing out
     document.cookie = '__session=; path=/; max-age=0';
     await firebaseSignOut(auth);
     setUserProfile(null);
-  }, []);
+  }, [profileUnsub]);
 
   const updateUserProfile = useCallback(async (data: Partial<UserProfile>) => {
     if (!user) return;
