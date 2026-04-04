@@ -122,10 +122,29 @@ export async function POST(request: NextRequest) {
 
         if (!usersSnapshot.empty) {
           const userDoc = usersSnapshot.docs[0];
-          await db.collection('users').doc(userDoc.id).update({
-            subscriptionStatus: subscription.status as 'active' | 'canceled' | 'past_due' | 'trialing',
-            updatedAt: FieldValue.serverTimestamp(),
-          });
+
+          // Check if subscription is scheduled to cancel at period end
+          if (subscription.cancel_at_period_end && subscription.status === 'active') {
+            await db.collection('users').doc(userDoc.id).update({
+              subscriptionStatus: 'canceling',
+              cancelAt: subscription.cancel_at
+                ? new Date(subscription.cancel_at * 1000).toISOString()
+                : null,
+              updatedAt: FieldValue.serverTimestamp(),
+            });
+          } else if (!subscription.cancel_at_period_end && subscription.status === 'active') {
+            // Reactivation or normal update — clear any pending cancellation
+            await db.collection('users').doc(userDoc.id).update({
+              subscriptionStatus: 'active',
+              cancelAt: null,
+              updatedAt: FieldValue.serverTimestamp(),
+            });
+          } else {
+            await db.collection('users').doc(userDoc.id).update({
+              subscriptionStatus: subscription.status as 'active' | 'canceled' | 'past_due' | 'trialing',
+              updatedAt: FieldValue.serverTimestamp(),
+            });
+          }
         }
         break;
       }
