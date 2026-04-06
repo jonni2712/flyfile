@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import MainLayout from '@/components/layout/MainLayout';
 import { Link } from '@/i18n/navigation';
 import { Check, Upload, Mail, Shield, HelpCircle, ArrowRight, Sparkles } from 'lucide-react';
+import CheckoutSuccessTracker from '@/components/CheckoutSuccessTracker';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -20,6 +21,7 @@ export default async function SubscriptionSuccessPage({ params }: { params: Prom
 
   return (
     <MainLayout>
+      <CheckoutSuccessTracker />
       {/* Hero */}
       <div className="relative -mt-16 pt-16 overflow-hidden bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
         <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />

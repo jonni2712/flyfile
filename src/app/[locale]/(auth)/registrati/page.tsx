@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics-events';
 
 export default function RegisterPage() {
   const t = useTranslations('auth.register');
@@ -54,6 +55,7 @@ export default function RegisterPage() {
 
     try {
       await sendAuthCode(email);
+      trackEvent('sign_up_started', { method: 'email' });
       setStep(2);
       setResendCooldown(60);
     } catch (err: unknown) {
@@ -71,6 +73,7 @@ export default function RegisterPage() {
 
     try {
       await verifyAuthCode(email, code);
+      trackEvent('sign_up_completed', { method: 'email' });
       router.push('/upload');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : t('invalidCode');
@@ -99,6 +102,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      trackEvent('sign_up_started', { method: 'google' });
       await signInWithGoogle();
       window.location.href = '/upload';
     } catch (err: unknown) {

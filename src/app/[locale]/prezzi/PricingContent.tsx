@@ -7,6 +7,7 @@ import { Check, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PRICING_PLANS } from '@/data/pricing';
 import { PLANS } from '@/types';
+import { trackEvent } from '@/lib/analytics-events';
 
 export default function PricingContent() {
   const tp = useTranslations('pricing');
@@ -109,6 +110,10 @@ export default function PricingContent() {
 
       const data = await response.json();
       if (data.url) {
+        trackEvent('checkout_started', {
+          plan: plan.id,
+          billing_cycle: isAnnual ? 'annual' : 'monthly',
+        });
         window.location.href = data.url;
       } else {
         setCheckoutError(data.error || 'Errore nella creazione del checkout');

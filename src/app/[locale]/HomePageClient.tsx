@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { getPlanLimits } from '@/types';
 import MainLayout from '@/components/layout/MainLayout';
+import { trackEvent } from '@/lib/analytics-events';
 
 interface UploadFile {
   file: File;
@@ -629,6 +630,13 @@ export default function HomePageClient() {
     setIsUploading(true);
     setUploadError(null);
 
+    const totalBytes = files.reduce((acc, f) => acc + f.file.size, 0);
+    trackEvent('upload_started', {
+      file_count: files.length,
+      total_bytes: totalBytes,
+      user_type: isAnonymous ? 'anonymous' : 'registered',
+    });
+
     // Update file statuses to uploading
     setFiles(prev => prev.map(f => ({ ...f, status: 'uploading' as const })));
 
@@ -663,6 +671,12 @@ export default function HomePageClient() {
           emailSent: deliveryMethod === 'email',
         });
         setShowSuccessModal(true);
+        trackEvent('upload_completed', {
+          file_count: files.length,
+          total_bytes: totalBytes,
+          delivery_method: deliveryMethod,
+          user_type: isAnonymous ? 'anonymous' : 'registered',
+        });
       } else {
         throw new Error(result.error || t('upload.uploadError'));
       }
@@ -710,7 +724,12 @@ export default function HomePageClient() {
 
   const copyToClipboard = () => {
     const urlToCopy = uploadResult?.customUrl || uploadResult?.downloadUrl;
-    if (urlToCopy) copy(urlToCopy);
+    if (urlToCopy) {
+      copy(urlToCopy);
+      trackEvent('link_copied', {
+        link_type: uploadResult?.customUrl ? 'branded' : 'default',
+      });
+    }
   };
 
   const resetForm = () => {
