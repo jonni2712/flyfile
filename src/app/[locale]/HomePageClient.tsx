@@ -14,12 +14,18 @@ import {
 import { getPlanLimits } from '@/types';
 import MainLayout from '@/components/layout/MainLayout';
 import { trackEvent } from '@/lib/analytics-events';
+import { useUploadDraft, loadUploadDraft, clearUploadDraft } from '@/hooks/useUploadDraft';
+import PaywallModal, { PaywallReason } from '@/components/PaywallModal';
+import UpgradeBanner from '@/components/UpgradeBanner';
+import { useUpgradePrompt } from '@/hooks/useUpgradePrompt';
+import WelcomeTour from '@/components/WelcomeTour';
 
 interface UploadFile {
   file: File;
   progress: number;
   status: 'pending' | 'uploading' | 'completed' | 'error';
   error?: string;
+  previewUrl?: string; // object URL for image thumbnails
 }
 
 // Expiry options with plan requirements (labels are translation keys under home.upload.expiryOptions)
@@ -298,19 +304,22 @@ const SidePanelContent = memo(function SidePanelContent({
 export default function HomePageClient() {
   const t = useTranslations('home');
   const tc = useTranslations('common');
-  const { user, userProfile, loading } = useAuth();
+  const { user, userProfile, loading, updateUserProfile } = useAuth();
   const { createTransfer, loading: transferLoading } = useTransfer();
   const router = useRouter();
+
+  // Load saved draft once at mount
+  const initialDraft = useMemo(() => loadUploadDraft(), []);
 
   // Form state
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(initialDraft?.title || '');
   const [deliveryMethod, setDeliveryMethod] = useState<'email' | 'link'>('link');
-  const [recipientEmail, setRecipientEmail] = useState('');
+  const [recipientEmail, setRecipientEmail] = useState(initialDraft?.recipientEmail || '');
   const [senderName, setSenderName] = useState('');
-  const [senderEmail, setSenderEmail] = useState('');
-  const [message, setMessage] = useState('');
+  const [senderEmail, setSenderEmail] = useState(initialDraft?.senderEmail || '');
+  const [message, setMessage] = useState(initialDraft?.message || '');
   const [password, setPassword] = useState('');
   const [expiryDays, setExpiryDays] = useState(3);
   const [accessControl, setAccessControl] = useState<'public' | 'tracked' | 'limited'>('public');
@@ -320,6 +329,39 @@ export default function HomePageClient() {
   // Upload state
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Upload progress, speed (bytes/s), and ETA tracking
+  const [uploadProgress, setUploadProgress] = useState<{
+    bytesUploaded: number;
+    totalBytes: number;
+  } | null>(null);
+  const [uploadSpeed, setUploadSpeed] = useState<number>(0); // bytes/s, EMA-smoothed
+  const speedSampleRef = useRef<{ bytes: number; time: number } | null>(null);
+  const [retryStatus, setRetryStatus] = useState<{ attempt: number; max: number } | null>(null);
+
+  // Paywall modal state
+  const [paywall, setPaywall] = useState<{ open: boolean; reason: PaywallReason }>({
+    open: false,
+    reason: 'storage_limit',
+  });
+
+  // Upgrade banner — only surfaces in high-intent moments (storage near limit or power user)
+  const upgradePrompt = useUpgradePrompt({
+    plan: userProfile?.plan,
+    storageUsed: userProfile?.storageUsed,
+    storageLimit: userProfile?.storageLimit,
+  });
+
+  // Welcome tour for first-time users (shown when onboardingCompleted !== true)
+  const showWelcomeTour =
+    !!user && !!userProfile && userProfile.onboardingCompleted !== true;
+  const handleCompleteOnboarding = useCallback(async () => {
+    try {
+      await updateUserProfile({ onboardingCompleted: true });
+    } catch (err) {
+      console.error('Failed to mark onboarding complete:', err);
+    }
+  }, [updateUserProfile]);
 
   // Advanced options toggle
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
@@ -400,6 +442,35 @@ export default function HomePageClient() {
       verificationInputRef.current.focus();
     }
   }, [showVerificationModal]);
+
+  // Auto-save form draft to localStorage (debounced)
+  useUploadDraft({ title, message, recipientEmail, senderEmail });
+
+  // Track latest files in a ref so unmount cleanup sees current state
+  const filesRef = useRef<UploadFile[]>([]);
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
+
+  // Cleanup image preview object URLs on unmount
+  useEffect(() => {
+    return () => {
+      filesRef.current.forEach((f) => {
+        if (f.previewUrl) URL.revokeObjectURL(f.previewUrl);
+      });
+    };
+  }, []);
+
+  // Format ETA seconds → "1h 23m", "2m 30s", "45s"
+  const formatEta = (seconds: number): string => {
+    if (!isFinite(seconds) || seconds <= 0) return '—';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  };
 
   const getFileIcon = (type: string) => {
     if (type.startsWith('image/')) {
@@ -508,6 +579,10 @@ export default function HomePageClient() {
         setUploadError(
           t('upload.insufficientSpace', { available: formatBytes(availableSpace), total: formatBytes(totalNewSize) })
         );
+        // Show contextual upgrade modal for paid plans below business
+        if (currentPlan !== 'business') {
+          setPaywall({ open: true, reason: 'storage_limit' });
+        }
         return;
       }
     }
@@ -516,6 +591,7 @@ export default function HomePageClient() {
       file,
       progress: 0,
       status: 'pending' as const,
+      previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
     }));
     setFiles((prev) => [...prev, ...uploadFiles]);
     setUploadError(null);
@@ -528,7 +604,11 @@ export default function HomePageClient() {
   };
 
   const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFiles((prev) => {
+      const removed = prev[index];
+      if (removed?.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   // Send verification code
@@ -637,6 +717,11 @@ export default function HomePageClient() {
       user_type: isAnonymous ? 'anonymous' : 'registered',
     });
 
+    // Reset progress tracking
+    setUploadProgress({ bytesUploaded: 0, totalBytes });
+    setUploadSpeed(0);
+    speedSampleRef.current = { bytes: 0, time: Date.now() };
+
     // Update file statuses to uploading
     setFiles(prev => prev.map(f => ({ ...f, status: 'uploading' as const })));
 
@@ -655,7 +740,25 @@ export default function HomePageClient() {
           accessControl: isBusiness ? accessControl : undefined,
           viewOption: isBusiness ? viewOption : undefined,
         },
-        files.map(f => f.file)
+        files.map(f => f.file),
+        (bytesUploaded, total) => {
+          setUploadProgress({ bytesUploaded, totalBytes: total });
+          setRetryStatus(null);
+          // Compute instantaneous speed and smooth with EMA (alpha=0.3)
+          const now = Date.now();
+          const last = speedSampleRef.current;
+          if (last) {
+            const dt = (now - last.time) / 1000;
+            if (dt >= 0.25) {
+              const instantSpeed = (bytesUploaded - last.bytes) / dt;
+              setUploadSpeed((prev) => (prev === 0 ? instantSpeed : 0.3 * instantSpeed + 0.7 * prev));
+              speedSampleRef.current = { bytes: bytesUploaded, time: now };
+            }
+          }
+        },
+        (attempt, max) => {
+          setRetryStatus({ attempt: attempt + 1, max });
+        }
       );
 
       if (result.success && result.downloadUrl) {
@@ -671,6 +774,8 @@ export default function HomePageClient() {
           emailSent: deliveryMethod === 'email',
         });
         setShowSuccessModal(true);
+        clearUploadDraft();
+        upgradePrompt.recordUpload();
         trackEvent('upload_completed', {
           file_count: files.length,
           total_bytes: totalBytes,
@@ -686,6 +791,10 @@ export default function HomePageClient() {
       setFiles(prev => prev.map(f => ({ ...f, status: 'error' as const, error: errorMessage })));
     } finally {
       setIsUploading(false);
+      setUploadProgress(null);
+      setUploadSpeed(0);
+      speedSampleRef.current = null;
+      setRetryStatus(null);
     }
   };
 
@@ -733,7 +842,13 @@ export default function HomePageClient() {
   };
 
   const resetForm = () => {
-    setFiles([]);
+    // Revoke any image preview URLs to avoid memory leaks
+    setFiles((prev) => {
+      prev.forEach((f) => {
+        if (f.previewUrl) URL.revokeObjectURL(f.previewUrl);
+      });
+      return [];
+    });
     setTitle('');
     setMessage('');
     setRecipientEmail('');
@@ -780,6 +895,16 @@ export default function HomePageClient() {
           </div>
         </div>
       )}
+      {/* Paywall modal */}
+      <PaywallModal
+        open={paywall.open}
+        reason={paywall.reason}
+        onClose={() => setPaywall((p) => ({ ...p, open: false }))}
+      />
+
+      {/* Welcome tour for first-time users */}
+      <WelcomeTour open={showWelcomeTour} onComplete={handleCompleteOnboarding} />
+
       {/* Verification Modal */}
       {showVerificationModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -979,6 +1104,13 @@ export default function HomePageClient() {
           <div
             className="w-full lg:w-[480px] lg:min-w-[480px] flex flex-col items-center justify-center px-4 lg:px-6 py-4 lg:py-8 flex-1 lg:flex-none"
           >
+            {/* Upgrade banner — only when high-intent triggers */}
+            {upgradePrompt.shouldShow && upgradePrompt.reason && (
+              <div className="w-full max-w-[420px] mb-3">
+                <UpgradeBanner reason={upgradePrompt.reason} onDismiss={upgradePrompt.dismiss} />
+              </div>
+            )}
+
             {/* Upload Card + Side Panel wrapper */}
             <div className="relative w-full max-w-[420px]">
             <div className="bg-white rounded-2xl shadow-lg p-6 w-full transition-all duration-200 relative" style={showAdvancedOptions && sidePanelHeight > 0 ? { minHeight: sidePanelHeight } : undefined}>
@@ -1069,9 +1201,18 @@ export default function HomePageClient() {
                           key={index}
                           className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-gray-50 group transition-colors"
                         >
-                          <div className={`w-7 h-7 bg-gradient-to-br ${fileIcon.gradient} rounded flex items-center justify-center flex-shrink-0`}>
-                            {fileIcon.icon}
-                          </div>
+                          {fileItem.previewUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={fileItem.previewUrl}
+                              alt={fileItem.file.name}
+                              className="w-7 h-7 rounded object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div className={`w-7 h-7 bg-gradient-to-br ${fileIcon.gradient} rounded flex items-center justify-center flex-shrink-0`}>
+                              {fileIcon.icon}
+                            </div>
+                          )}
                           <span className="text-sm text-gray-800 truncate flex-1">{fileItem.file.name}</span>
                           <span className="text-xs text-gray-400 flex-shrink-0">{formatBytes(fileItem.file.size)}</span>
                           {fileItem.status === 'uploading' && (
@@ -1206,6 +1347,40 @@ export default function HomePageClient() {
                   <MoreHorizontal className="w-5 h-5" />
                 </button>
               </div>
+
+              {/* Upload progress + ETA */}
+              {isUploading && uploadProgress && uploadProgress.totalBytes > 0 && (
+                <div className="mb-3">
+                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-[width] duration-200 ease-out ${
+                        retryStatus ? 'bg-yellow-500 animate-pulse' : 'bg-brand-500'
+                      }`}
+                      style={{
+                        width: `${Math.min(100, (uploadProgress.bytesUploaded / uploadProgress.totalBytes) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                  {retryStatus ? (
+                    <div className="mt-1.5 text-xs text-yellow-700 flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Connessione instabile, nuovo tentativo {retryStatus.attempt}/{retryStatus.max}…
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between mt-1.5 text-xs text-gray-500">
+                      <span>
+                        {formatBytes(uploadProgress.bytesUploaded)} / {formatBytes(uploadProgress.totalBytes)}
+                      </span>
+                      <span>
+                        {uploadSpeed > 0 && `${formatBytes(uploadSpeed)}/s · `}
+                        {uploadSpeed > 0
+                          ? formatEta((uploadProgress.totalBytes - uploadProgress.bytesUploaded) / uploadSpeed)
+                          : ''}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Transfer Button */}
               <button

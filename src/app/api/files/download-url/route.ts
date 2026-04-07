@@ -4,6 +4,7 @@ import { getAdminFirestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { recordDownload } from '@/lib/analytics';
+import { notifyFirstDownload } from '@/lib/notify-first-download';
 import { verifyAuth } from '@/lib/auth-utils';
 import { verifyPassword } from '@/lib/password';
 
@@ -238,6 +239,9 @@ export async function POST(request: NextRequest) {
         country,
         downloadType: 'single',
       }).catch(err => console.error('Analytics error:', err));
+
+      // Notify sender on first download (idempotent)
+      notifyFirstDownload(transferId);
 
       return NextResponse.json({
         downloadUrl,

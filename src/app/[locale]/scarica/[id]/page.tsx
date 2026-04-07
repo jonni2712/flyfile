@@ -628,6 +628,32 @@ export default function DownloadPage() {
           isDownloading={downloadingFileId === previewFile.id}
         />
       )}
+
+      {/* Mobile sticky download CTA — always reachable while scrolling on phones */}
+      {transfer && transfer.status !== 'expired' && (!transfer.password || passwordVerified) && (
+        <div
+          className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]"
+          style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+        >
+          <button
+            onClick={handleDownloadAll}
+            disabled={downloading}
+            className="w-full bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[48px]"
+          >
+            {downloading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                {t('downloading')}
+              </>
+            ) : (
+              <>
+                <Download className="w-5 h-5" />
+                {t('downloadAll')} ({formatBytes(transfer.totalSize)})
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

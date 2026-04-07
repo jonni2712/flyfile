@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useCallback, useMemo, ReactNode } 
 import { useAuth } from './AuthContext';
 import { Transfer, TransferUploadData, UploadResponse } from '@/types';
 import { encryptFile, isEncryptionSupported } from '@/lib/client-encryption';
+import { uploadWithProgress } from '@/lib/upload-with-progress';
 
 interface TransferContextType {
   transfers: Transfer[];
@@ -12,7 +13,12 @@ interface TransferContextType {
   fetchTransfers: () => Promise<void>;
   getTransfer: (transferId: string) => Promise<Transfer | null>;
   getPublicTransfer: (transferId: string) => Promise<Transfer | null>;
-  createTransfer: (data: TransferUploadData, files: File[]) => Promise<UploadResponse>;
+  createTransfer: (
+    data: TransferUploadData,
+    files: File[],
+    onProgress?: (bytesUploaded: number, totalBytes: number) => void,
+    onRetry?: (attempt: number, maxAttempts: number, fileName: string) => void
+  ) => Promise<UploadResponse>;
   updateTransfer: (transferId: string, data: Partial<Transfer>) => Promise<void>;
   deleteTransfer: (transferId: string) => Promise<void>;
   verifyPassword: (transferId: string, password: string) => Promise<boolean>;
@@ -165,7 +171,9 @@ export function TransferProvider({ children }: { children: ReactNode }) {
   // Create a new transfer (using API to enforce plan limits)
   const createTransfer = useCallback(async (
     data: TransferUploadData,
-    files: File[]
+    files: File[],
+    onProgress?: (bytesUploaded: number, totalBytes: number) => void,
+    onRetry?: (attempt: number, maxAttempts: number, fileName: string) => void
   ): Promise<UploadResponse> => {
     setLoading(true);
     setError(null);
@@ -251,23 +259,32 @@ export function TransferProvider({ children }: { children: ReactNode }) {
 
       const { transferId, internalId, downloadUrl, customUrl, uploadUrls, expiresAt, emailSent } = createResult;
 
-      // Upload files to R2 using presigned URLs
+      // Compute total bytes across all files for cumulative progress
+      const totalBytes = encryptedFilesData.reduce((acc, { file }) => acc + file.size, 0);
+      let bytesCompletedFromPreviousFiles = 0;
+
+      // Upload files to R2 using presigned URLs with progress reporting
       for (let i = 0; i < encryptedFilesData.length; i++) {
         const { file } = encryptedFilesData[i];
         const uploadUrl = uploadUrls[i].uploadUrl;
+        const contentType = canEncrypt ? 'application/octet-stream' : (file as File).type;
 
-        // Upload encrypted data to R2
-        const uploadResponse = await fetch(uploadUrl, {
-          method: 'PUT',
-          body: file,
-          headers: {
-            'Content-Type': canEncrypt ? 'application/octet-stream' : (file as File).type,
-          },
-        });
-
-        if (!uploadResponse.ok) {
+        try {
+          await uploadWithProgress(uploadUrl, file, contentType, {
+            onProgress: (bytesUploaded) => {
+              if (onProgress) {
+                onProgress(bytesCompletedFromPreviousFiles + bytesUploaded, totalBytes);
+              }
+            },
+            onRetry: (attempt, maxAttempts) => {
+              if (onRetry) onRetry(attempt, maxAttempts, filesMetadata[i].name);
+            },
+          });
+        } catch {
           throw new Error(`Upload fallito per ${filesMetadata[i].name}`);
         }
+
+        bytesCompletedFromPreviousFiles += file.size;
       }
 
       // Confirm upload to activate transfer and update user storage

@@ -5,6 +5,7 @@ import { getDownloadUrl } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { sendEmail, getDownloadNotificationEmail } from '@/lib/email';
 import { recordDownload } from '@/lib/analytics';
+import { notifyFirstDownload } from '@/lib/notify-first-download';
 import { triggerWebhooks } from '@/lib/webhooks';
 import archiver from 'archiver';
 import { PassThrough } from 'stream';
@@ -175,6 +176,9 @@ export async function GET(
       country,
       downloadType: 'zip',
     }).catch(err => console.error('Analytics error:', err));
+
+    // Notify sender on first download (idempotent)
+    notifyFirstDownload(transferId);
 
     // Trigger webhooks for download event
     if (transferData.userId) {

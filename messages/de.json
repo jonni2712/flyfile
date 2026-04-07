@@ -169,6 +169,8 @@
     "billedMonthly": "monatlich",
     "billedAnnually": "jährlich",
     "freeForever": "FlyFile kostenlos genießen",
+    "perMonthShort": "Monat",
+    "saveYearly": "Spare {amount} € pro Jahr",
     "currentPlan": "Aktueller Plan",
     "activePlan": "Aktiver Plan",
     "mostPopular": "Beliebteste",

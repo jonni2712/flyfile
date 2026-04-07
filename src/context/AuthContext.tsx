@@ -13,6 +13,7 @@ import {
   deleteUser,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import * as Sentry from '@sentry/nextjs';
 import { auth, db, googleProvider } from '@/lib/firebase';
 import { UserProfile } from '@/types';
 
@@ -51,11 +52,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsub = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setUserProfile({
+        const profile = {
           ...data,
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate(),
-        } as UserProfile);
+        } as UserProfile;
+        setUserProfile(profile);
+        // Identify user in Sentry for error correlation
+        Sentry.setUser({
+          id: profile.uid,
+          email: profile.email,
+          plan: profile.plan,
+        });
       }
     });
     setProfileUnsub(() => unsub);
@@ -175,6 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           profileCleanup = null;
         }
         setUserProfile(null);
+        Sentry.setUser(null);
         // Clear session cookie on logout
         document.cookie = '__session=; path=/; max-age=0';
       }

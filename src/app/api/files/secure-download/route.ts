@@ -5,6 +5,7 @@ import { getDownloadUrl } from '@/lib/r2';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { decryptData } from '@/lib/encryption';
 import { recordDownload } from '@/lib/analytics';
+import { notifyFirstDownload } from '@/lib/notify-first-download';
 import { verifyPassword } from '@/lib/password';
 
 /**
@@ -159,6 +160,9 @@ export async function POST(request: NextRequest) {
       country,
       downloadType: 'secure',
     }).catch(err => console.error('Analytics error:', err));
+
+    // Notify sender on first download (idempotent)
+    notifyFirstDownload(transferId);
 
     // Return decrypted file (convert Buffer to Uint8Array for Response)
     return new Response(new Uint8Array(decryptedBuffer), {

@@ -3,18 +3,48 @@
   "short_name": "FlyFile",
   "description": "La piattaforma più sicura per condividere file con crittografia AES-256 end-to-end. Invia file di grandi dimensioni in modo sicuro e veloce.",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
-  "background_color": "#3b82f6",
-  "theme_color": "#3b82f6",
-  "orientation": "portrait-primary",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "background_color": "#ffffff",
+  "theme_color": "#409cff",
+  "orientation": "any",
   "scope": "/",
   "lang": "it",
+  "dir": "ltr",
   "categories": ["productivity", "utilities", "business"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/favicon.ico",
       "sizes": "48x48",
-      "type": "image/x-icon"
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Pagina principale di FlyFile"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Carica file",
+      "short_name": "Upload",
+      "description": "Vai direttamente alla pagina di upload",
+      "url": "/",
+      "icons": [{ "src": "/favicon.ico", "sizes": "48x48" }]
+    },
+    {
+      "name": "I miei file",
+      "short_name": "File",
+      "description": "Visualizza i tuoi trasferimenti",
+      "url": "/files",
+      "icons": [{ "src": "/favicon.ico", "sizes": "48x48" }]
     }
   ]
 }

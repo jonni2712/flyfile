@@ -5,6 +5,7 @@ import { useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { PLANS } from '@/types';
 import { Check, User, Building2, Loader2, CreditCard, Download, ExternalLink, X, AlertTriangle } from 'lucide-react';
+import BillingPageSkeleton from '@/components/skeletons/BillingPageSkeleton';
 
 interface PaymentMethod {
   id: string;
@@ -234,7 +235,7 @@ export default function BillingPage() {
     }
   };
 
-  if (!user || !userProfile) return null;
+  if (!user || !userProfile) return <BillingPageSkeleton />;
 
   const plan = PLANS[userProfile.plan] || PLANS.free;
   const isPaid = userProfile.plan !== 'free';

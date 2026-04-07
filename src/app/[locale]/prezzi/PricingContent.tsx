@@ -12,7 +12,8 @@ import { trackEvent } from '@/lib/analytics-events';
 export default function PricingContent() {
   const tp = useTranslations('pricing');
   const { user, userProfile } = useAuth();
-  const [isAnnual, setIsAnnual] = useState(false);
+  // Default to annual — most cost-effective and most users keep it
+  const [isAnnual, setIsAnnual] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
@@ -219,22 +220,44 @@ export default function PricingContent() {
 
                 {/* Price */}
                 <div className="mb-5">
-                  <span className="text-3xl font-bold text-gray-900">
-                    {PRICING_PLANS[idx].priceMonthly === 0
-                      ? '0'
-                      : `${((isAnnual ? PRICING_PLANS[idx].priceAnnual : PRICING_PLANS[idx].priceMonthly) / 100).toFixed(0)}`
-                    } &euro;
-                  </span>
-                  {PRICING_PLANS[idx].priceMonthly > 0 && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      {tp('perMonth', { billing: isAnnual ? tp('billedAnnually') : tp('billedMonthly') })}
-                    </p>
-                  )}
-                  {PRICING_PLANS[idx].priceMonthly === 0 && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      {tp('freeForever')}
-                    </p>
-                  )}
+                  {(() => {
+                    const monthlyCents = PRICING_PLANS[idx].priceMonthly;
+                    const annualCents = PRICING_PLANS[idx].priceAnnual;
+                    if (monthlyCents === 0) {
+                      return (
+                        <>
+                          <span className="text-3xl font-bold text-gray-900">0 &euro;</span>
+                          <p className="text-xs text-gray-400 mt-1">{tp('freeForever')}</p>
+                        </>
+                      );
+                    }
+                    // Always display the per-month equivalent so prices are comparable
+                    const displayMonthly = isAnnual ? annualCents / 12 / 100 : monthlyCents / 100;
+                    const yearlyCost = (annualCents / 100).toFixed(0);
+                    const yearlySavings = ((monthlyCents * 12 - annualCents) / 100).toFixed(0);
+                    return (
+                      <>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-bold text-gray-900">
+                            {displayMonthly.toFixed(displayMonthly % 1 === 0 ? 0 : 2)} &euro;
+                          </span>
+                          <span className="text-sm text-gray-500">/{tp('perMonthShort')}</span>
+                        </div>
+                        {isAnnual ? (
+                          <div className="mt-1 space-y-0.5">
+                            <p className="text-xs text-gray-400">
+                              {yearlyCost} &euro; {tp('billedAnnually')}
+                            </p>
+                            <p className="text-xs text-green-600 font-medium">
+                              {tp('saveYearly', { amount: yearlySavings })}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400 mt-1">{tp('billedMonthly')}</p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Features */}

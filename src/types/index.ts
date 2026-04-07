@@ -89,6 +89,8 @@ export interface UserProfile {
     transferDownloaded?: boolean; // default true
     transferViewed?: boolean;     // default true
   };
+  // First-time user onboarding flag (set true after the welcome tour completes/skips)
+  onboardingCompleted?: boolean;
   // Beta tester fields
   isBetaTester?: boolean;
   betaTesterCode?: string;
