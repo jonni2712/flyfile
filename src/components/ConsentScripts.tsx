@@ -43,11 +43,21 @@ function removeScript(id: string): void {
   if (el) el.remove();
 }
 
-function clearGACookies(): void {
-  const gaCookies = ['_ga', '_gid', '_gat', '_ga_W4J7Q31Y7B'];
-  gaCookies.forEach(name => {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
+function clearAnalyticsCookies(): void {
+  const cookies = [
+    // Google Analytics
+    '_ga', '_gid', '_gat', '_ga_W4J7Q31Y7B',
+    // Microsoft Clarity
+    '_clck', '_clsk', 'MUID', 'ANONCHK', 'SM',
+  ];
+  const host = window.location.hostname;
+  cookies.forEach(name => {
+    // Domain-scoped
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${host}`;
+    // No domain attribute (default for some cookies)
     document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    // Cross-subdomain (leading dot)
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${host}`;
   });
 }
 
@@ -105,13 +115,17 @@ export default function ConsentScripts() {
       // Disable GA tracking
       w[`ga-disable-${GA_MEASUREMENT_ID}`] = true;
 
-      // Clear existing GA cookies
-      clearGACookies();
+      // Clear all analytics cookies (GA + Clarity)
+      clearAnalyticsCookies();
 
       // Remove injected scripts
       removeScript('ga-gtag');
       removeScript('google-adsense');
       removeScript('ms-clarity');
+
+      // Clean up Clarity queue + init flag so a future re-consent rebuilds it cleanly
+      delete w.clarity;
+      delete w.__clarityInitialized;
     }
   }, []);
 
