@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="FlyFile">
+  <title>FlyFile</title>
+  <defs>
+    <linearGradient id="flyfile-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#409cff" />
+      <stop offset="100%" stop-color="#7c5cfc" />
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" ry="56" fill="url(#flyfile-gradient)" />
+  <path
+    d="M 72 64 L 188 64 L 188 96 L 104 96 L 104 116 L 160 116 L 160 146 L 104 146 L 104 192 L 72 192 Z"
+    fill="#ffffff"
+  />
+</svg>

@@ -16,6 +16,18 @@
   "prefer_related_applications": false,
   "icons": [
     {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-icon",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "/favicon.ico",
       "sizes": "48x48",
       "type": "image/x-icon",
