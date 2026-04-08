@@ -48,14 +48,14 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com https://apis.google.com https://accounts.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://*.clarity.ms https://pagead2.googlesyndication.com",
       // Styles: self, inline for CSS-in-JS
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
-      // Images: self, data URIs, Cloudflare R2, Firebase, Stripe, Google
-      "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.googleapis.com https://lh3.googleusercontent.com https://www.google.com https://*.googleusercontent.com https://www.googletagmanager.com https://*.clarity.ms",
+      // Images: self, data URIs, Cloudflare R2, Firebase, Stripe, Google, AdSense
+      "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.googleapis.com https://lh3.googleusercontent.com https://www.google.com https://*.googleusercontent.com https://www.googletagmanager.com https://*.clarity.ms https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.g.doubleclick.net",
       // Fonts: self, Google Fonts
       "font-src 'self' https://fonts.gstatic.com data:",
-      // Connect: API calls to self, Firebase, Cloudflare R2, Stripe, Vercel, Google, GTM, reCAPTCHA
-      "connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.r2.cloudflarestorage.com https://api.stripe.com https://vitals.vercel-insights.com wss://*.firebaseio.com https://accounts.google.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://*.google-analytics.com https://www.googletagmanager.com https://www.google.com/recaptcha/ https://*.clarity.ms https://*.ingest.de.sentry.io",
-      // Frames: Stripe checkout, Google Auth, Firebase Auth, reCAPTCHA
-      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://*.firebaseapp.com https://flyfile.it https://www.google.com/recaptcha/ https://recaptcha.google.com",
+      // Connect: API calls to self, Firebase, Cloudflare R2, Stripe, Vercel, Google, GTM, reCAPTCHA, AdSense fraud detection
+      "connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.r2.cloudflarestorage.com https://api.stripe.com https://vitals.vercel-insights.com wss://*.firebaseio.com https://accounts.google.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://*.google-analytics.com https://www.googletagmanager.com https://www.google.com/recaptcha/ https://*.clarity.ms https://*.ingest.de.sentry.io https://pagead2.googlesyndication.com https://*.googlesyndication.com https://ep1.adtrafficquality.google https://*.g.doubleclick.net",
+      // Frames: Stripe checkout, Google Auth, Firebase Auth, reCAPTCHA, AdSense ad iframes
+      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://*.firebaseapp.com https://flyfile.it https://www.google.com/recaptcha/ https://recaptcha.google.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.g.doubleclick.net https://*.adtrafficquality.google",
       // Workers: self for service workers
       "worker-src 'self' blob:",
       // Object: none

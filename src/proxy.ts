@@ -157,5 +157,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
+  // Exclude Sentry tunnel route (/monitoring) so next-intl middleware doesn't
+  // rewrite it to /{locale}/monitoring and return 404 — Sentry needs the raw
+  // request to forward error reports to its ingestion endpoint.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api|monitoring).*)"],
 };
