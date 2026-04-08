@@ -42,8 +42,10 @@ const securityHeaders = [
       // Current limitation: Next.js requires 'unsafe-inline' for its own script injection
       // and 'unsafe-eval' for development/HMR. Consider using middleware-based CSP with nonces
       // for stricter production security.
-      // Scripts: self, inline for Next.js, Vercel analytics, Stripe, Google APIs, GTM, reCAPTCHA
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com https://apis.google.com https://accounts.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.clarity.ms",
+      // Scripts: self, inline for Next.js, Vercel analytics, Stripe, Google APIs, GTM, reCAPTCHA,
+      // Clarity (wildcard for www.clarity.ms + scripts.clarity.ms which loads the actual SDK),
+      // Google AdSense
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com https://apis.google.com https://accounts.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://*.clarity.ms https://pagead2.googlesyndication.com",
       // Styles: self, inline for CSS-in-JS
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
       // Images: self, data URIs, Cloudflare R2, Firebase, Stripe, Google
