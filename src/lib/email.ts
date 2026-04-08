@@ -97,7 +97,7 @@ export function getTeamInviteEmail(params: {
 <body style="${emailStyles.body}">
   <div style="${emailStyles.wrapper}">
     <div style="${emailStyles.header}">
-      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="vertical-align: middle; padding-right: 10px;"><div style="width: 36px; height: 36px; background: #5b7efc; background: linear-gradient(135deg, #409cff 0%, #7c5cfc 100%); border-radius: 8px; text-align: center; line-height: 36px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 22px; font-weight: 800; color: #ffffff;">F</div></td><td style="vertical-align: middle;"><span style="color: #111827; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">FlyFile</span></td></tr></table>
     </div>
 
     <div style="${emailStyles.content}">
@@ -182,7 +182,7 @@ export function getTransferNotificationEmail(params: {
 <body style="${emailStyles.body}">
   <div style="${emailStyles.wrapper}">
     <div style="${emailStyles.header}">
-      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="vertical-align: middle; padding-right: 10px;"><div style="width: 36px; height: 36px; background: #5b7efc; background: linear-gradient(135deg, #409cff 0%, #7c5cfc 100%); border-radius: 8px; text-align: center; line-height: 36px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 22px; font-weight: 800; color: #ffffff;">F</div></td><td style="vertical-align: middle;"><span style="color: #111827; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">FlyFile</span></td></tr></table>
     </div>
 
     <div style="${emailStyles.content}">
@@ -266,7 +266,7 @@ export function getPasswordResetEmail(params: {
 <body style="${emailStyles.body}">
   <div style="${emailStyles.wrapper}">
     <div style="${emailStyles.header}">
-      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="vertical-align: middle; padding-right: 10px;"><div style="width: 36px; height: 36px; background: #5b7efc; background: linear-gradient(135deg, #409cff 0%, #7c5cfc 100%); border-radius: 8px; text-align: center; line-height: 36px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 22px; font-weight: 800; color: #ffffff;">F</div></td><td style="vertical-align: middle;"><span style="color: #111827; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">FlyFile</span></td></tr></table>
     </div>
 
     <div style="${emailStyles.content}">
@@ -330,7 +330,7 @@ export function getPasswordSetupEmail(params: {
 <body style="${emailStyles.body}">
   <div style="${emailStyles.wrapper}">
     <div style="${emailStyles.header}">
-      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="vertical-align: middle; padding-right: 10px;"><div style="width: 36px; height: 36px; background: #5b7efc; background: linear-gradient(135deg, #409cff 0%, #7c5cfc 100%); border-radius: 8px; text-align: center; line-height: 36px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 22px; font-weight: 800; color: #ffffff;">F</div></td><td style="vertical-align: middle;"><span style="color: #111827; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">FlyFile</span></td></tr></table>
     </div>
 
     <div style="${emailStyles.content}">
@@ -402,7 +402,7 @@ export function getAuthCodeEmail(params: {
 <body style="${emailStyles.body}">
   <div style="${emailStyles.wrapper}">
     <div style="${emailStyles.header}">
-      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="vertical-align: middle; padding-right: 10px;"><div style="width: 36px; height: 36px; background: #5b7efc; background: linear-gradient(135deg, #409cff 0%, #7c5cfc 100%); border-radius: 8px; text-align: center; line-height: 36px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 22px; font-weight: 800; color: #ffffff;">F</div></td><td style="vertical-align: middle;"><span style="color: #111827; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">FlyFile</span></td></tr></table>
     </div>
 
     <div style="${emailStyles.content}">
@@ -477,7 +477,7 @@ export function getVerificationCodeEmail(params: {
 <body style="${emailStyles.body}">
   <div style="${emailStyles.wrapper}">
     <div style="${emailStyles.header}">
-      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="vertical-align: middle; padding-right: 10px;"><div style="width: 36px; height: 36px; background: #5b7efc; background: linear-gradient(135deg, #409cff 0%, #7c5cfc 100%); border-radius: 8px; text-align: center; line-height: 36px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 22px; font-weight: 800; color: #ffffff;">F</div></td><td style="vertical-align: middle;"><span style="color: #111827; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">FlyFile</span></td></tr></table>
     </div>
 
     <div style="${emailStyles.content}">
@@ -556,7 +556,7 @@ export function getUploadConfirmationEmail(params: {
 <body style="${emailStyles.body}">
   <div style="${emailStyles.wrapper}">
     <div style="${emailStyles.header}">
-      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="vertical-align: middle; padding-right: 10px;"><div style="width: 36px; height: 36px; background: #5b7efc; background: linear-gradient(135deg, #409cff 0%, #7c5cfc 100%); border-radius: 8px; text-align: center; line-height: 36px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 22px; font-weight: 800; color: #ffffff;">F</div></td><td style="vertical-align: middle;"><span style="color: #111827; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">FlyFile</span></td></tr></table>
     </div>
 
     <div style="${emailStyles.content}">
@@ -661,7 +661,7 @@ export function getDownloadNotificationEmail(params: {
 <body style="${emailStyles.body}">
   <div style="${emailStyles.wrapper}">
     <div style="${emailStyles.header}">
-      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="vertical-align: middle; padding-right: 10px;"><div style="width: 36px; height: 36px; background: #5b7efc; background: linear-gradient(135deg, #409cff 0%, #7c5cfc 100%); border-radius: 8px; text-align: center; line-height: 36px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 22px; font-weight: 800; color: #ffffff;">F</div></td><td style="vertical-align: middle;"><span style="color: #111827; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">FlyFile</span></td></tr></table>
     </div>
 
     <div style="${emailStyles.content}">
@@ -754,7 +754,7 @@ export function getContactNotificationEmail(params: {
 <body style="${emailStyles.body}">
   <div style="${emailStyles.wrapper}">
     <div style="${emailStyles.header}">
-      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="vertical-align: middle; padding-right: 10px;"><div style="width: 36px; height: 36px; background: #5b7efc; background: linear-gradient(135deg, #409cff 0%, #7c5cfc 100%); border-radius: 8px; text-align: center; line-height: 36px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 22px; font-weight: 800; color: #ffffff;">F</div></td><td style="vertical-align: middle;"><span style="color: #111827; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">FlyFile</span></td></tr></table>
     </div>
 
     <div style="${emailStyles.content}">
@@ -853,7 +853,7 @@ export function getBetaTesterWelcomeEmail(params: {
 <body style="${emailStyles.body}">
   <div style="${emailStyles.wrapper}">
     <div style="${emailStyles.header}">
-      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="vertical-align: middle; padding-right: 10px;"><div style="width: 36px; height: 36px; background: #5b7efc; background: linear-gradient(135deg, #409cff 0%, #7c5cfc 100%); border-radius: 8px; text-align: center; line-height: 36px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 22px; font-weight: 800; color: #ffffff;">F</div></td><td style="vertical-align: middle;"><span style="color: #111827; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">FlyFile</span></td></tr></table>
     </div>
 
     <div style="${emailStyles.content}">
@@ -950,7 +950,7 @@ export function getSubscriptionConfirmationEmail(params: {
 <body style="${emailStyles.body}">
   <div style="${emailStyles.wrapper}">
     <div style="${emailStyles.header}">
-      <h1 style="${emailStyles.headerTitle}">FlyFile</h1>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="vertical-align: middle; padding-right: 10px;"><div style="width: 36px; height: 36px; background: #5b7efc; background: linear-gradient(135deg, #409cff 0%, #7c5cfc 100%); border-radius: 8px; text-align: center; line-height: 36px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 22px; font-weight: 800; color: #ffffff;">F</div></td><td style="vertical-align: middle;"><span style="color: #111827; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">FlyFile</span></td></tr></table>
     </div>
 
     <div style="${emailStyles.content}">

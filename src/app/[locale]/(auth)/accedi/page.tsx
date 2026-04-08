@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 type Step = 'email' | 'password' | 'code';
 
@@ -191,8 +192,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="p-8">
           {/* Logo */}
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">FlyFile</h2>
+          <div className="flex justify-center mb-8">
+            <Link href="/" aria-label="FlyFile home">
+              <Logo variant="wordmark" theme="light" size={36} />
+            </Link>
           </div>
 
           {/* Step: Email */}

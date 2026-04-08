@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Menu, X, Check, Zap, Settings, LogOut, Building2 } from 'lucide-react';
 import { PLANS } from '@/types';
 import { formatBytes } from '@/lib/format';
+import Logo from '@/components/Logo';
 
 const PricingPanel = dynamic(() => import('./PricingPanel'), { ssr: false });
 const TransfersPanel = dynamic(() => import('./TransfersPanel'), { ssr: false });
@@ -79,10 +80,8 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16">
             {/* Logo — far left (desktop only) */}
             <div className="hidden sm:flex shrink-0 items-center">
-              <Link href="/" className="flex items-center">
-                <span className="text-2xl font-bold text-white">
-                  FlyFile
-                </span>
+              <Link href="/" className="flex items-center" aria-label="FlyFile home">
+                <Logo variant="wordmark" theme="dark" size={32} />
               </Link>
             </div>
 
@@ -96,8 +95,8 @@ export default function Navbar() {
               >
                 <Menu className="h-6 w-6" />
               </button>
-              <Link href="/" className="text-2xl font-bold text-white">
-                FlyFile
+              <Link href="/" aria-label="FlyFile home">
+                <Logo variant="wordmark" theme="dark" size={28} />
               </Link>
               {!user ? (
                 <Link
@@ -345,7 +344,7 @@ export default function Navbar() {
               <X className="h-6 w-6" />
             </button>
             {/* Logo */}
-            <span className="text-2xl font-bold text-white">FlyFile</span>
+            <Logo variant="wordmark" theme="dark" size={28} />
             {/* Register / Avatar */}
             {!user ? (
               <Link

@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics-events';
+import Logo from '@/components/Logo';
 
 export default function RegisterPage() {
   const t = useTranslations('auth.register');
@@ -117,8 +118,10 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="p-8">
           {/* Logo */}
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">FlyFile</h2>
+          <div className="flex justify-center mb-8">
+            <Link href="/" aria-label="FlyFile home">
+              <Logo variant="wordmark" theme="light" size={36} />
+            </Link>
           </div>
 
           {step === 1 ? (

@@ -22,8 +22,8 @@ const features: Record<string, string[]> = {
   es: ['Cifrado AES-256', 'Hasta 5GB gratis', 'Sin registro'],
 };
 
-export default async function Image({ params }: { params: { locale: string } }) {
-  const locale = params.locale || 'it';
+export default async function Image({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const tagline = taglines[locale] || taglines.it;
   const featureList = features[locale] || features.it;
 
@@ -37,29 +37,29 @@ export default async function Image({ params }: { params: { locale: string } }) 
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)',
+          background: 'linear-gradient(135deg, #409cff 0%, #5b7efc 50%, #7c5cfc 100%)',
           fontFamily: 'sans-serif',
         }}
       >
-        {/* Decorative circles */}
+        {/* Decorative orbs */}
         <div
           style={{
             position: 'absolute',
-            top: -60,
-            left: -60,
-            width: 300,
-            height: 300,
+            top: -120,
+            left: -120,
+            width: 420,
+            height: 420,
             borderRadius: '50%',
-            background: 'rgba(255,255,255,0.1)',
+            background: 'rgba(255,255,255,0.10)',
           }}
         />
         <div
           style={{
             position: 'absolute',
-            bottom: -80,
-            right: -80,
-            width: 400,
-            height: 400,
+            bottom: -160,
+            right: -160,
+            width: 520,
+            height: 520,
             borderRadius: '50%',
             background: 'rgba(255,255,255,0.08)',
           }}
@@ -76,42 +76,71 @@ export default async function Image({ params }: { params: { locale: string } }) 
             padding: '40px',
           }}
         >
+          {/* Logo mark — white rounded square with white F (inverted from app icon for contrast on the gradient bg) */}
           <div
             style={{
-              fontSize: 72,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 140,
+              height: 140,
+              borderRadius: 32,
+              background: 'rgba(255,255,255,0.18)',
+              border: '2px solid rgba(255,255,255,0.35)',
+              backdropFilter: 'blur(10px)',
+              marginBottom: 28,
+            }}
+          >
+            <svg
+              width="84"
+              height="84"
+              viewBox="0 0 256 256"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M 72 64 L 188 64 L 188 96 L 104 96 L 104 116 L 160 116 L 160 146 L 104 146 L 104 192 L 72 192 Z"
+                fill="#ffffff"
+              />
+            </svg>
+          </div>
+
+          <div
+            style={{
+              fontSize: 84,
               fontWeight: 800,
               color: 'white',
-              lineHeight: 1.1,
-              marginBottom: 16,
+              lineHeight: 1,
+              marginBottom: 18,
+              letterSpacing: -2,
             }}
           >
             FlyFile
           </div>
           <div
             style={{
-              fontSize: 32,
+              fontSize: 30,
               fontWeight: 400,
-              color: 'rgba(255,255,255,0.9)',
+              color: 'rgba(255,255,255,0.92)',
               lineHeight: 1.4,
-              maxWidth: 700,
+              maxWidth: 760,
             }}
           >
             {tagline}
           </div>
           <div
             style={{
-              marginTop: 32,
-              fontSize: 18,
-              color: 'rgba(255,255,255,0.7)',
+              marginTop: 36,
+              fontSize: 19,
+              color: 'rgba(255,255,255,0.78)',
               display: 'flex',
               alignItems: 'center',
-              gap: 16,
+              gap: 18,
             }}
           >
             <span>{featureList[0]}</span>
-            <span style={{ color: 'rgba(255,255,255,0.4)' }}>|</span>
+            <span style={{ color: 'rgba(255,255,255,0.4)' }}>•</span>
             <span>{featureList[1]}</span>
-            <span style={{ color: 'rgba(255,255,255,0.4)' }}>|</span>
+            <span style={{ color: 'rgba(255,255,255,0.4)' }}>•</span>
             <span>{featureList[2]}</span>
           </div>
         </div>

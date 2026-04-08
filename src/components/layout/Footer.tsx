@@ -3,6 +3,7 @@
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import Logo from '@/components/Logo';
 
 export default function Footer() {
   const t = useTranslations('common');
@@ -14,8 +15,8 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-14">
           {/* Brand */}
           <div className="col-span-2">
-            <Link href="/" className="text-2xl font-bold text-white">
-              FlyFile
+            <Link href="/" aria-label="FlyFile home">
+              <Logo variant="wordmark" theme="dark" size={32} />
             </Link>
             <p className="mt-3 text-sm text-gray-400 leading-relaxed max-w-sm">
               {t('footer.description')}
