@@ -44,8 +44,8 @@ const securityHeaders = [
       // for stricter production security.
       // Scripts: self, inline for Next.js, Vercel analytics, Stripe, Google APIs, GTM, reCAPTCHA,
       // Clarity (wildcard for www.clarity.ms + scripts.clarity.ms which loads the actual SDK),
-      // Google AdSense
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com https://apis.google.com https://accounts.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://*.clarity.ms https://pagead2.googlesyndication.com",
+      // Google AdSense + fraud detection (adtrafficquality for sodar2.js)
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com https://apis.google.com https://accounts.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://*.clarity.ms https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.adtrafficquality.google",
       // Styles: self, inline for CSS-in-JS
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
       // Images: self, data URIs, Cloudflare R2, Firebase, Stripe, Google, AdSense
