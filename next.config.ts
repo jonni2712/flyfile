@@ -48,8 +48,8 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com https://apis.google.com https://accounts.google.com https://www.gstatic.com https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://*.clarity.ms https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.adtrafficquality.google",
       // Styles: self, inline for CSS-in-JS
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
-      // Images: self, data URIs, Cloudflare R2, Firebase, Stripe, Google, AdSense
-      "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.googleapis.com https://lh3.googleusercontent.com https://www.google.com https://*.googleusercontent.com https://www.googletagmanager.com https://*.clarity.ms https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.g.doubleclick.net",
+      // Images: self, data URIs, Cloudflare R2, Firebase, Stripe, Google, AdSense (+ fraud detection tracking pixels)
+      "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://*.googleapis.com https://lh3.googleusercontent.com https://www.google.com https://*.googleusercontent.com https://www.googletagmanager.com https://*.clarity.ms https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.g.doubleclick.net https://*.adtrafficquality.google",
       // Fonts: self, Google Fonts
       "font-src 'self' https://fonts.gstatic.com data:",
       // Connect: API calls to self, Firebase, Cloudflare R2, Stripe, Vercel, Google, GTM, reCAPTCHA, AdSense fraud detection
