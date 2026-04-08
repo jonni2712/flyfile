@@ -26,12 +26,6 @@
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "/favicon.ico",
-      "sizes": "48x48",
-      "type": "image/x-icon",
-      "purpose": "any"
     }
   ],
   "screenshots": [

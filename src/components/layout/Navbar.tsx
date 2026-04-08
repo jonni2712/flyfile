@@ -21,6 +21,16 @@ export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isTransfersOpen, setIsTransfersOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Switch logo + hamburger color when user scrolls past the hero area.
+  // Uses passive listener so it doesn't block scrolling perf.
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Close dropdown on Escape key
   useEffect(() => {
@@ -81,7 +91,7 @@ export default function Navbar() {
             {/* Logo — far left (desktop only) */}
             <div className="hidden sm:flex shrink-0 items-center">
               <Link href="/" className="flex items-center" aria-label="FlyFile home">
-                <Logo variant="wordmark" theme="dark" size={32} />
+                <Logo variant="wordmark" theme={isScrolled ? 'light' : 'dark'} size={32} />
               </Link>
             </div>
 
@@ -91,12 +101,16 @@ export default function Navbar() {
                 onClick={() => setIsOpen(!isOpen)}
                 aria-expanded={isOpen}
                 aria-label={isOpen ? 'Close menu' : 'Open menu'}
-                className="inline-flex items-center justify-center p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors min-h-[44px] min-w-[44px]"
+                className={`inline-flex items-center justify-center p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] ${
+                  isScrolled
+                    ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
               >
                 <Menu className="h-6 w-6" />
               </button>
               <Link href="/" aria-label="FlyFile home">
-                <Logo variant="wordmark" theme="dark" size={28} />
+                <Logo variant="wordmark" theme={isScrolled ? 'light' : 'dark'} size={28} />
               </Link>
               {!user ? (
                 <Link

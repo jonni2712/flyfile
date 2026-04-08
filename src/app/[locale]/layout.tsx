@@ -66,10 +66,7 @@ export async function generateMetadata({
         "max-snippet": -1,
       },
     },
-    icons: {
-      icon: "/favicon.ico",
-      shortcut: "/favicon.ico",
-    },
+    // Icons are auto-injected by Next.js from src/app/icon.svg and src/app/apple-icon.tsx
     manifest: "/manifest.json",
     openGraph: {
       title: t("title"),
