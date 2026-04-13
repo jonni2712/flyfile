@@ -10,6 +10,22 @@ Sentry.init({
   // Add optional integrations for additional features
   integrations: [Sentry.replayIntegration()],
 
+  // Filter out noise from third-party browser extensions that inject scripts
+  // into every page (MetaMask, Grammarly, password managers, etc.).
+  // These errors come from extension code, not our app, and pollute the dashboard.
+  beforeSend(event) {
+    const frames = event.exception?.values?.[0]?.stacktrace?.frames;
+    if (frames?.some((f) => f.filename?.includes('inpage.js') || f.filename?.includes('content-script'))) {
+      return null; // Drop the event
+    }
+    // Also drop by message pattern for extensions that don't expose stacktrace
+    const msg = event.exception?.values?.map((v) => v.value).join(' ') || '';
+    if (/metamask|walletconnect|ethereum/i.test(msg)) {
+      return null;
+    }
+    return event;
+  },
+
   // 100% in dev, 20% in production
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.2,
   // Enable logs to be sent to Sentry
